@@ -1,4 +1,13 @@
-void calculate_rs(dt,dx,dy,imax,jmax,F,G,RS)
+#include<math.h>
+
+void calculate_rs(double dt,
+		  double dx,
+		  double dy,
+		  int imax,
+		  int jmax,
+		  double **F,
+		  double **G,
+		  double **RS)
 {
 
 for(int i=1; i<imax; i++)
