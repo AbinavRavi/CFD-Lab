@@ -1,5 +1,3 @@
-void calculate_dt(Re,tau,dt,dx,dy,imax,jmax,U,V)
-{
 min(double a, double b, double c)
    { 
     if (a < b)
@@ -14,8 +12,19 @@ min(double a, double b, double c)
         return b;
     else return c;
    }
- 
- double Umax = U[0][0];
+
+void calculate_dt(double Re,
+                  double tau,
+                  double dt,
+                  double dx,
+                  double dy,
+                  int imax,
+                  int jmax,
+                  double **U,
+                  double **V)
+{
+
+ double **Umax = U[0][0];
  
    for( i = 1 ; i < imax ; i++ )
    {
@@ -26,7 +35,7 @@ min(double a, double b, double c)
       }
    }
    
-  double Vmax = V[0][0];
+  double **Vmax = V[0][0];
  
    for( i = 1 ; i < imax ; i++ )
    {
