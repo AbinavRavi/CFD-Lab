@@ -24,7 +24,7 @@ void calculate_dt(double Re,
                   double **V)
 {
 
- double **Umax = U[0][0];
+ double Umax = U[0][0];
  
    for( i = 1 ; i < imax ; i++ )
    {
@@ -35,7 +35,7 @@ void calculate_dt(double Re,
       }
    }
    
-  double **Vmax = V[0][0];
+  double Vmax = V[0][0];
  
    for( i = 1 ; i < imax ; i++ )
    {
