@@ -13,8 +13,7 @@ min(double a, double b, double c)
     if (b < c)
         return b;
     else return c;
-	 
-	}
+   }
  
  double Umax = U[0][0];
  
@@ -53,5 +52,4 @@ min(double a, double b, double c)
  {
    dt = 0.05;
  }
-}
 }
