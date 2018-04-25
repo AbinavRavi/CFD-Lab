@@ -16,7 +16,7 @@ double min(double a, double b, double c)
 
 void calculate_dt(double Re,
                   double tau,
-                  double &dt,
+                  double *dt,
                   double dx,
                   double dy,
                   int imax,
