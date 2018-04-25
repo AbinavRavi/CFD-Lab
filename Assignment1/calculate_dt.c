@@ -1,4 +1,4 @@
-min(double a, double b, double c)
+double min(double a, double b, double c)
    { 
     if (a < b)
      {
@@ -57,8 +57,5 @@ void calculate_dt(double Re,
    dt = tau * min(x,y,z);
  }
  
- else if(i<0)
- {
-   dt = 0.05;
- }
+ 
 }
