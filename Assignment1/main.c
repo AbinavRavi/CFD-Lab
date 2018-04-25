@@ -46,7 +46,7 @@ int main(int argn, char** args){
   int t = 0;
   int n1=1;
   while (t < tend) {
-    calculate_dt(Re,tau,dt,dx,dy,imax,jmax,U,V);
+    calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
     boundaryvalues(imax,jmax,U,V);
     calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
     calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
