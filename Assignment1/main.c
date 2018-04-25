@@ -2,6 +2,9 @@
 #include "visual.h"
 #include "init.h"
 #include <stdio.h>
+#include "sor.h"
+#include "uvp.h"
+#include "boundary_val.h"
 
 
 /**
@@ -23,7 +26,7 @@
  *
  * @image html whole-grid.jpg
  *
- * Within the main loop the following big steps are done (for some of the 
+ * Within the main loop the following big steps are done (for some of the
  * operations a definition is defined already within uvp.h):
  *
  * - calculate_dt() Determine the maximal time step size.
@@ -38,5 +41,30 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 int main(int argn, char** args){
+
+  int n = 0; //
+  int t = 0;
+  int n1=1;
+  while (t < tend) {
+    calculate_dt(Re,tau,dt,dx,dy,imax,jmax,U,V);
+    boundaryvalues(imax,jmax,U,V);
+    calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
+    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
+	int it = 0;
+	double res = 0.0;
+  do {
+    sor(omg,dx,dy,imax,jmax,P,RS,&res);
+    ++it;
+  } while(it<itmax && res>eps);
+  calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P);
+  if (t >= n1*dt_end)
+  {
+    write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
+    n1+=1;
+    break;
+  }
+  t +=dt;
+  n = n+1;
+  }
   return -1;
 }
