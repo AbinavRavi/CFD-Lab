@@ -5,6 +5,8 @@
  *      Author: abinav
  */
 
+#include <uvp.h>
+
 void calculate_uv(double dt,double dx,double dy,int imax, int jmax, double**U, double**V,double**F,double**G,double **P)
 {
 	for (int i = 1; i<= imax;++i)

@@ -5,6 +5,8 @@
  *      Author: abinav
  */
 
+#include <boundary_val.h>
+
 void boundaryvalues(int imax,int jmax,double **U,double **V)
 {
 	for (int j =1; j<=jmax;++j)
