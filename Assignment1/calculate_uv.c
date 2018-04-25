@@ -1,9 +1,4 @@
-/*
- * uvp.c
- *
- *  Created on: Apr 20, 2018
- *      Author: abinav
- */
+
 
 #include <uvp.h>
 
