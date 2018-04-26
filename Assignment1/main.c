@@ -1,10 +1,10 @@
 #include "helper.h"
 #include "visual.h"
 #include "init.h"
+#include"uvp.h"
+#include"boundary_val.h"
+#include"sor.h"
 #include <stdio.h>
-#include "sor.h"
-#include "uvp.h"
-#include "boundary_val.h"
 
 
 /**
@@ -26,7 +26,7 @@
  *
  * @image html whole-grid.jpg
  *
- * Within the main loop the following big steps are done (for some of the
+ * Within the main loop the following big steps are done (for some of the 
  * operations a definition is defined already within uvp.h):
  *
  * - calculate_dt() Determine the maximal time step size.
@@ -42,29 +42,93 @@
  */
 int main(int argn, char** args){
 
-  int n = 0; //
-  int t = 0;
-  int n1=1;
-  while (t < tend) {
-    calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
-    boundaryvalues(imax,jmax,U,V);
-    calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
-    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
+    //location of input file
+    const char* filename = "cavity100.dat";
+
+    //define parameter variables
+    double Re;                /* reynolds number   */
+    double UI;                /* velocity x-direction */
+    double VI;                /* velocity y-direction */
+    double PI;                /* pressure */
+    double GX;                /* gravitation x-direction */
+    double GY;                /* gravitation y-direction */
+    double t_end;             /* end time */
+    double xlength;           /* length of the domain x-dir.*/
+    double ylength;           /* length of the domain y-dir.*/
+    double dt;                /* time step */
+    double dx;                /* length of a cell x-dir. */
+    double dy;                /* length of a cell y-dir. */
+    int  imax;                /* number of cells x-direction*/
+    int  jmax;                /* number of cells y-direction*/
+    double alpha;             /* uppwind differencing factor*/
+    double omg;               /* relaxation factor */
+    double tau;               /* safety factor for time step*/
+    int  itermax;             /* max. number of iterations  */
+    /* for pressure per time step */
+    double eps;               /* accuracy bound for pressure*/
+    double dt_value;           /* time for output */
+
+    //Read and assign the parameter values from file
+    int pseudo = read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
+				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
+                                &alpha, &omg, &tau, &itermax, &eps, &dt_value);
+    pseudo++;
+    //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
+    double **P = matrix(0, imax, 0, jmax);
+    double **U = matrix(0, imax, 0, jmax);
+    double **V = matrix(0, imax, 0, jmax);
+    double **F = matrix(0, imax, 0, jmax);
+    double **G = matrix(0, imax, 0, jmax);
+    double **RS = matrix(0, imax, 0, jmax);
+
+    //Initialize the U, V and P
+    init_uvp(UI, VI, PI, imax, jmax, U, V, P);
+
+	int n = 0; //
+	int t = 0;
+	int n1=1;
+    while (t < t_end) {
+
+    	calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
+
+    	boundaryvalues(imax,jmax,U,V);
+
+    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
+
+    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
+
 	int it = 0;
+
 	double res = 0.0;
-  do {
-    sor(omg,dx,dy,imax,jmax,P,RS,&res);
-    ++it;
-  } while(it<itmax && res>eps);
-  calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P);
-  if (t >= n1*dt_end)
-  {
-    write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
-    n1+=1;
-    break;
-  }
-  t +=dt;
-  n = n+1;
-  }
+
+    do {
+
+    	sor(omg,dx,dy,imax,jmax,P,RS,&res);
+    	
+	++it;
+
+    	} while(it<itermax && res>eps);
+
+  	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P);
+
+  	if (t >= n1*dt_value)
+  	{
+   		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
+    		n1=n1+ 1;
+    		break;
+  	}
+    t =t+ dt;
+    n = n+ 1;
+    }
+
+    //Free memory
+    free_matrix( P, 0, imax, 0, jmax);
+    free_matrix( U, 0, imax, 0, jmax);
+    free_matrix( V, 0, imax, 0, jmax);
+    free_matrix( F, 0, imax, 0, jmax);
+    free_matrix( G, 0, imax, 0, jmax);
+    free_matrix(RS, 0, imax, 0, jmax);
+
   return -1;
+
 }
