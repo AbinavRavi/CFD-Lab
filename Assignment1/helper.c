@@ -2,7 +2,6 @@
 #include <errno.h>
 #include <stdio.h>
 #include "helper.h"
-
 /* ----------------------------------------------------------------------- */
 /*                             auxiliary functions                         */
 /* ----------------------------------------------------------------------- */
@@ -332,7 +331,9 @@ double **matrix( int nrl, int nrh, int ncl, int nch )
 {
    int i;
    int nrow = nrh - nrl + 1;	/* compute number of lines */
+   printf("Debug: nrow = %d \n",nrow);
    int ncol = nch - ncl + 1;	/* compute number of columns */
+   printf("Debug: ncol = %d \n",ncol);
    
    double **pArray  = (double **) malloc((size_t)( nrow * sizeof(double*)) );
    double  *pMatrix = (double *)  malloc((size_t)( nrow * ncol * sizeof( double )));
@@ -368,9 +369,11 @@ void free_matrix( double **m, int nrl, int nrh, int ncl, int nch )
 void init_matrix( double **m, int nrl, int nrh, int ncl, int nch, double a)
 {
    int i,j;
-   for( i = nrl; i <= nrh; i++)
-       for( j = ncl; j <= nch; j++)
+   for( i = nrl; i <= nrh; i++){
+       for( j = ncl; j <= nch; j++){
 	   m[i][j] = a;
+	   }
+   }
 }
 
 

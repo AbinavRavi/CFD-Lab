@@ -1,6 +1,5 @@
 #ifndef __INIT_H_
 #define __INIT_H_
-
 /**
  * This operation initializes all the local variables reading a configuration
  * file. For every variable a macro like READ_INT() is called passing it the

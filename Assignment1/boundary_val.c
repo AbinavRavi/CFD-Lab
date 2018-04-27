@@ -1,12 +1,12 @@
-#include <boundary_val.h>
+#include "boundary_val.h"
 
 void boundaryvalues(int imax,int jmax,double **U,double **V)
 {
 	for (int j =1; j<=jmax;++j)
 	{
 		//Horizontal velocities on Vertical Boundaries
-		U[0,j] = 0;
-		U[imax,j] = 0;
+		U[0][j] = 0;
+		U[imax][j] = 0;
 
 		//Vertical Boundary conditions
 		 V[0][j]       = - V[1][j];
@@ -23,7 +23,7 @@ void boundaryvalues(int imax,int jmax,double **U,double **V)
 
 		 //Horizontal Boundary Conditions
 		 U[i][0]       = - U[i][1];
-		 U[i][jmax+1]  = 2.0 - U[i][jmax];
+		 U[i][jmax]    = 1.0;
 
 	}
 }

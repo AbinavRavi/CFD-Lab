@@ -69,37 +69,42 @@ int main(int argn, char** args){
     double dt_value;           /* time for output */
 
     //Read and assign the parameter values from file
-    int pseudo = read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
+    int pseudo;
+	pseudo = read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
 				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                                 &alpha, &omg, &tau, &itermax, &eps, &dt_value);
-    pseudo++;
+							
+	pseudo++;
+	//printf("Debug: jmax:  %d\n", jmax);							
+	//printf("Debug: file read \n");
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
-    double **P = matrix(0, imax, 0, jmax);
-    double **U = matrix(0, imax, 0, jmax);
-    double **V = matrix(0, imax, 0, jmax);
-    double **F = matrix(0, imax, 0, jmax);
-    double **G = matrix(0, imax, 0, jmax);
-    double **RS = matrix(0, imax, 0, jmax);
-
+    double **P = matrix(0, imax+1, 0, jmax+1);
+    double **U = matrix(0, imax+1, 0, jmax+1);
+    double **V = matrix(0, imax+1, 0, jmax+1);
+    double **F = matrix(0, imax+1, 0, jmax+1);
+    double **G = matrix(0, imax+1, 0, jmax+1);
+    double **RS = matrix(0, imax+1, 0, jmax+1);
+									//printf("Debug: Matrix allocated on heap \n");
     //Initialize the U, V and P
     init_uvp(UI, VI, PI, imax, jmax, U, V, P);
-
+									//printf("Debug: init_uvp called \n");
 	int n = 0; //
-	int t = 0;
-	int n1=1;
+	double t = 0;
+	int n1=0;
+
     while (t < t_end) {
 
-    	calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
-
-    	boundaryvalues(imax,jmax,U,V);
-
-    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
-
-    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
-
+    calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
+    printf("%f \n",dt);							
+    boundaryvalues(imax,jmax,U,V);
+													
+    calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
+													
+    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
+													
 	int it = 0;
 
-	double res = 0.0;
+	double res = 10.0;
 
     do {
 
@@ -110,12 +115,12 @@ int main(int argn, char** args){
     	} while(it<itermax && res>eps);
 
   	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P);
-
   	if (t >= n1*dt_value)
   	{
    		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
+		printf("%f SECONDS COMPLETED \n",n1*dt_value);
     		n1=n1+ 1;
-    		break;
+    		continue;
   	}
     t =t+ dt;
     n = n+ 1;
@@ -132,3 +137,8 @@ int main(int argn, char** args){
   return -1;
 
 }
+
+
+
+
+

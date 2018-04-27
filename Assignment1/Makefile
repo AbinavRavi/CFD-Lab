@@ -6,12 +6,14 @@ OBJ = 	helper.o\
       	init.o\
       	boundary_val.o\
       	uvp.o\
+	sor.o\
+	init_uvp.o\
       	main.o\
       	visual.o
 
 
 all:  $(OBJ)
-	$(CC) $(CFLAGS) -o sim $(OBJ)  -lm
+	$(CC) $(CFLAGS) -o sim $(OBJ) -lm
 
 %.o : %.c
 	$(CC) -c $(CFLAGS) $*.c -o $*.o
@@ -22,7 +24,8 @@ clean:
 helper.o      : helper.h 
 init.o        : helper.h init.h 
 boundary_val.o: helper.h boundary_val.h 
-uvp.o         : helper.h uvp.h
+uvp.o	      : uvp.h
 visual.o      : helper.h
-
+sor.o		: sor.h
+init_uvp.o	  : init.h
 main.o        : helper.h init.h boundary_val.h uvp.h visual.h
