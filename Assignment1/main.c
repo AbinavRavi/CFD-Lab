@@ -26,7 +26,7 @@
  *
  * @image html whole-grid.jpg
  *
- * Within the main loop the following big steps are done (for some of the 
+ * Within the main loop the following big steps are done (for some of the
  * operations a definition is defined already within uvp.h):
  *
  * - calculate_dt() Determine the maximal time step size.
@@ -70,12 +70,12 @@ int main(int argn, char** args){
 
     //Read and assign the parameter values from file
     int pseudo;
-	pseudo = read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
+	pseudo = read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end,
 				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                                 &alpha, &omg, &tau, &itermax, &eps, &dt_value);
-							
+
 	pseudo++;
-	//printf("Debug: jmax:  %d\n", jmax);							
+	//printf("Debug: jmax:  %d\n", jmax);
 	//printf("Debug: file read \n");
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     double **P = matrix(0, imax+1, 0, jmax+1);
@@ -91,39 +91,41 @@ int main(int argn, char** args){
 	int n = 0; //
 	double t = 0;
 	int n1=0;
-
+//main loop
     while (t < t_end) {
-
+//calling the calculate_dt function for the dt values
     calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
-    printf("%f \n",dt);							
+  // used for testing  printf("%f \n",dt);
+  //calling the boundaryvalues function from boundary_val.c
     boundaryvalues(imax,jmax,U,V);
-													
+	//calling the function calculate_fg from uvp.c
     calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
-													
+	//calling teh function calculate_rs from uvp.c
     calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
-													
+	//initializing initial iteration to zero
 	int it = 0;
-
+  //initializing the residual value with a high number in random
 	double res = 10.0;
-
+  //do while loop is ran so as to execute the condition atleast once in case of while condition not being satisfied
     do {
-
+      //calling the sor Function from sor.c
     	sor(omg,dx,dy,imax,jmax,P,RS,&res);
-    	
+
 	++it;
 
     	} while(it<itermax && res>eps);
-
+//calling the calculate_uv function from uvp.c
   	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P);
   	if (t >= n1*dt_value)
   	{
+      //writing the output values
    		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
 		printf("%f SECONDS COMPLETED \n",n1*dt_value);
     		n1=n1+ 1;
     		continue;
   	}
-    t =t+ dt;
-    n = n+ 1;
+    t =t+ dt; //increase in timestep dt
+    n = n+ 1; 
     }
 
     //Free memory
@@ -137,8 +139,3 @@ int main(int argn, char** args){
   return -1;
 
 }
-
-
-
-
-
