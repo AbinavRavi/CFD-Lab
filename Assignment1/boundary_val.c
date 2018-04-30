@@ -23,7 +23,8 @@ void boundaryvalues(int imax,int jmax,double **U,double **V)
 
 		 //Horizontal Boundary Conditions
 		 U[i][0]       = - U[i][1];
-		 U[i][jmax]    = 1.0;
+		 //U[i][jmax]    = 1.0;
+		 U[i][jmax+1]  = 2-U[i][jmax];
 
 	}
 }

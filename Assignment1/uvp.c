@@ -2,21 +2,7 @@
 #include "uvp.h"
 #include"helper.h"
 
-/*double three_min(double a, double b, double c)*/
-/*   { */
-/*    if (a < b)*/
-/*     {*/
-/*        if (a < c) */
-/*             return a; */
-/*        else */
-/*             return c;*/
-/*     }*/
 
-/*    if (b < c)*/
-/*        return b;*/
-/*    else return c;*/
-/*   }*/
- //function to calculate the dt values
 void calculate_dt(double Re,
                   double tau,
                   double *dt,
@@ -29,7 +15,7 @@ void calculate_dt(double Re,
 {
 
  double Umax = fabs(U[0][0]);
-
+ 
    for( int i = 1 ; i <= imax ; i++ )
    {
       for( int j = 1 ; j <= jmax ; j++ )
@@ -38,9 +24,9 @@ void calculate_dt(double Re,
             Umax = fabs(U[i][j]);
       }
    }
-
+   
   double Vmax = fabs(V[0][0]);
-
+ 
    for( int i = 1 ; i <= imax ; i++ )
    {
       for( int j = 1 ; j <= jmax ; j++ )
@@ -49,9 +35,9 @@ void calculate_dt(double Re,
             Vmax = fabs(V[i][j]);
       }
    }
-
+ 
  double x, y, z;
-
+ 
  x = (Re/2.0)*pow(((1.0/pow(dx,2.0))+(1.0/pow(dy,2.0))),-1.0);
 
  y = dx/(fabs(Umax));
@@ -67,7 +53,7 @@ void calculate_dt(double Re,
 
 }
 
-//function to calculate F and G matrices
+
 void calculate_fg(double Re,
 		 double GX, double GY,
 		 double alpha,
@@ -78,9 +64,9 @@ void calculate_fg(double Re,
 		 double** F, double** G)
 {
 
-    for(int i=1; i<imax; i++){
-
-        for(int j=1; j<jmax; j++){
+    for(int i=1; i<=imax-1; i++){
+	
+        for(int j=1; j<=jmax; j++){
 
         F[i][j]=U[i][j]+dt*(
                 //Central difference scheme for second derivatives
@@ -97,7 +83,12 @@ void calculate_fg(double Re,
                              )
                 //Gravity component in x-direction
                 +GX);
-
+		}
+	}
+	
+	for(int i=1; i<=imax; i++){
+	
+        for(int j=1; j<=jmax-1; j++){
         G[i][j]=V[i][j]+dt*(
                 //Central difference Scheme for second derivatives
                 (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
@@ -113,15 +104,17 @@ void calculate_fg(double Re,
                             )
                 +GY);
         }
-
+	}
+	
+	for (int i = 0; i <=imax ; i++) {
         //Boundary conditions for G
         G[i][0] = V[i][0];
         G[i][jmax]=V[i][jmax];
 
     }
-
+    
     //Boundary conditions for F
-    for (int j = 0; j <jmax ; ++j) {
+    for (int j = 0; j <=jmax ; j++) {
         F[0][j]=U[0][j];
         F[imax][j]=U[imax][j];
     }
@@ -129,29 +122,29 @@ void calculate_fg(double Re,
 }
 
 
-//Function to calculate the U and V components of velocity.
+
 void calculate_uv(double dt,double dx,double dy,int imax, int jmax, double**U, double**V,double**F,double**G,double **P)
 {
-	for (int i = 1; i<= imax-1;++i)
+	for (int i = 1; i<= imax-1;i++)
 	{
-		for (int j=1; j<=jmax;++j)
+		for (int j=1; j<=jmax;j++)
 		{
-			//update the U and V components of velocity
+			//update the U component of velocity
 			U[i][j] = F[i][j] - (dt/dx)*(P[i+1][j]-P[i][j]);
 		}
 	}
-
-	for (int i = 1; i<= imax;++i)
+	
+	for (int i = 1; i<= imax;i++)
 	{
-		for (int j=1; j<=jmax-1;++j)
+		for (int j=1; j<=jmax-1;j++)
 		{
-			//update the U and V components of velocity
+			//update the V component of velocity
 			V[i][j] = G[i][j] - (dt/dy)*(P[i][j+1] -P[i][j]);
 		}
 	}
 }
 
-//Function to calculate the right hand side of PPE
+
 void calculate_rs(double dt,
 		  double dx,
 		  double dy,
@@ -164,14 +157,14 @@ void calculate_rs(double dt,
 
 for(int i=1; i<=imax; i++)
    {
-
+	
         for(int j=1; j<=jmax; j++)
 		{
-
+		
 		RS[i][j] =  (1/dt)*( (F[i][j]-F[i-1][j])/dx + (G[i][j]-G[i][j-1])/dy );
-
+		
 		}
-
+		
 	}
 
 }
