@@ -1,0 +1,7 @@
+Once we finish with the execution of the code please write a short procedure of how to execute the code in this file.
+
+We have to make changes as follows
+  Output all vtk files in one folder so that we have the results to look at later period sorted
+  we have to give a shell output (print) the following things on console after every timestep
+    dt value, residual, No of SOR Iterations, and a warning message if the iterations have diverged from PPE
+    
