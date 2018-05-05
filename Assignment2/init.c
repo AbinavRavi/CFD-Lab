@@ -22,7 +22,11 @@ int read_parameters( const char *szFileName,       /* name of the file */
                     int  *itermax,             /* max. number of iterations  */
 		                               /* for pressure per time step */
                     double *eps,               /* accuracy bound for pressure*/
-		    double *dt_value)           /* time for output */
+		                double *dt_value,         /* time for output */
+                                /*for Temperature inclusion/
+                    double *TI,               /*Temperature*/
+                    double *Pr,               /*Prandtl Number*/
+                    double *beta)             /*Coefficient of Thermal Expansion*/
 {
    READ_DOUBLE( szFileName, *xlength );
    READ_DOUBLE( szFileName, *ylength );
@@ -47,12 +51,12 @@ int read_parameters( const char *szFileName,       /* name of the file */
    READ_DOUBLE( szFileName, *GX );
    READ_DOUBLE( szFileName, *GY );
    READ_DOUBLE( szFileName, *PI );
+   READ_DOUBLE( szFileName, *TI);
+   READ_DOUBLE(szFileName, *Pr);
+   READ_DOUBLE(szFileName, *beta);
 
    *dx = *xlength / (double)(*imax);
    *dy = *ylength / (double)(*jmax);
 
    return 1;
 }
-
-
-
