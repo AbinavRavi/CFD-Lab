@@ -26,7 +26,9 @@ int read_parameters( const char *szFileName,       /* name of the file */
                                 /*for Temperature inclusion/
                     double *TI,               /*Temperature*/
                     double *Pr,               /*Prandtl Number*/
-                    double *beta)             /*Coefficient of Thermal Expansion*/
+                    double *beta,           /*Coefficient of Thermal Expansion*/
+	            char *Problem,
+                    char *geometry)
 {
    READ_DOUBLE( szFileName, *xlength );
    READ_DOUBLE( szFileName, *ylength );
@@ -54,9 +56,31 @@ int read_parameters( const char *szFileName,       /* name of the file */
    READ_DOUBLE( szFileName, *TI);
    READ_DOUBLE(szFileName, *Pr);
    READ_DOUBLE(szFileName, *beta);
+   READ_STRING(szFileName, *problem);
+   READ_STRING(szFileName, *geometry);
 
    *dx = *xlength / (double)(*imax);
    *dy = *ylength / (double)(*jmax);
+	
+void init_flag(
+  char* problem,
+  char* geometry,
+  int imax,
+  int jmax,
+  int** Flag)
+{
+	 int **Picture = NULL;
+
+  Picture = read_pgm(geometry);
+	
+	for(int i=0; i<imax+1; i++){
+    for(int j=0; j<jmax+1; j++){
+      Flag[i][j] = Picture[i][j]; /* still need to be modified*/
+    }
+  }
+
+}
+
 
    return 1;
 }
