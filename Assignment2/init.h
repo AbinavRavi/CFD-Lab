@@ -59,7 +59,12 @@ int read_parameters(
   double *tau,
   int  *itermax,
   double *eps,
-  double *dt_value
+  double *dt_value,
+  double *TI,               
+  double *Pr,              
+  double *beta,          
+	char *Problem,
+  char *geometry
 );
 
 /**
@@ -76,6 +81,13 @@ void init_uvp(
   double **V,
   double **P
 );
+
+void init_flag(
+               char* problem,
+               char* geometry
+               int imax,
+               int jmax,
+               int **Flag);
 
 #endif
 
