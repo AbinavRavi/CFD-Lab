@@ -62,6 +62,23 @@ int read_parameters( const char *szFileName,       /* name of the file */
    *dx = *xlength / (double)(*imax);
    *dy = *ylength / (double)(*jmax);
 	
+	void init_uvp(
+              double UI,
+              double VI,
+              double PI,             /* from First Assignment To initialise Values*/
+              int imax,
+              int jmax,
+              double **U,
+              double **V,
+              double **P
+             ){
+
+    init_matrix(U, 0, imax ,  0, jmax+1, UI);
+    init_matrix(V, 0, imax+1, 0, jmax  , VI);
+    init_matrix(P, 0, imax+1, 0, jmax+1, PI);
+
+}
+	
 void init_flag(
   char* problem,
   char* geometry,
@@ -75,7 +92,7 @@ void init_flag(
 	
 	for(int i=0; i<imax+1; i++){
     for(int j=0; j<jmax+1; j++){
-      Flag[i][j] = Picture[i][j]; /* still need to be modified*/
+      Flag[i][j] = Picture[i][j]; /* still need to be modified*/ /* No idea to Proceed */
     }
   }
 
