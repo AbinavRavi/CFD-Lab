@@ -27,7 +27,7 @@ int read_parameters( const char *szFileName,       /* name of the file */
                     double *TI,               /*Temperature*/
                     double *Pr,               /*Prandtl Number*/
                     double *beta,           /*Coefficient of Thermal Expansion*/
-	            char *Problem,
+	            char *problem,
                     char *geometry)
 {
    READ_DOUBLE( szFileName, *xlength );
