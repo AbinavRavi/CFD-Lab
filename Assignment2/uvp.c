@@ -211,4 +211,30 @@ void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double
     }
   }
 
+  for(int i = 0; i<imax; ++i)
+  {
+  	for(int j = 0; j<jmax; ++j)
+  	{
+  		if ( B_O(flag[i][j]) )  temp[i][j] = temp[i+1][j];
+
+  		if ( B_W(flag[i][j]) )  temp[i][j] = temp[i-1][j];
+
+  		if ( B_N(flag[i][j]) )  temp[i][j] = temp[i][j+1];
+
+  		if ( B_S(flag[i][j]) )  temp[i][j] = temp[i][j-1];
+
+  		if ( B_NO(flag[i][j]) ) temp[i][j] = (temp[i][j+1] + temp[i+1][j])/2;
+
+  		if ( B_NW(flag[i][j]) ) temp[i][j] = (temp[i][j+1] + temp[i-1][j])/2;
+
+  		if ( B_SO(flag[i][j]) ) temp[i][j] = (temp[i][j-1] + temp[i+1][j])/2;
+
+  		if ( B_SW(flag[i][j]) ) temp[i][j] = (temp[i][j-1] + temp[i-1][j])/2;
+
+  		if (flag[i][j]&(1<<3) ) temp[i][j] = temp[imax/2][jmax/2];
+
+  		if (flag[i][j]&(1<<4) ) temp[i][j] = 0;
+  	}
+  }
+
 }
