@@ -15,37 +15,20 @@ void boundaryvalues(
   int **flag
 );
 
+int B_O(int flag);
 
-	int B_O(int flag){
-	return flag & (1<<8) && ~( flag & ((1<<5) | (1<<6)) );
-	}
+int B_W(int flag);
 
-	int B_W(int flag){
-	return flag & (1<<7) && ~( flag & ((1<<5) | (1<<6)) );
-	}
+int B_N(int flag);
 
-	int B_N(int flag){
-	return flag & (1<<5) && ~( flag & ((1<<7) | (1<<8)) );
-	}
+int B_S(int flag);
 
-	int B_S(int flag){
-	return flag & (1<<6) && ~( flag & ((1<<7) | (1<<8)) );
-	}
+int B_NO(int flag);
 
-	int B_NO(int flag){
-	return flag & (1<<8) &&  flag & (1<<5);
-	}
+int B_NW(int flag);
 
-	int B_NW(int flag){
-	return flag & (1<<7) &&  flag & (1<<5);
-	}
+int B_SO(int flag);
 
-	int B_SO(int flag){
-	return flag & (1<<8) &&  flag & (1<<6); 
-	}
-
-	int B_SW(int flag){
-	return flag & (1<<7) &&  flag & (1<<6);
-	}
+int B_SW(int flag);
 
 #endif

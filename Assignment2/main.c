@@ -44,7 +44,7 @@ int main(int argn, char** args){
 
     //location of input file
     const char* filename = "cavity100.dat";
-
+    printf("Debug: begin \n");
     //define parameter variables
     double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
@@ -64,22 +64,22 @@ int main(int argn, char** args){
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
     int  itermax;             /* max. number of iterations  */
-    /* for pressure per time step */
+    				/* for pressure per time step */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
-    char* problem;
-    char* geometry;
-    int **flag;
-    //int **flag = matrix(0, imax, 0, jmax);
+    char* problem ="0";
+    char* geometry ="0";
+printf("Debug: 1 \n");
     //Read and assign the parameter values from file
     int pseudo;
+	
 	pseudo = read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
 				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                                 &alpha, &omg, &tau, &itermax, &eps, &dt_value, problem, geometry);
 							
 	pseudo++;
 	//printf("Debug: jmax:  %d\n", jmax);							
-	//printf("Debug: file read \n");
+	printf("Debug: file read \n");
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     double **P = matrix(0, imax, 0, jmax);
     double **U = matrix(0, imax, 0, jmax);
@@ -87,6 +87,7 @@ int main(int argn, char** args){
     double **F = matrix(0, imax, 0, jmax);
     double **G = matrix(0, imax, 0, jmax);
     double **RS = matrix(0, imax, 0, jmax);
+    int **flag = imatrix(0, imax, 0, jmax);
 									//printf("Debug: Matrix allocated on heap \n");
     //Initialize the U, V and P
     init_uvp(UI, VI, PI, imax, jmax, U, V, P);
@@ -97,27 +98,28 @@ int main(int argn, char** args){
 
     init_flag(problem, geometry, imax, jmax, flag);
 
-    //while (t < t_end) {
+    while (t < t_end) {
 
     calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
     //printf("%f \n",dt);							
-    boundaryvalues(imax,jmax,U,V,flag);
-													
+    boundaryvalues(imax, jmax, U, V, flag);
+    spec_boundary_val(imax, jmax, U, V, flag);
+								
     calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag);
 													
     calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
 													
-	//int it = 0;
+	int it = 0;
 
 	double res = 10.0;
 
-    //do {
+    do {
 
     	sor(omg,dx,dy,imax,jmax,P,RS,&res,flag);
     	
-	//++it;
+	++it;
 
-    	//} while(it<itermax && res>eps);
+    	} while(it<itermax && res>eps);
 
   	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
 	
@@ -130,7 +132,7 @@ int main(int argn, char** args){
   	}*/
     t =t+ dt;
     n = n+ 1;
-   // }
+    }
 	//printf("%f \n",U[(int)((double)imax/2)][(int)(7*(double)jmax/8)]);
     //Free memory
     free_matrix( P, 0, imax, 0, jmax);
@@ -139,12 +141,9 @@ int main(int argn, char** args){
     free_matrix( F, 0, imax, 0, jmax);
     free_matrix( G, 0, imax, 0, jmax);
     free_matrix(RS, 0, imax, 0, jmax);
-
+    free_imatrix(flag, 0, imax, 0, jmax);
   return -1;
 
 }
-
-
-
 
 
