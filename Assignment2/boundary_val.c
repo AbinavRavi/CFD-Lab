@@ -1,151 +1,160 @@
-#include <stdio.h>
-#include <string.h>
 #include "boundary_val.h"
-#include "init.h"
-#include "helper.h"
+#include <stdio.h>
 
-void boundaryvalues(int imax, int jmax, double **U, double **V,  int wl, int wr, int wt, int wb, int **Flag)
-{
-	int i, j;
-
-	/* Iterate across both the ceiling and floor  */
-	for(i = 1; i < imax+1; i++)
+void spec_boundary_val(int imax,int jmax,double **U,double **V,int **flag){
+	for(int i = 0; i<imax; ++i)
 	{
-		/* FLOOR BC*/
-		if (wb == 1)	/* no-slip BC for floor*/
+		for(int j = 0; j<jmax; ++j)
 		{
-			U[i][0] = -U[i][1];
-			V[i][0]	= 0;
-		}
-		else if (wb == 2)	/* free-slip BC for floor*/
-		{
-			V[i][0]	= 0;
-			U[i][0] = U[i][1];
-		}
-		else if (wb == 3)	/* outflow BC for floor*/
-		{
-			V[i][0]	= V[i][1];
-			U[i][0] = U[i][1];
-		}
-
-		/* CEILING BC */
-		if (wt == 1)	/* no-slip BC for ceiling*/
-		{
-			U[i][jmax+1] 	= -U[i][jmax];
-			V[i][jmax]		= 0;
-		}
-		else if (wt == 2)	/* free-slip BC for ceiling*/
-		{
-			V[i][jmax]		= 0;
-			U[i][jmax+1] 	= U[i][jmax];
-
-		}
-		else if (wt == 3) /* (wb == 3) outflow BC for ceiling*/
-		{
-			U[i][jmax+1] 	= U[i][jmax];
-			V[i][jmax] 		= V[i][jmax-1];
-
+		if(flag[i][j]&(1<<4))
+			{ U[i][j]=1; V[i][j] = 0; V[i][j-1] = 0;}
 		}
 	}
 
-	/* Iterate across both the walls*/
-	for(j = 1; j < jmax+1; j++)
-	{
-		/* LEFT wall BC*/
-		if (wl == 1)	/* no-slip BC for left wall*/
-		{
-			V[0][j]	= -V[1][j];
-			U[0][j]	= 0;
-		}
-		else if (wl == 2)	/* free-slip BC for left wall*/
-		{
-			U[0][j]	= 0;
-			V[0][j]	= V[1][j];
-		}
-		else if (wl == 3)	/* outflow BC for left wall*/
-		{
-			U[0][j]	= U[1][j];
-			V[0][j]	= V[1][j];
-		}
-
-		/* RIGHT wall BC*/
-		if (wr == 1)	/* no-slip BC for right wall*/
-		{
-			V[imax+1][j] 	= -V[imax][j];
-			U[imax][j]		= 0;
-		}
-		else if (wr == 2)	/* free-slip BC for right wall*/
-		{
-			U[imax][j]		= 0;
-			V[imax+1][j] 	= V[imax][j];
-		}
-		else if (wr == 3)	/* outflow BC for right wall*/
-		{
-			U[imax][j] 		= U[imax-1][j];
-			V[imax+1][j] 	= V[imax][j];
-		}
-	}
-
-	/*
-		loop through the Flag array and find each cells have the flag B_N, B_W, B_O, B_S
-	 */
-	for(i = 1 ; i < imax + 1 ; i++)
-	{
-		for(j = 1 ; j < jmax + 1 ; j++)
-		{
-			/* check the boundary cells */
-			if(Flag[i][j] == B_O)
-			{
-				U[i][j] = 0;
-				V[i][j - 1] = - V[i + 1][j - 1];
-				V[i][j]	= -V[i + 1][j];
-			}
-			else if(Flag[i][j] == B_N)
-			{
-				V[i][j] = 0;
-				U[i - 1][j] = - U[i - 1][j + 1];
-				U[i][j]	= -U[i][j + 1];
-			}
-			else if(Flag[i][j] == B_W)
-			{
-				U[i - 1][j] = 0;
-				V[i][j - 1] = - V[i - 1][j - 1];
-				V[i][j]	= -V[i - 1][j];
-			}
-			else if(Flag[i][j] == B_S)
-			{
-				V[i][j - 1] = 0;
-				U[i][j] = - U[i][j - 1];
-				U[i - 1][j]	= - U[i - 1][j - 1];
-			}
-			else if(Flag[i][j] == B_NO)
-			{
-				U[i][j] = 0;
-				V[i][j] = 0;
-				U[i - 1][j]	= -U[i - 1][j + 1];
-				V[i][j - 1]	= -V[i + 1][j - 1];
-			}
-			else if(Flag[i][j] == B_NW)
-			{
-				U[i - 1][j] = 0;
-				V[i][j] = 0;
-				U[i][j]	= -U[i][j + 1];
-				V[i][j - 1]	= -V[i - 1][j - 1];
-			}
-			else if(Flag[i][j] == B_SO)
-			{
-				U[i][j] = 0;
-				V[i][j - 1] = 0;
-				U[i - 1][j]	= -U[i - 1][j - 1];
-				V[i][j]	= -V[i + 1][j];
-			}
-			else if(Flag[i][j] == B_SW)
-			{
-				U[i - 1][j] = 0;
-				V[i][j - 1] = 0;
-				U[i][j]	= -U[i][j - 1];
-				V[i][j]	= -V[i - 1][j];
-			}
-		}
-	}
 }
+
+void boundaryvalues(int imax,int jmax,double **U,double **V,int **flag)
+{
+	for(int i = 0; i<imax; ++i)
+	{
+	for(int j = 0; j<jmax; ++j)
+	{
+
+	switch(flag[i][j]& ((1<<1)|(1<<2)|(1<<3)) )
+{
+	case 1<<1://No slip conditions
+	if ( B_O(flag[i][j]) )
+	{
+	U[i][j] = 0;
+	V[i][j-1] = -V[i+1][j-1];	
+	V[i][j] = -V[i+1][j];
+	}
+
+	if ( B_W(flag[i][j]) ) 
+	{
+	U[i-1][j] = 0;
+	V[i][j-1] = -V[i-1][j-1];	
+	V[i][j] = -V[i-1][j];
+	}
+
+	if ( B_N(flag[i][j]) ) 
+	{
+	V[i][j] = 0;
+	U[i-1][j] = -U[i-1][j+1];
+	U[i][j] = -U[i][j+1];	
+	}
+
+	if ( B_S(flag[i][j]) )
+	{
+	V[i][j-1] = 0;
+	U[i-1][j] = -U[i-1][j-1];
+	U[i][j] = -U[i][j-1];	
+	}
+
+	if ( B_NO(flag[i][j])  )
+	{
+	U[i][j] = 0;
+	U[i-1][j] = -U[i-1][j+1];
+	V[i][j] = 0;
+	V[i][j-1] = -V[i+1][j-1];
+	}
+
+	if ( B_NW(flag[i][j])  )
+	{
+	U[i-1][j] = 0;
+	U[i][j] = - U[i][j+1];
+	V[i][j] = 0;
+	V[i][j-1] = -V[i-1][j-1];
+	} 
+
+	if ( B_SO(flag[i][j]) ){
+	U[i][j]=0;
+	U[i-1][j] = -U[i-1][j-1];
+	V[i][j-1]=0;
+	V[i][j] = -V[i+1][j];
+	}
+
+	if ( B_SW(flag[i][j]) ){
+	U[i-1][j] = 0;
+	U[i][j] = -U[i][j-1];
+	V[i][j-1] = 0;
+	V[i][j] = -V[i-1][j];
+	}
+	break;
+
+	case 1<<2://Free Slip conditions
+	if ( B_O(flag[i][j]) )
+	{
+	U[i][j] = 0;	
+	V[i][j] = V[i+1][j];
+	V[i][j-1] = V[i+1][j-1];
+	}
+
+	if ( B_W(flag[i][j]) ) 
+	{
+	U[i-1][j] = 0;
+	V[i][j-1] = V[i-1][j-1];	
+	V[i][j] = V[i-1][j];
+	}
+
+	if ( B_N(flag[i][j]) ) 
+	{
+	V[i][j] = 0;
+	U[i-1][j] = U[i-1][j+1];
+	U[i][j] = U[i][j+1];	
+	}
+
+	if ( B_S(flag[i][j]) )
+	{
+	V[i][j-1] = 0;
+	U[i-1][j] = U[i-1][j-1];
+	U[i][j] = U[i][j-1];	
+	}
+
+	if ( B_NO(flag[i][j])  )
+	{
+	U[i][j] = 0;
+	U[i-1][j] = U[i-1][j+1];
+	V[i][j] = 0;
+	V[i][j-1] = V[i+1][j-1];
+	}
+
+	if ( B_NW(flag[i][j])  )
+	{
+	U[i-1][j] = 0;
+	U[i][j] = U[i][j+1];
+	V[i][j] = 0;
+	V[i][j-1] = V[i-1][j-1];
+	} 
+
+	if ( B_SO(flag[i][j]) ){
+	U[i][j]=0;
+	U[i-1][j] = U[i-1][j-1];
+	V[i][j-1]=0;
+	V[i][j] = V[i+1][j];
+	}
+
+	if ( B_SW(flag[i][j]) ){
+	U[i-1][j] = 0;
+	U[i][j] = U[i][j-1];
+	V[i][j-1] = 0;
+	V[i][j] = V[i-1][j];
+	}	
+	break;
+
+	case 1<<3://Assuming outflow happens in x direction.
+	U[i][j] = U[i-1][j];
+	V[i][j] = V[i-1][j];
+	V[i][j-1] = V[i-1][j-1];
+	break;
+}
+	}
+	}
+
+	spec_boundary_val( imax, jmax, U, V,flag);
+
+	printf("Boundary values for u,v set. \n");
+
+}
+
+

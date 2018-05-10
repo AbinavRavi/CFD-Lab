@@ -1,6 +1,5 @@
 #ifndef __INIT_H_
 #define __INIT_H_
-
 /**
  * This operation initializes all the local variables reading a configuration
  * file. For every variable a macro like READ_INT() is called passing it the
@@ -38,34 +37,30 @@
  * @param dt_value   time steps for output (after how many time steps one should
  *                   write into the output file)
  */
-int read_parameters( 
-  const char *szFileName,
-  double *Re,
-  double *UI,
-  double *VI,
-  double *PI,
-  double *GX,
-  double *GY,
-  double *t_end,
-  double *xlength,
-  double *ylength,
-  double *dt,
-  double *dx,
-  double *dy,
-  int  *imax,
-  int  *jmax,
-  double *alpha,
-  double *omg,
-  double *tau,
-  int  *itermax,
-  double *eps,
-  double *dt_value,
-  double *TI,               
-  double *Pr,              
-  double *beta,          
-	char *Problem,
-  char *geometry
-);
+int read_parameters( const char *szFileName,       /* name of the file */
+                    double *Re,                /* reynolds number   */
+                    double *UI,                /* velocity x-direction */
+                    double *VI,                /* velocity y-direction */
+                    double *PI,                /* pressure */
+                    double *GX,                /* gravitation x-direction */
+                    double *GY,                /* gravitation y-direction */
+                    double *t_end,             /* end time */
+                    double *xlength,           /* length of the domain x-dir.*/
+                    double *ylength,           /* length of the domain y-dir.*/
+                    double *dt,                /* time step */
+                    double *dx,                /* length of a cell x-dir. */
+                    double *dy,                /* length of a cell y-dir. */
+                    int  *imax,                /* number of cells x-direction*/
+                    int  *jmax,                /* number of cells y-direction*/
+                    double *alpha,             /* uppwind differencing factor*/
+                    double *omg,               /* relaxation factor */
+                    double *tau,               /* safety factor for time step*/
+                    int  *itermax,             /* max. number of iterations  */
+		                               /* for pressure per time step */
+                    double *eps,               /* accuracy bound for pressure*/
+		    double *dt_value,		/* time for output */
+		    char *problem,
+                    char *geometry);
 
 /**
  * The arrays U,V and P are initialized to the constant values UI, VI and PI on
@@ -82,12 +77,8 @@ void init_uvp(
   double **P
 );
 
-void init_flag(
-               char* problem,
-               char* geometry
-               int imax,
-               int jmax,
-               int **Flag);
+void init_flag(const char* problem, const char* geometry, int imax, int jmax, int **flag);
+int  isfluid(int pic);
 
 #endif
 

@@ -1,5 +1,6 @@
 #include "helper.h"
 #include "init.h"
+#include <stdio.h>
 
 int read_parameters( const char *szFileName,       /* name of the file */
                     double *Re,                /* reynolds number   */
@@ -22,13 +23,9 @@ int read_parameters( const char *szFileName,       /* name of the file */
                     int  *itermax,             /* max. number of iterations  */
 		                               /* for pressure per time step */
                     double *eps,               /* accuracy bound for pressure*/
-		                double *dt_value,         /* time for output */
-                                /*for Temperature inclusion/
-                    double *TI,               /*Temperature*/
-                    double *Pr,               /*Prandtl Number*/
-                    double *beta,           /*Coefficient of Thermal Expansion*/
-	            char *problem,
-                    char *geometry)
+		    double *dt_value,		/* time for output */
+		    char *problem,
+                    char *geometry)           
 {
    READ_DOUBLE( szFileName, *xlength );
    READ_DOUBLE( szFileName, *ylength );
@@ -53,51 +50,91 @@ int read_parameters( const char *szFileName,       /* name of the file */
    READ_DOUBLE( szFileName, *GX );
    READ_DOUBLE( szFileName, *GY );
    READ_DOUBLE( szFileName, *PI );
-   READ_DOUBLE( szFileName, *TI);
-   READ_DOUBLE(szFileName, *Pr);
-   READ_DOUBLE(szFileName, *beta);
-   READ_STRING(szFileName, *problem);
-   READ_STRING(szFileName, *geometry);
+
+   READ_STRING( szFileName, problem );
+   READ_STRING( szFileName, geometry );
 
    *dx = *xlength / (double)(*imax);
    *dy = *ylength / (double)(*jmax);
-	
-	void init_uvp(
-              double UI,
-              double VI,
-              double PI,             /* from First Assignment To initialise Values*/
-              int imax,
-              int jmax,
-              double **U,
-              double **V,
-              double **P
-             ){
 
-    init_matrix(U, 0, imax ,  0, jmax+1, UI);
-    init_matrix(V, 0, imax+1, 0, jmax  , VI);
-    init_matrix(P, 0, imax+1, 0, jmax+1, PI);
-
-}
-	
-void init_flag(
-  char* problem,
-  char* geometry,
-  int imax,
-  int jmax,
-  int** Flag)
-{
-	 int **Picture = NULL;
-
-  Picture = read_pgm(geometry);
-	
-	for(int i=0; i<imax+1; i++){
-    for(int j=0; j<jmax+1; j++){
-      Flag[i][j] = Picture[i][j]; /* still need to be modified*/ /* No idea to Proceed */
-    }
-  }
-
-}
-
+   printf("Parameter file read \n");
 
    return 1;
+}
+
+
+void init_uvp(double UI, double VI, double PI, int imax, int jmax, double** U, double** V, double** P){
+	init_matrix(U ,0,imax ,0, jmax, UI);
+	init_matrix(V ,0,imax ,0, jmax, VI);
+	init_matrix(P ,0,imax ,0, jmax, PI);
+	printf("U,V,P matrices iniialized \n");
+}
+
+int  isfluid(int pic){
+	if((pic == 2)||(pic == 3)||(pic == 4))
+		return 1;
+		else return 0;
+}
+
+void init_flag(const char* problem, const char* geometry, int imax, int jmax, int **flag)
+{
+	int **pic = read_pgm(geometry);
+
+	for (int i=0; i<imax; i++)
+	{
+		for (int j=0; j<jmax; j++)
+		{
+		flag[i][j] = 0;
+		assert(pic);
+		switch(pic[i][j])
+		{
+			case 0:
+			flag[i][j] = 1<<1;
+			break;
+
+			case 1:
+			flag[i][j] = 1<<2;
+			break;
+
+			case 2:
+			flag[i][j] = 1<<3;
+			break;
+
+			case 3:
+			flag[i][j] = 1<<4;
+			break;
+
+			case 4:
+			flag[i][j] = 1<<0;
+			break;
+		}
+
+			if(!isfluid(pic[i][j]))
+			{
+				if(isfluid(pic[i+1][j]) && i<imax-1)
+				{
+				flag[i][j] |= 1<<8;
+				}
+				if(isfluid(pic[i-1][j]) && i>0)
+				{
+				flag[i][j] |= 1<<7;
+				}
+				if(isfluid(pic[i][j+1]) == 4 && j<jmax-1)
+				{
+				flag[i][j] |= 1<<5;
+				}
+				if(isfluid(pic[i][j-1]) == 4 && j>0)
+				{
+				flag[i][j] |= 1<<6;
+				}
+
+			}
+ 
+
+		}
+
+	}
+	printf("Flags set using geometry file.\n");
+
+
 }
