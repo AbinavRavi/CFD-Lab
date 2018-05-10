@@ -17,7 +17,7 @@ void calculate_dt(double Re,
 {
 
  double Umax = fabs(U[0][0]);
- 
+
    for( int i = 1 ; i <= imax ; i++ )
    {
       for( int j = 1 ; j <= jmax ; j++ )
@@ -26,9 +26,9 @@ void calculate_dt(double Re,
             Umax = fabs(U[i][j]);
       }
    }
-   
+
   double Vmax = fabs(V[0][0]);
- 
+
    for( int i = 1 ; i <= imax ; i++ )
    {
       for( int j = 1 ; j <= jmax ; j++ )
@@ -37,9 +37,9 @@ void calculate_dt(double Re,
             Vmax = fabs(V[i][j]);
       }
    }
- 
+
  double x, y, z;
- 
+
  x = (Re/2.0)*pow(((1.0/pow(dx,2.0))+(1.0/pow(dy,2.0))),-1.0);
 
  y = dx/(fabs(Umax));
@@ -67,9 +67,9 @@ void calculate_fg(double Re,
 {
 
     for(int i=0; i<imax-1; i++){
-	
+
         for(int j=0; j<jmax; j++){
-	
+
 	if((flag[i][j]&(1<<0))&flag[i+1][j]) //
 
         F[i][j]=U[i][j]+dt*(
@@ -91,7 +91,7 @@ void calculate_fg(double Re,
     }
 
     for(int i=0; i<imax; i++){
-	
+
         for(int j=0; j<jmax-1; j++){
 
 	if((flag[i][j]&(1<<0))&flag[i][j+1])
@@ -157,7 +157,7 @@ void calculate_uv(double dt,double dx,double dy,int imax, int jmax, double**U, d
 			U[i][j] = F[i][j] - (dt/dx)*(P[i+1][j]-P[i][j]);
 		}
 	}
-	
+
 	for (int i = 0; i< imax;i++)
 	{
 		for (int j=0; j<jmax-1;j++)
@@ -193,4 +193,22 @@ void calculate_rs(double dt,
     printf("RS calculated \n");
 }
 
+void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V)
+{
+  double dut_dx = (1/dx)*(((U[i][j])*(temp[i][j]+temp[i+1][j])/2)-((U[i-1][j])*(temp[i-1][j]+temp[i][j])/2))+(alpha/dx)*((fabs(U[i][j]))*((temp[i][j]-temp[i+1][j])/2) - (fabs(U[i-1][j]))*((temp[i-1][j]-temp[i][j])/2);
 
+  double dvt_dy = (1/dy)*(((V[i][j])*(temp[i][j]+temp[i][j+1])/2)-((V[i][j-1])*(temp[i][j-1]+temp[i][j])/2))+(alpha/dy)*((fabs(V[i][j]))*((temp[i][j]-temp[i][j+1])/2) - (fabs(V[i][j-1]))*((temp[i][j-1]-temp[i][j])/2);
+
+  double dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
+
+  double dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
+
+  double Z = ((1/Re*Pr)*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy);
+
+  for (int i = 0; i< imax;i++){
+    for (int j=0;j<jmax;j++){
+      temp[i][j] = temp[i][j]+ (dt*Z);
+    }
+  }
+
+}

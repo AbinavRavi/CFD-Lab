@@ -25,7 +25,11 @@ int read_parameters( const char *szFileName,       /* name of the file */
                     double *eps,               /* accuracy bound for pressure*/
 		    double *dt_value,		/* time for output */
 		    char *problem,
-                    char *geometry)           
+                    char *geometry
+                  double **temp
+                double *Pr
+                double *TI
+                double *beta)           
 {
    READ_DOUBLE( szFileName, *xlength );
    READ_DOUBLE( szFileName, *ylength );
@@ -129,7 +133,7 @@ void init_flag(const char* problem, const char* geometry, int imax, int jmax, in
 				}
 
 			}
- 
+
 
 		}
 
