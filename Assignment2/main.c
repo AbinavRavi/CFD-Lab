@@ -50,9 +50,28 @@ int main(int argn, char** args){
     printf("4. Fluid Trap \n");
     printf("5. rayleigh-Benard Convection \n");
     int select;
-    scanf();
+    scanf("%d",&select);
     //location of input file
-    const char* filename = "cavity100.dat";
+    const char* filename = "0";
+    switch(select)
+    {
+    case 1:
+    filename = "karman_vortex.dat";
+    break;
+    case 2:
+    filename = "step_flow.dat";
+    break;
+    case 3:
+    filename = "natural_convection.dat";
+    break;
+    case 4:
+    filename = "fluid_trap.dat";
+    break;
+    case 5:
+    filename = "RB_convection.dat";
+    break;
+    }
+
     //define parameter variables
     double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
@@ -80,13 +99,25 @@ int main(int argn, char** args){
     double T_h;
     double T_c;
     double beta;
-    char *problem = "karman-vortex";
-    char *geometry = "channel-bfs.pgm";
+    char *problem = "step_flow";
+    char *geometry = "step_flow.pgm";
     //Read and assign the parameter values from file
-    int pseudo = read_parameters(filename, &imax, &jmax, &xlength, &ylength, 
+    read_parameters(filename, &imax, &jmax, &xlength, &ylength, 
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
 			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy);
-	pseudo++;
+
+    
+    int include_temp = 1;
+    if(((select==1)||(select==2)))
+	{
+		if( (Pr!=0)||(TI!=0)||(T_h!=0)||(T_c!=0)||(beta!=0) ){
+		char szBuff[80];
+        sprintf( szBuff, "Input file incompatible. Please check .dat file. \n");
+        ERROR( szBuff );
+		}
+		else  include_temp = 0;
+	}
+
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     printf("PROGRESS: Starting matrix allocation... \n");
     double **P = matrix(0, imax-1, 0, jmax-1);
@@ -96,13 +127,22 @@ int main(int argn, char** args){
     double **G = matrix(0, imax-1, 0, jmax-1);
     double **RS = matrix(0, imax-1, 0, jmax-1);
     int **flag = imatrix(0, imax-1, 0, jmax-1);
+	if(include_temp) double **temp = matrix(0, imax-1, 0, jmax-1);
     printf("PROGRESS: Matrices allocated on heap... \n \n");
 
     //Initilize flags
     init_flag(problem,geometry, imax, jmax, flag);
 
     //Initialize the U, V and P
-    init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
+    if(include_temp)
+	{
+		init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, temp, flag);
+	}
+	else
+	{
+		init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
+	}
+
 
     printf("PROGRESS: Starting the flow simulation...\n");
     double t=0; int n=0; int n1=0;
@@ -164,3 +204,9 @@ int main(int argn, char** args){
     
 }
 
+
+/*Things to do:
+read parameter
+write temp and obstructions to vtk filename
+assert function
+*/
