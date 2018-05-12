@@ -84,7 +84,8 @@ void calculate_dt(
   int jmax,
   double **U,
   double **V,
-  double Pr
+  double Pr,
+  int include_temp
 );
 
 

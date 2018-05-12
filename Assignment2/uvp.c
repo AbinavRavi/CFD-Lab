@@ -13,7 +13,7 @@ void calculate_dt(double Re,
                   int imax,
                   int jmax,
                   double **U,
-                  double **V,double Pr)
+                  double **V,double Pr, int include_temp)
 {
 
  double Umax = fabs(U[0][0]);
@@ -46,14 +46,18 @@ void calculate_dt(double Re,
 
  z = dy/(fabs(Vmax));
  
- w = (Re*Pr/2.0)*(((dx*dx)*(dy*dy)/((dx*dx)+(dy*dy))));
+  double min = fmin(x,y);
+    min = fmin(min,z);
 
- double minA = fmin(x,y);
- double minB = fmin(minA,z);
- double minC = fmin(minB,w);
+ if(include_temp){
+ w = (Re*Pr/2.0)*(((dx*dx)*(dy*dy)/((dx*dx)+(dy*dy))));
+    min = fmin(min,w);
+ }
+
+ 
  if( (tau > 0) && (tau < 1))
  {
-   *dt = tau * minB;
+   *dt = tau * min;
  }
 }
 
