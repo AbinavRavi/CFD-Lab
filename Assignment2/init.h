@@ -38,29 +38,34 @@
  *                   write into the output file)
  */
 int read_parameters( const char *szFileName,       /* name of the file */
-                    double *Re,                /* reynolds number   */
-                    double *UI,                /* velocity x-direction */
+		    int  *imax,                /* number of cells x-direction*/
+                    int  *jmax,                /* number of cells y-direction*/ 
+		    double *xlength,           /* length of the domain x-dir.*/
+                    double *ylength,           /* length of the domain y-dir.*/
+		    double *dt,                /* time step */
+		    double *t_end,             /* end time */
+		    double *tau,               /* safety factor for time step*/
+		    double *dt_value,		/* time for output */
+		    double *eps,               /* accuracy bound for pressure*/
+		    double *omg,               /* relaxation factor */
+		    double *alpha,             /* uppwind differencing factor*/
+                    int  *itermax,             /* max. number of iterations  */
+		    double *GX,                /* gravitation x-direction */
+                    double *GY,                /* gravitation y-direction */
+		    double *Re,                /* reynolds number   */
+                    double *Pr,
+		    double *UI,                /* velocity x-direction */
                     double *VI,                /* velocity y-direction */
                     double *PI,                /* pressure */
-                    double *GX,                /* gravitation x-direction */
-                    double *GY,                /* gravitation y-direction */
-                    double *t_end,             /* end time */
-                    double *xlength,           /* length of the domain x-dir.*/
-                    double *ylength,           /* length of the domain y-dir.*/
-                    double *dt,                /* time step */
-                    double *dx,                /* length of a cell x-dir. */
-                    double *dy,                /* length of a cell y-dir. */
-                    int  *imax,                /* number of cells x-direction*/
-                    int  *jmax,                /* number of cells y-direction*/
-                    double *alpha,             /* uppwind differencing factor*/
-                    double *omg,               /* relaxation factor */
-                    double *tau,               /* safety factor for time step*/
-                    int  *itermax,             /* max. number of iterations  */
-		                               /* for pressure per time step */
-                    double *eps,               /* accuracy bound for pressure*/
-		    double *dt_value,		/* time for output */
-		    char *problem,
-                    char *geometry);
+       		    double *TI,
+		    double *T_h,
+		    double *T_c,
+		    double *beta,
+		    double *dx,                /* length of a cell x-dir. */
+                    double *dy                /* length of a cell y-dir. */
+                    		                               /* for pressure per time step */
+
+);
 
 /**
  * The arrays U,V and P are initialized to the constant values UI, VI and PI on
@@ -74,10 +79,26 @@ void init_uvp(
   int jmax,
   double **U,
   double **V,
-  double **P
+  double **P,
+  int **flag
 );
 
-void init_flag(const char* problem, const char* geometry, int imax, int jmax, int **flag);
+void init_uvpt(
+double UI,
+double VI, 
+double PI, 
+double TI, 
+int imax, 
+int jmax,
+double** U, 
+double** V, 
+double** P, 
+double** T, 
+int** flag
+);
+
+void init_flag(char* problem,
+ char* geometry, int imax, int jmax, int **flag);
 int  isfluid(int pic);
 
 #endif

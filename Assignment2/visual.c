@@ -1,6 +1,8 @@
 #include "helper.h"
 #include "visual.h"
 #include <stdio.h>
+#include<sys/types.h>
+#include<sys/stat.h>
 
 
 void write_vtkFile(const char *szProblem,
@@ -18,7 +20,14 @@ void write_vtkFile(const char *szProblem,
   int i,j;
   char szFileName[80];
   FILE *fp=NULL;
-  sprintf( szFileName, "%s.%i.vtk", szProblem, timeStepNumber );
+  
+  struct stat st = {0};
+
+  if (stat("Solutions", &st) == -1) {
+    mkdir("Solutions", 0700);
+  }
+
+  sprintf( szFileName, "Solutions/%s.%i.vtk", szProblem, timeStepNumber );
   fp = fopen( szFileName, "w");
   if( fp == NULL )		       
   {
@@ -32,7 +41,7 @@ void write_vtkFile(const char *szProblem,
   write_vtkPointCoordinates(fp, imax, jmax, dx, dy);
 
   fprintf(fp,"POINT_DATA %i \n", (imax+1)*(jmax+1) );
-	
+
   fprintf(fp,"\n");
   fprintf(fp, "VECTORS velocity float\n");
   for(j = 0; j < jmax+1; j++) {

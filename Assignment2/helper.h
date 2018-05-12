@@ -26,6 +26,14 @@
  */
 extern clock_t last_timer_reset;   
 
+void write_sim_log(const char *szProblem,
+		double t,
+		double dt,
+		int timeStepNumber,
+		int SOR_iterations,
+		double residual,
+		const char* is_converged   		 
+);
 
 int min( int a, int b);	       
 int max( int a, int b);
@@ -103,7 +111,6 @@ void  errhandler( int nLine, const char *szFile, const char *szString );
 void read_string( const char* szFilename, const char* szName, char*  sValue);
 void read_int   ( const char* szFilename, const char* szName, int*    nValue);
 void read_double( const char* szFilename, const char* szName, double*  Value);
-
 
 /**
  * Writing matrices to a file.

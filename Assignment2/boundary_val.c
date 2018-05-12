@@ -1,7 +1,8 @@
 #include "boundary_val.h"
 #include <stdio.h>
 
-void spec_boundary_val(int imax,int jmax,double **U,double **V,int **flag){
+void spec_boundary_val(int imax,int jmax,double **U,double **V,int **flag)
+{
 	for(int i = 0; i<imax; ++i)
 	{
 		for(int j = 0; j<jmax; ++j)
@@ -186,7 +187,7 @@ void boundaryvalues(int imax,int jmax,double **U,double **V,int **flag)
 
 	//spec_boundary_val( imax, jmax, U, V,flag);
 
-	printf("Boundary values for u,v set. \n");
+	//printf("Boundary values for u,v set. \n");
 
 }
 

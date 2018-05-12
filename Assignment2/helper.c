@@ -2,6 +2,41 @@
 #include <errno.h>
 #include <stdio.h>
 #include "helper.h"
+#include<string.h>
+
+/* ----------------------------------------------------------------------- */
+/*                             write log file                              */
+/* ----------------------------------------------------------------------- */
+void write_sim_log(const char *szProblem,
+		double t,
+		double dt,
+		int timeStepNumber,
+		int SOR_iterations,
+		double residual,
+		const char* is_converged   		 
+) {
+  
+  char szFileName[80];
+  FILE *fp = NULL;
+  sprintf( szFileName, "%s.log", szProblem );
+  fp = fopen( szFileName, "w");
+  if( fp == NULL )
+  {
+    char szBuff[80];
+    sprintf( szBuff, "Failed to open %s", szFileName );
+    ERROR( szBuff );
+    return;
+  }
+             
+fprintf(fp, "%f %f %d %d %f %s \n", t, dt, timeStepNumber, SOR_iterations, residual, is_converged);
+
+  if( fclose(fp) )
+  {
+    char szBuff[80];
+    sprintf( szBuff, "Failed to close %s", szFileName );
+    ERROR( szBuff );
+  }
+}
 /* ----------------------------------------------------------------------- */
 /*                             auxiliary functions                         */
 /* ----------------------------------------------------------------------- */
@@ -163,8 +198,7 @@ void read_string( const char* szFileName, const char* szVarName, char*   pVariab
 	szValue = find_string( szFileName, szVarName +1 );
     else
 	szValue = find_string( szFileName, szVarName );
-    
-    if( sscanf( szValue, "%s", pVariable) == 0)
+    	if( sscanf( szValue, "%s", pVariable) == 0)
 	READ_ERROR("wrong format", szVarName, szFileName,0);
 
     printf( "File: %s\t\t%s%s= %s\n", szFileName, 
@@ -176,16 +210,15 @@ void read_string( const char* szFileName, const char* szVarName, char*   pVariab
 void read_int( const char* szFileName, const char* szVarName, int* pVariable)
 {
     char* szValue = NULL;	/* string containing the read variable value */
-
+    
     if( szVarName  == 0 )  ERROR("null pointer given as varable name" );
     if( szFileName == 0 )  ERROR("null pointer given as filename" );
     if( pVariable  == 0 )  ERROR("null pointer given as variable" );
-
+    
     if( szVarName[0] == '*' )
 	szValue = find_string( szFileName, szVarName +1 );
     else
 	szValue = find_string( szFileName, szVarName );
-    
     if( sscanf( szValue, "%d", pVariable) == 0)
 	READ_ERROR("wrong format", szVarName, szFileName, 0);
 
@@ -331,9 +364,9 @@ double **matrix( int nrl, int nrh, int ncl, int nch )
 {
    int i;
    int nrow = nrh - nrl + 1;	/* compute number of lines */
-   printf("Debug: nrow = %d \n",nrow);
+
    int ncol = nch - ncl + 1;	/* compute number of columns */
-   printf("Debug: ncol = %d \n",ncol);
+   printf("nrow = %d \n, ncol = %d \n",nrow, ncol);
    
    double **pArray  = (double **) malloc((size_t)( nrow * sizeof(double*)) );
    double  *pMatrix = (double *)  malloc((size_t)( nrow * ncol * sizeof( double )));
@@ -456,7 +489,6 @@ int **read_pgm(const char *filename)
 
     /* read the width and height */
     sscanf(line,"%d %d\n",&xsize,&ysize);
-
     printf("Image size: %d x %d\n", xsize,ysize);
 
     /* read # of gray levels */
@@ -468,9 +500,9 @@ int **read_pgm(const char *filename)
     printf("Image initialised...\n");
 
     /* read pixel row by row */
-    for(j1=1; j1 < ysize+1; j1++)
+    for(j1=0; j1 < ysize; j1++)
     {
-	    for (i1=1; i1 < xsize+1; i1++)
+	    for (i1=0; i1 < xsize; i1++)
 	    {
 	        int byte;
             fscanf(input, "%d", &byte);
@@ -482,12 +514,14 @@ int **read_pgm(const char *filename)
 	        }
 	        else
 	        {
-		        pic[i1][ysize+1-j1] = byte;
-		        printf("%d,%d: %d\n", i1,ysize+1-j1,byte);
+		        pic[i1][ysize-1-j1] = byte;
+		        //printf("%d,%d: %d\n", i1,ysize+1-j1,byte);
+			printf("%d",byte);
 	        }
 	     }
+	printf("\n");
     }
-    for (i1 = 0; i1 < xsize+2; i1++)
+    /*for (i1 = 0; i1 < xsize+2; i1++)
     {
         pic[i1][0] = 0;
     }
@@ -499,10 +533,9 @@ int **read_pgm(const char *filename)
     {
         pic[0][j1] = 0;
         pic[xsize+1][j1] = 0;
-    }
+    }*/
 
     /* close file */
     fclose(input);
-    
     return pic;
 }

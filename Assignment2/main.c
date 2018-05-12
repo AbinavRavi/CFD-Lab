@@ -42,9 +42,17 @@
  */
 int main(int argn, char** args){
 
+    printf("Assignment-2, Group D \n");
+    printf("Please select the problem from the list below by typing 1-5 \n");
+    printf("1. Karman Vortex Street \n");
+    printf("2. Flow over a Step \n");
+    printf("3. Natural Convection \n");
+    printf("4. Fluid Trap \n");
+    printf("5. rayleigh-Benard Convection \n");
+    int select;
+    scanf();
     //location of input file
     const char* filename = "cavity100.dat";
-    printf("Debug: begin \n");
     //define parameter variables
     double Re;                /* reynolds number   */
     double UI;                /* velocity x-direction */
@@ -67,73 +75,82 @@ int main(int argn, char** args){
     				/* for pressure per time step */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
-    char* problem ="0";
-    char* geometry ="0";
-printf("Debug: 1 \n");
+    double Pr;
+    double TI;
+    double T_h;
+    double T_c;
+    double beta;
+    char *problem = "karman-vortex";
+    char *geometry = "channel-bfs.pgm";
     //Read and assign the parameter values from file
-    int pseudo;
-	
-	pseudo = read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
-				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
-                                &alpha, &omg, &tau, &itermax, &eps, &dt_value, problem, geometry);
-							
+    int pseudo = read_parameters(filename, &imax, &jmax, &xlength, &ylength, 
+			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
+			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy);
 	pseudo++;
-	//printf("Debug: jmax:  %d\n", jmax);							
-	printf("Debug: file read \n");
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
-    double **P = matrix(0, imax, 0, jmax);
-    double **U = matrix(0, imax, 0, jmax);
-    double **V = matrix(0, imax, 0, jmax);
-    double **F = matrix(0, imax, 0, jmax);
-    double **G = matrix(0, imax, 0, jmax);
-    double **RS = matrix(0, imax, 0, jmax);
-    int **flag = imatrix(0, imax, 0, jmax);
-									//printf("Debug: Matrix allocated on heap \n");
+    printf("PROGRESS: Starting matrix allocation... \n");
+    double **P = matrix(0, imax-1, 0, jmax-1);
+    double **U = matrix(0, imax-1, 0, jmax-1);
+    double **V = matrix(0, imax-1, 0, jmax-1);
+    double **F = matrix(0, imax-1, 0, jmax-1);
+    double **G = matrix(0, imax-1, 0, jmax-1);
+    double **RS = matrix(0, imax-1, 0, jmax-1);
+    int **flag = imatrix(0, imax-1, 0, jmax-1);
+    printf("PROGRESS: Matrices allocated on heap... \n \n");
+
+    //Initilize flags
+    init_flag(problem,geometry, imax, jmax, flag);
+
     //Initialize the U, V and P
-    init_uvp(UI, VI, PI, imax, jmax, U, V, P);
-									//printf("Debug: init_uvp called \n");
-	int n = 0; //
-	double t = 0;
-	//int n1=0;
+    init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
 
-    init_flag(problem, geometry, imax, jmax, flag);
-
+    printf("PROGRESS: Starting the flow simulation...\n");
+    double t=0; int n=0; int n1=0;
     while (t < t_end) {
+        const char* is_converged = "Yes";
+	calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
+   	printf("t = %f ,dt = %f, ",t,dt);
+							
+    	boundaryvalues(imax, jmax, U, V, flag);
 
-    calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
-    //printf("%f \n",dt);							
-    boundaryvalues(imax, jmax, U, V, flag);
-    spec_boundary_val(imax, jmax, U, V, flag);
-								
-    calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag);
+    	spec_boundary_val(imax, jmax, U, V, flag);
+			
+    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag);
 													
-    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
+    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
 													
 	int it = 0;
-
 	double res = 10.0;
 
-    do {
+    	do {
 
-    	sor(omg,dx,dy,imax,jmax,P,RS,&res,flag);
+    		sor(omg,dx,dy,imax,jmax,P,RS,&res,flag);
     	
-	++it;
+		++it;
 
     	} while(it<itermax && res>eps);
+	printf("SOR itertions = %d ,residual = %f \n", it-1, res);
+	if((it==itermax)&&(res>eps)){
+		printf("WARNING: Iteration limit reached before convergence. \n");
+		is_converged = "No";
+	}
+  	write_sim_log(problem, t, dt, n, it-1, res, is_converged);
 
-  	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
+	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
 	
-  	/*if (t >= n1*dt_value)
+  	if (t >= n1*dt_value)
   	{
-   		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
-		printf("%f SECONDS COMPLETED \n",n1*dt_value);
+   		write_vtkFile("solution", n,xlength,ylength,imax-2,jmax-2,dx,dy,U,V,P);
+		printf("writing result at %f SECONDS COMPLETED \n",n1*dt_value);
     		n1=n1+ 1;
     		continue;
-  	}*/
-    t =t+ dt;
-    n = n+ 1;
+  	}
+    	t =t+ dt;
+    	n = n+ 1;
     }
-	//printf("%f \n",U[(int)((double)imax/2)][(int)(7*(double)jmax/8)]);
+    printf("PROGRESS: flow simulation completed...\n");
+
+    printf("PROGRESS: Freeing allocated memory...\n");
     //Free memory
     free_matrix( P, 0, imax, 0, jmax);
     free_matrix( U, 0, imax, 0, jmax);
@@ -142,8 +159,8 @@ printf("Debug: 1 \n");
     free_matrix( G, 0, imax, 0, jmax);
     free_matrix(RS, 0, imax, 0, jmax);
     free_imatrix(flag, 0, imax, 0, jmax);
+    printf("PROGRESS: allocated memory released...\n");
   return -1;
-
+    
 }
-
 
