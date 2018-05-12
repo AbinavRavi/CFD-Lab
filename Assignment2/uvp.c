@@ -210,23 +210,7 @@ void calculate_rs(double dt,
 void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag)
 {   
     int i = 0,j = 0;
-  double dut_dx = (1/dx)*(((U[i][j])*(temp[i][j]+temp[i+1][j])/2)-((U[i-1][j])*(temp[i-1][j]+temp[i][j])/2))+(alpha/dx)*((fabs(U[i][j]))*((temp[i][j]-temp[i+1][j])/2) - (fabs(U[i-1][j]))*((temp[i-1][j]-temp[i][j])/2));
-
-  double dvt_dy = (1/dy)*(((V[i][j])*(temp[i][j]+temp[i][j+1])/2)-((V[i][j-1])*(temp[i][j-1]+temp[i][j])/2))+(alpha/dy)*((fabs(V[i][j]))*((temp[i][j]-temp[i][j+1])/2) - (fabs(V[i][j-1]))*((temp[i][j-1]-temp[i][j])/2));
-
-  double dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
-
-  double dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
-
-  double Z = ((1/Re*Pr)*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy);
-
-  for (int i = 0; i< imax;i++){
-    for (int j=0;j<jmax;j++){
-      temp[i][j] = temp[i][j]+ (dt*Z);
-    }
-  }
-
-  for(int i = 0; i<imax; ++i)
+    for(int i = 0; i<imax; ++i)
   {
   	for(int j = 0; j<jmax; ++j)
   	{
@@ -251,6 +235,23 @@ void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double
   		if (flag[i][j]&(1<<4) ) temp[i][j] = 0;
   	}
   }
+  double dut_dx = (1/dx)*(((U[i][j])*(temp[i][j]+temp[i+1][j])/2)-((U[i-1][j])*(temp[i-1][j]+temp[i][j])/2))+(alpha/dx)*((fabs(U[i][j]))*((temp[i][j]-temp[i+1][j])/2) - (fabs(U[i-1][j]))*((temp[i-1][j]-temp[i][j])/2));
+
+  double dvt_dy = (1/dy)*(((V[i][j])*(temp[i][j]+temp[i][j+1])/2)-((V[i][j-1])*(temp[i][j-1]+temp[i][j])/2))+(alpha/dy)*((fabs(V[i][j]))*((temp[i][j]-temp[i][j+1])/2) - (fabs(V[i][j-1]))*((temp[i][j-1]-temp[i][j])/2));
+
+  double dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
+
+  double dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
+
+  double Z = ((1/Re*Pr)*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy);
+
+  for (int i = 0; i< imax;i++){
+    for (int j=0;j<jmax;j++){
+      temp[i][j] = temp[i][j]+ (dt*Z);
+    }
+  }
+
+  
 
 }
 
