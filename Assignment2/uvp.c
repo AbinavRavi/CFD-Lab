@@ -13,7 +13,7 @@ void calculate_dt(double Re,
                   int imax,
                   int jmax,
                   double **U,
-                  double **V)
+                  double **V,double Pr)
 {
 
  double Umax = fabs(U[0][0]);
@@ -38,16 +38,19 @@ void calculate_dt(double Re,
       }
    }
  
- double x, y, z;
+ double x, y, z, w;
  
  x = (Re/2.0)*pow(((1.0/pow(dx,2.0))+(1.0/pow(dy,2.0))),-1.0);
 
  y = dx/(fabs(Umax));
 
  z = dy/(fabs(Vmax));
+ 
+ w = (Re*Pr/2.0)*(((dx*dx)*(dy*dy)/((dx*dx)+(dy*dy))));
 
  double minA = fmin(x,y);
  double minB = fmin(minA,z);
+ double minC = fmin(minB,w);
  if( (tau > 0) && (tau < 1))
  {
    *dt = tau * minB;
@@ -62,7 +65,7 @@ void calculate_fg(double Re,
 		 double dx, double dy,
 		 int imax, int jmax,
 		 double** U, double** V,
-		 double** F, double** G,int **flag)
+		 double** F, double** G,int **flag,double beta, double** temp)
 {
 
 
@@ -115,7 +118,7 @@ for(int i = 0; i<imax; ++i)
                     +alpha*(fabs(V[i][j]+V[i+1][j])*(U[i][j]-U[i][j+1])-fabs(V[i][j-1]+V[i+1][j-1])*(U[i][j-1]-U[i][j]))
                              )
                 //Gravity component in x-direction
-                +GX);
+                +GX*((beta*dt)*(temp[i][j]+temp[i+1][j]))/2);
 	}
 	}
     }
@@ -140,7 +143,7 @@ for(int i = 0; i<imax; ++i)
                         (pow((V[i][j]+V[i][j+1]),2.0) - pow((V[i][j-1]+V[i][j]),2.0))
                         +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
                             )
-                +GY);
+                +GY*(((beta*dt)*(temp[i][j]+temp[i][j+1]))/2));
 
 	}
         }
@@ -200,4 +203,50 @@ void calculate_rs(double dt,
     //printf("RS calculated \n");
 }
 
+void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag)
+{   
+    int i = 0,j = 0;
+  double dut_dx = (1/dx)*(((U[i][j])*(temp[i][j]+temp[i+1][j])/2)-((U[i-1][j])*(temp[i-1][j]+temp[i][j])/2))+(alpha/dx)*((fabs(U[i][j]))*((temp[i][j]-temp[i+1][j])/2) - (fabs(U[i-1][j]))*((temp[i-1][j]-temp[i][j])/2));
+
+  double dvt_dy = (1/dy)*(((V[i][j])*(temp[i][j]+temp[i][j+1])/2)-((V[i][j-1])*(temp[i][j-1]+temp[i][j])/2))+(alpha/dy)*((fabs(V[i][j]))*((temp[i][j]-temp[i][j+1])/2) - (fabs(V[i][j-1]))*((temp[i][j-1]-temp[i][j])/2));
+
+  double dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
+
+  double dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
+
+  double Z = ((1/Re*Pr)*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy);
+
+  for (int i = 0; i< imax;i++){
+    for (int j=0;j<jmax;j++){
+      temp[i][j] = temp[i][j]+ (dt*Z);
+    }
+  }
+
+  for(int i = 0; i<imax; ++i)
+  {
+  	for(int j = 0; j<jmax; ++j)
+  	{
+  		if ( B_O(flag[i][j]) )  temp[i][j] = temp[i+1][j];
+
+  		if ( B_W(flag[i][j]) )  temp[i][j] = temp[i-1][j];
+
+  		if ( B_N(flag[i][j]) )  temp[i][j] = temp[i][j+1];
+
+  		if ( B_S(flag[i][j]) )  temp[i][j] = temp[i][j-1];
+
+  		if ( B_NO(flag[i][j]) ) temp[i][j] = (temp[i][j+1] + temp[i+1][j])/2;
+
+  		if ( B_NW(flag[i][j]) ) temp[i][j] = (temp[i][j+1] + temp[i-1][j])/2;
+
+  		if ( B_SO(flag[i][j]) ) temp[i][j] = (temp[i][j-1] + temp[i+1][j])/2;
+
+  		if ( B_SW(flag[i][j]) ) temp[i][j] = (temp[i][j-1] + temp[i-1][j])/2;
+
+  		if (flag[i][j]&(1<<3) ) temp[i][j] = temp[imax/2][jmax/2];
+
+  		if (flag[i][j]&(1<<4) ) temp[i][j] = 0;
+  	}
+  }
+
+}
 

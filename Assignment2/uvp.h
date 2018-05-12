@@ -40,7 +40,9 @@ void calculate_fg(
   double **V,
   double **F,
   double **G,
-  int **flag
+  int **flag,
+  double beta,
+  double **temp
 );
 
 
@@ -81,7 +83,8 @@ void calculate_dt(
   int imax,
   int jmax,
   double **U,
-  double **V
+  double **V,
+  double Pr
 );
 
 
@@ -111,5 +114,7 @@ void calculate_uv(
   double **P,
   int **flag
 );
+
+void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag);
 
 #endif
