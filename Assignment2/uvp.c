@@ -69,7 +69,8 @@ void calculate_fg(double Re,
 		 double dx, double dy,
 		 int imax, int jmax,
 		 double** U, double** V,
-		 double** F, double** G,int **flag,double beta, double** temp)
+		 double** F, double** G,int **flag,
+		 double beta, double** temp, int include_temp)
 {
 
 
@@ -102,12 +103,15 @@ for(int i = 0; i<imax; ++i)
 }
 
 
-    for(int i=0; i<imax-1; i++){
-	
-        for(int j=0; j<jmax; j++){
-	//printf("%d %d \n",i,j);
-	if((flag[i][j]&(1<<0))&flag[i+1][j]){
-
+    for(int i=0; i<imax-1; i++)
+    {
+        for(int j=0; j<jmax; j++)
+	{
+	if((flag[i][j]&(1<<0))&flag[i+1][j])
+	//if((flag[i][j]&(1<<0))&flag[i+1][j]||((flag[i+1][j]&(1<<3)) && (flag[i][j]&(1<<0))))
+	{
+	if(include_temp)
+	{
         F[i][j]=U[i][j]+dt*(
                 //Central difference scheme for second derivatives
                 (1/Re)*((U[i-1][j]-2*U[i][j]+U[i+1][j])/pow(dx,2.0)+(U[i][j-1]-2*U[i][j]+U[i][j+1])/pow(dy,2.0))
@@ -124,16 +128,36 @@ for(int i = 0; i<imax; ++i)
                 //Gravity component in x-direction
                 +GX*((beta*dt)*(temp[i][j]+temp[i+1][j]))/2);
 	}
+	else
+	{
+        F[i][j]=U[i][j]+dt*(
+                //Central difference scheme for second derivatives
+                (1/Re)*((U[i-1][j]-2*U[i][j]+U[i+1][j])/pow(dx,2.0)+(U[i][j-1]-2*U[i][j]+U[i][j+1])/pow(dy,2.0))
+                //Modified Donor Cell method on convective term (d(u^2)/dx)
+                -(1/dx)*0.25*(
+                        (pow((U[i+1][j]+U[i][j]),2.0) - pow((U[i-1][j]+U[i][j]),2.0))
+                        +alpha*(fabs(U[i+1][j]+U[i][j])*(U[i][j]-U[i+1][j])-fabs(U[i-1][j]+U[i][j])*(U[i-1][j]-U[i][j]))
+                             )
+                 //Modified Donor Cell method on convective term (d(uv)/dy)
+                -(1/dy)*0.25*(
+                        ((V[i][j]+V[i+1][j])*(U[i][j]+U[i][j+1])- (V[i][j-1]+V[i+1][j-1])*(U[i][j-1]+U[i][j]))
+                    +alpha*(fabs(V[i][j]+V[i+1][j])*(U[i][j]-U[i][j+1])-fabs(V[i][j-1]+V[i+1][j-1])*(U[i][j-1]-U[i][j]))
+                             )+GX);		
+	}
+
+	}
 	}
     }
 
 
-    for(int i=0; i<imax; i++){
-	
-        for(int j=0; j<jmax-1; j++){
-	//printf("%d \n",flag[i][j]);
-	if((flag[i][j]&(1<<0))&flag[i][j+1]){
-
+    for(int i=0; i<imax; i++)
+	{
+        for(int j=0; j<jmax-1; j++)
+	{
+	if((flag[i][j]&(1<<0))&flag[i][j+1])
+	{
+	if(include_temp)
+	{
         G[i][j]=V[i][j]+dt*(
                 //Central difference Scheme for second derivatives
                 (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
@@ -148,7 +172,24 @@ for(int i = 0; i<imax; ++i)
                         +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
                             )
                 +GY*(((beta*dt)*(temp[i][j]+temp[i][j+1]))/2));
-
+	}
+	else
+	{
+        G[i][j]=V[i][j]+dt*(
+                //Central difference Scheme for second derivatives
+                (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
+                //Modified Donor cell method for d(uv)/dx
+                -(1/dx)*0.25*(
+                        ((U[i][j]+U[i][j+1])*(V[i][j]+V[i+1][j])- (U[i-1][j]+U[i-1][j+1])*(V[i-1][j]+V[i][j]))
+                    +alpha*(fabs(U[i][j]+U[i][j+1])*(V[i][j]-V[i+1][j])-fabs(U[i-1][j]+U[i-1][j+1])*(V[i-1][j]-V[i][j]))
+                            )
+                //modified Donor cell method for d(v^2)/dy
+                -(1/dy)*0.25*(
+                        (pow((V[i][j]+V[i][j+1]),2.0) - pow((V[i][j-1]+V[i][j]),2.0))
+                        +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
+                            )+GY);
+	
+	}
 	}
         }
 
@@ -207,11 +248,11 @@ void calculate_rs(double dt,
     //printf("RS calculated \n");
 }
 
-void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag)
+void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,
+		double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, const char* problem)
 {   
-    int i = 0,j = 0;
     for(int i = 0; i<imax; ++i)
-  {
+    {
   	for(int j = 0; j<jmax; ++j)
   	{
   		if ( B_O(flag[i][j]) )  temp[i][j] = temp[i+1][j];
@@ -230,28 +271,81 @@ void calculate_temp(double **temp,double Pr, double Re, int imax,int jmax,double
 
   		if ( B_SW(flag[i][j]) ) temp[i][j] = (temp[i][j-1] + temp[i-1][j])/2;
 
-  		if (flag[i][j]&(1<<3) ) temp[i][j] = temp[imax/2][jmax/2];
+  		if (flag[i][j]&(1<<3) ) temp[i][j] = temp[i-1][j];
 
-  		if (flag[i][j]&(1<<4) ) temp[i][j] = 0;
+  		if (flag[i][j]&(1<<4) ) temp[i][j] = TI;
   	}
   }
-  double dut_dx = (1/dx)*(((U[i][j])*(temp[i][j]+temp[i+1][j])/2)-((U[i-1][j])*(temp[i-1][j]+temp[i][j])/2))+(alpha/dx)*((fabs(U[i][j]))*((temp[i][j]-temp[i+1][j])/2) - (fabs(U[i-1][j]))*((temp[i-1][j]-temp[i][j])/2));
 
-  double dvt_dy = (1/dy)*(((V[i][j])*(temp[i][j]+temp[i][j+1])/2)-((V[i][j-1])*(temp[i][j-1]+temp[i][j])/2))+(alpha/dy)*((fabs(V[i][j]))*((temp[i][j]-temp[i][j+1])/2) - (fabs(V[i][j-1]))*((temp[i][j-1]-temp[i][j])/2));
+if( strcmp(problem,"natural_convection") )
+{
+	for(int j=0; j<jmax; j++)
+	{
+		temp[0][j] = 2*T_h - temp[1][j];
+		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
+	}
+}
 
-  double dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
+if( strcmp(problem,"fluid_trap") )
+{
+	for(int j=0; j<jmax; j++)
+	{
+		temp[0][j] = 2*T_h - temp[1][j];
+		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
+	}
+}
 
-  double dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
+if( strcmp(problem,"rb_convection") )
+{
+	for(int i=0; i<imax; i++)
+	{
+		temp[i][0] = 2*T_h - temp[i][1];
+		temp[i][jmax-1] = 2*T_c - temp[i][jmax-2];		
+	}
 
-  double Z = ((1/Re*Pr)*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy);
+}
+
+double dut_dx;
+double dvt_dy;
+double dt2_dx2;
+double dt2_dy2;
+double Z;
+  for (int i = 0; i< imax;i++){
+    for (int j=0;j<jmax;j++){
+
+		if(flag[i][j]&(1<<0)){
+
+  dut_dx = (1/dx)*( (U[i][j]*(temp[i][j]+temp[i+1][j])/2)-(U[i-1][j]*(temp[i-1][j]+temp[i][j])/2))+(alpha/dx)*(
+		(fabs(U[i][j])*(temp[i][j]-temp[i+1][j])/2) - (fabs(U[i-1][j])*(temp[i-1][j]-temp[i][j])/2)
+	);
+
+  dvt_dy = (1/dy)*( (V[i][j]*(temp[i][j]+temp[i][j+1])/2)-(V[i][j-1]*(temp[i][j-1]+temp[i][j])/2) )+(alpha/dy)*(
+		(fabs(V[i][j])*(temp[i][j]-temp[i][j+1])/2) - (fabs(V[i][j-1])*(temp[i][j-1]-temp[i][j])/2)
+	);
+
+  dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
+
+  dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
+
+  Z = ((1/Re*Pr)*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy);
+
+      temp1[i][j] = temp[i][j]+ (dt*Z);
+    }
+  }
+	
+}
 
   for (int i = 0; i< imax;i++){
     for (int j=0;j<jmax;j++){
-      temp[i][j] = temp[i][j]+ (dt*Z);
+
+		if(flag[i][j]&(1<<0)){
+
+		temp[i][j] = temp1[i][j];
     }
   }
-
-  
+	
+}
 
 }
+
 

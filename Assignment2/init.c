@@ -2,7 +2,7 @@
 #include "init.h"
 #include <stdio.h>
 
-int read_parameters( const char *szFileName,       /* name of the file */
+void read_parameters( const char *szFileName,       /* name of the file */
 		    int  *imax,                /* number of cells x-direction*/
                     int  *jmax,                /* number of cells y-direction*/ 
 		    double *xlength,           /* length of the domain x-dir.*/
@@ -69,7 +69,6 @@ int read_parameters( const char *szFileName,       /* name of the file */
    *dy = *ylength / (double)(*jmax);
 
    printf("PROGRESS: .dat file read... \n \n");
- return 1;
 
 }
 
@@ -87,11 +86,6 @@ void init_uvp(double UI, double VI, double PI, int imax, int jmax,
 				V[i][j] = VI;
 				P[i][j] = PI;
 			}
-			/*else{
-				U[i][j] = 0;
-				V[i][j] = 0;
-				P[i][j] = 0;		
-			}*/
 		}
 	}
 	printf("PROGRESS: U,V,P matrices initialized... \n \n");
@@ -111,12 +105,6 @@ void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax,
 				P[i][j] = PI;
 				T[i][j] = TI;
 			}
-			/*else{
-				U[i][j] = 0;
-				V[i][j] = 0;
-				P[i][j] = 0;
-				T[i][j] = 0;		
-			}*/
 		}
 	}
 	printf("PROGRESS: U,V,P,T matrices initialized... \n \n");
@@ -127,10 +115,90 @@ int  isfluid(int pic){
 		else {return 0;}
 }
 
-//int assert(int imax, int jmax, int **pic){
+void call_assert_error()
+{
+	char szBuff[80];
+       	sprintf( szBuff, "Geometry is forbidden. Consider modifying .pgm file. \n");
+        ERROR( szBuff );
+}
 
+// fluid on opposite sides Left and right
+int forbidden_LR(int **pic, int i, int j)
+{
+	if( (pic[i-1][j]==4)&&(pic[i+1][j]==4) ) {return 1;}
+	else {return 0;}
+}
 
-//}
+// fluid on opposite sides top and bottom
+int forbidden_TB(int **pic, int i, int j)
+{
+	if( (pic[i][j+1]==4)&&(pic[i][j-1]==4) ) {return 1;}
+	else {return 0;}	
+}
+
+//Avoids any forbidden configuration
+void forbid_assert(int imax, int jmax, int **pic)
+{
+	//inner obstacles
+	for(int i=1; i<imax-1; i++)
+	{
+		for(int j=1; j<jmax-1; j++)
+		{
+			if(pic[i][j]!=4)
+			{
+				if(forbidden_LR(pic,i,j)||forbidden_TB(pic,i,j))
+				{
+					call_assert_error();
+				}
+			}
+		}
+	}
+	//left boundary
+		for(int j=1; j<jmax-1; j++)
+		{
+			if(pic[0][j]!=4)
+			{
+				if(forbidden_TB(pic,0,j))
+				{
+					call_assert_error();
+				}
+			}
+		}
+	//right boundary
+		for(int j=1; j<jmax-1; j++)
+		{
+			if(pic[imax-1][j]!=4)
+			{
+				if(forbidden_TB(pic,imax-1,j))
+				{
+					call_assert_error();
+				}
+			}
+		}
+	//top boundary
+	for(int i=1; i<imax-1; i++)
+	{
+			if(pic[i][jmax-1]!=4)
+			{
+				if(forbidden_LR(pic,i,jmax-1))
+				{
+					call_assert_error();
+				}
+			}
+	}
+	//bottom boundary
+	for(int i=1; i<imax-1; i++)
+	{
+			if(pic[i][0]!=4)
+			{
+				if(forbidden_LR(pic,i,0))
+				{
+					call_assert_error();
+				}
+			}
+	}
+
+}
 
 
 void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
@@ -145,7 +213,8 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
 
 		flag[i][j] = 0;
 
-		//assert(pic);
+		forbid_assert(imax, jmax, pic);
+
 		switch(pic[i][j])
 		{
 			case 0: //fluid
@@ -194,23 +263,7 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
 		}
 
 	}
-	/*printf("\n");
-	for(int j=0;j<jmax;j++){
 
-		for(int i=0;i<imax;i++){
-
-			printf("%d",pic[i][j]);
-		}
-		printf("\n");	
-	}
-	for(int j=0;j<jmax;j++){
-
-		for(int i=0;i<imax;i++){
-
-			printf("%d ",flag[i][j]);
-		}
-		printf("\n");	
-	}*/
 	printf("PROGRESS: flags set using .pgm file...\n \n");
 
 

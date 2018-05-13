@@ -16,7 +16,7 @@ void write_vtkFile(const char *szProblem,
                  double **U,
                  double **V,
                  double **P,
-                 double **T) {
+		 double **T, int include_temp) {
   
   int i,j;
   char szFileName[80];
@@ -41,35 +41,41 @@ void write_vtkFile(const char *szProblem,
   write_vtkHeader( fp, imax, jmax, dx, dy);
   write_vtkPointCoordinates(fp, imax, jmax, dx, dy);
 
-  fprintf(fp,"POINT_DATA %i \n", (imax+1)*(jmax+1) );
+  fprintf(fp,"POINT_DATA %i \n", (imax)*(jmax) );
 
   fprintf(fp,"\n");
   fprintf(fp, "VECTORS velocity float\n");
-  for(j = 0; j < jmax+1; j++) {
-    for(i = 0; i < imax+1; i++) {
+  for(j = 0; j < jmax; j++) {
+    for(i = 0; i < imax; i++) {
       fprintf(fp, "%f %f 0\n", (U[i][j] + U[i][j+1]) * 0.5, (V[i][j] + V[i+1][j]) * 0.5 );
     }
   }
 
+if(include_temp)
+{
+  fprintf(fp,"\n");
+  fprintf(fp,"CELL_DATA %i \n", ((imax)*(jmax)) );
+  fprintf(fp, "SCALARS pressure temparature float 2 \n"); 
+  fprintf(fp, "LOOKUP_TABLE default \n");
+  for(j = 0; j < jmax; j++) {
+    for(i = 0; i < imax; i++) {
+      fprintf(fp, "%f\n", P[i][j] );
+    }
+  }
+}
+else
+{
   fprintf(fp,"\n");
   fprintf(fp,"CELL_DATA %i \n", ((imax)*(jmax)) );
   fprintf(fp, "SCALARS pressure float 1 \n"); 
   fprintf(fp, "LOOKUP_TABLE default \n");
-  for(j = 1; j < jmax+1; j++) {
-    for(i = 1; i < imax+1; i++) {
+  for(j = 0; j < jmax; j++) {
+    for(i = 0; i < imax; i++) {
       fprintf(fp, "%f\n", P[i][j] );
     }
   }
+}
 
-  fprintf(fp,"\n");
-  fprintf(fp,"CELL_DATA %i \n", ((imax)*(jmax)) );
-  fprintf(fp, "SCALARS temperature float 1 \n"); 
-  fprintf(fp, "LOOKUP_TABLE default \n");
-  for(j = 1; j < jmax+1; j++) {
-    for(i = 1; i < imax+1; i++) {
-      fprintf(fp, "%f\n", T[i][j] );
-    }
-  }
   if( fclose(fp) )
   {
     char szBuff[80];

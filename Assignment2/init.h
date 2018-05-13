@@ -37,7 +37,7 @@
  * @param dt_value   time steps for output (after how many time steps one should
  *                   write into the output file)
  */
-int read_parameters( const char *szFileName,       /* name of the file */
+void read_parameters( const char *szFileName,       /* name of the file */
 		    int  *imax,                /* number of cells x-direction*/
                     int  *jmax,                /* number of cells y-direction*/ 
 		    double *xlength,           /* length of the domain x-dir.*/
@@ -97,9 +97,18 @@ double** T,
 int** flag
 );
 
-void init_flag(char* problem,
- char* geometry, int imax, int jmax, int **flag);
 int  isfluid(int pic);
+
+void call_assert_error();
+
+int forbidden_LR(int **pic, int i, int j);
+
+int forbidden_TB(int **pic, int i, int j);
+
+void forbid_assert(int imax, int jmax, int **pic);
+
+void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag);
+
 
 #endif
 

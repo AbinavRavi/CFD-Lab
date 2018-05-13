@@ -60,7 +60,7 @@ void boundaryvalues(int imax,int jmax,double **U,double **V,int **flag)
 	if ( B_O(flag[i][j]) )
 	{
 	U[i][j] = 0;
-	V[i][j-1] = -V[i+1][j-1];	
+	V[i][j-1] = -V[i+1][j-1];		
 	V[i][j] = -V[i+1][j];
 	}
 
