@@ -17,7 +17,6 @@ rm_OBJ = helper.o\
 	sor.o\
       	main.o\
       	visual.o\
-	-rf Solutions\
 	sim\
 	*.log
 	

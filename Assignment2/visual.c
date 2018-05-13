@@ -1,8 +1,6 @@
 #include "helper.h"
 #include "visual.h"
 #include <stdio.h>
-#include<sys/types.h>
-#include<sys/stat.h>
 
 
 void write_vtkFile(const char *szProblem,
@@ -15,20 +13,12 @@ void write_vtkFile(const char *szProblem,
 		 double dy,
                  double **U,
                  double **V,
-                 double **P,
-		 double **T, int include_temp) {
+                 double **P) {
   
   int i,j;
   char szFileName[80];
   FILE *fp=NULL;
-  
-  struct stat st = {0};
-
-  if (stat("Solutions", &st) == -1) {
-    mkdir("Solutions", 0700);
-  }
-
-  sprintf( szFileName, "Solutions/%s.%i.vtk", szProblem, timeStepNumber );
+  sprintf( szFileName, "%s.%i.vtk", szProblem, timeStepNumber );
   fp = fopen( szFileName, "w");
   if( fp == NULL )		       
   {
@@ -41,40 +31,25 @@ void write_vtkFile(const char *szProblem,
   write_vtkHeader( fp, imax, jmax, dx, dy);
   write_vtkPointCoordinates(fp, imax, jmax, dx, dy);
 
-  fprintf(fp,"POINT_DATA %i \n", (imax)*(jmax) );
-
+  fprintf(fp,"POINT_DATA %i \n", (imax+1)*(jmax+1) );
+	
   fprintf(fp,"\n");
   fprintf(fp, "VECTORS velocity float\n");
-  for(j = 0; j < jmax; j++) {
-    for(i = 0; i < imax; i++) {
+  for(j = 0; j < jmax+1; j++) {
+    for(i = 0; i < imax+1; i++) {
       fprintf(fp, "%f %f 0\n", (U[i][j] + U[i][j+1]) * 0.5, (V[i][j] + V[i+1][j]) * 0.5 );
     }
   }
 
-if(include_temp)
-{
-  fprintf(fp,"\n");
-  fprintf(fp,"CELL_DATA %i \n", ((imax)*(jmax)) );
-  fprintf(fp, "SCALARS pressure temparature float 2 \n"); 
-  fprintf(fp, "LOOKUP_TABLE default \n");
-  for(j = 0; j < jmax; j++) {
-    for(i = 0; i < imax; i++) {
-      fprintf(fp, "%f\n", P[i][j] );
-    }
-  }
-}
-else
-{
   fprintf(fp,"\n");
   fprintf(fp,"CELL_DATA %i \n", ((imax)*(jmax)) );
   fprintf(fp, "SCALARS pressure float 1 \n"); 
   fprintf(fp, "LOOKUP_TABLE default \n");
-  for(j = 0; j < jmax; j++) {
-    for(i = 0; i < imax; i++) {
+  for(j = 1; j < jmax+1; j++) {
+    for(i = 1; i < imax+1; i++) {
       fprintf(fp, "%f\n", P[i][j] );
     }
   }
-}
 
   if( fclose(fp) )
   {

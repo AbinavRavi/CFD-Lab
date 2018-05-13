@@ -26,14 +26,6 @@
  */
 extern clock_t last_timer_reset;   
 
-void write_sim_log(const char *szProblem,
-		double t,
-		double dt,
-		int timeStepNumber,
-		int SOR_iterations,
-		double residual,
-		const char* is_converged   		 
-);
 
 int min( int a, int b);	       
 int max( int a, int b);

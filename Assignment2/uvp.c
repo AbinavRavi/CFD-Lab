@@ -50,7 +50,7 @@ void calculate_dt(double Re,
     min = fmin(min,z);
 
  if(include_temp){
- w = (Re*Pr/2.0)*(((dx*dx)*(dy*dy)/((dx*dx)+(dy*dy))));
+ w = (Re*Pr/2.0)*( (dx*dx)*(dy*dy)/( (dx*dx)+(dy*dy) ) );
     min = fmin(min,w);
  }
 
@@ -107,7 +107,7 @@ for(int i = 0; i<imax; ++i)
     {
         for(int j=0; j<jmax; j++)
 	{
-	if((flag[i][j]&(1<<0))&flag[i+1][j])
+	if(((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))))
 	//if((flag[i][j]&(1<<0))&flag[i+1][j]||((flag[i+1][j]&(1<<3)) && (flag[i][j]&(1<<0))))
 	{
 	if(include_temp)
@@ -124,9 +124,9 @@ for(int i = 0; i<imax; ++i)
                 -(1/dy)*0.25*(
                         ((V[i][j]+V[i+1][j])*(U[i][j]+U[i][j+1])- (V[i][j-1]+V[i+1][j-1])*(U[i][j-1]+U[i][j]))
                     +alpha*(fabs(V[i][j]+V[i+1][j])*(U[i][j]-U[i][j+1])-fabs(V[i][j-1]+V[i+1][j-1])*(U[i][j-1]-U[i][j]))
-                             )
+                             )+GX)
                 //Gravity component in x-direction
-                +GX*((beta*dt)*(temp[i][j]+temp[i+1][j]))/2);
+                -GX*beta*dt*(temp[i][j]+temp[i+1][j])/2;
 	}
 	else
 	{
@@ -170,8 +170,8 @@ for(int i = 0; i<imax; ++i)
                 -(1/dy)*0.25*(
                         (pow((V[i][j]+V[i][j+1]),2.0) - pow((V[i][j-1]+V[i][j]),2.0))
                         +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
-                            )
-                +GY*(((beta*dt)*(temp[i][j]+temp[i][j+1]))/2));
+                            )+GY)
+                -GY*beta*dt*(temp[i][j]+temp[i][j+1])/2;
 	}
 	else
 	{
@@ -348,4 +348,44 @@ double Z;
 
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+void nullify_obstacles1(double **U, double **V, double **P, int **flag, int imax, int jmax)
+{
+
+	for (int i = 0; i< imax;i++)
+	{
+	    for (int j=0;j<jmax; j++)
+		{
+			if(flag[i][j]&( (1<<1)|(1<<2)) )
+			{
+				U[i][j] = 0;
+				V[i][j] = 0;
+				P[i][j] = 0;
+			}
+			
+		}
+	}
+
+}
+
+
+void nullify_obstacles2(double **U, double **V, double **P, double **T, int **flag, int imax, int jmax)
+{
+	for (int i = 0; i< imax;i++)
+	{
+	    for (int j=0;j<jmax; j++)
+		{
+			if(flag[i][j]&( (1<<1)|(1<<2)) )
+			{
+				U[i][j] = 0;
+				V[i][j] = 0;
+				P[i][j] = 0;
+				T[i][j] = 0;
+			}
+		}
+	}
+
+
+}
 

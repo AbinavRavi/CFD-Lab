@@ -4,39 +4,7 @@
 #include "helper.h"
 #include<string.h>
 
-/* ----------------------------------------------------------------------- */
-/*                             write log file                              */
-/* ----------------------------------------------------------------------- */
-void write_sim_log(const char *szProblem,
-		double t,
-		double dt,
-		int timeStepNumber,
-		int SOR_iterations,
-		double residual,
-		const char* is_converged   		 
-) {
-  
-  char szFileName[80];
-  FILE *fp = NULL;
-  sprintf( szFileName, "%s.log", szProblem );
-  fp = fopen( szFileName, "w");
-  if( fp == NULL )
-  {
-    char szBuff[80];
-    sprintf( szBuff, "Failed to open %s", szFileName );
-    ERROR( szBuff );
-    return;
-  }
-             
-fprintf(fp, "%f %f %d %d %f %s \n", t, dt, timeStepNumber, SOR_iterations, residual, is_converged);
 
-  if( fclose(fp) )
-  {
-    char szBuff[80];
-    sprintf( szBuff, "Failed to close %s", szFileName );
-    ERROR( szBuff );
-  }
-}
 /* ----------------------------------------------------------------------- */
 /*                             auxiliary functions                         */
 /* ----------------------------------------------------------------------- */

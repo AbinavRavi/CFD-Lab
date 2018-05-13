@@ -55,11 +55,11 @@ void read_parameters( const char *szFileName,       /* name of the file */
    READ_DOUBLE( szFileName, *GX );
    READ_DOUBLE( szFileName, *GY );
    READ_DOUBLE( szFileName, *Re );
+   READ_DOUBLE( szFileName, *Pr );
+
    READ_DOUBLE( szFileName, *UI );
    READ_DOUBLE( szFileName, *VI );
    READ_DOUBLE( szFileName, *PI );
-	
-   READ_DOUBLE( szFileName, *Pr );
    READ_DOUBLE( szFileName, *TI );
    READ_DOUBLE( szFileName, *T_h );
    READ_DOUBLE( szFileName, *T_c );
