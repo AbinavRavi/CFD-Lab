@@ -69,3 +69,6 @@ T_c		291.20
 #       temperature related values
 #--------------------------------------------
 beta		0.00179
+
+problem		P5
+geometry	P5.pgm
