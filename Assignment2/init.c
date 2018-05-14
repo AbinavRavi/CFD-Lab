@@ -204,7 +204,8 @@ void forbid_assert(int imax, int jmax, int **pic)
 void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
 {
 	printf("PROGRESS: Setting flags... \n");
-	int **pic = read_pgm(geometry);
+	int **pic = imatrix(0,imax-1,0,jmax-1);
+	pic = read_pgm(geometry);
 
 	for (int i=0; i<imax; i++)
 	{
@@ -263,7 +264,7 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
 		}
 
 	}
-
+	free_imatrix(pic, 0,imax-1,0,jmax-1);
 	printf("PROGRESS: flags set using .pgm file...\n \n");
 
 
