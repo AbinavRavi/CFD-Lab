@@ -107,7 +107,7 @@ for(int i = 0; i<imax; ++i)
     {
         for(int j=0; j<jmax; j++)
 	{
-	if(((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))))
+	if( ((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))) )
 	//if((flag[i][j]&(1<<0))&flag[i+1][j]||((flag[i+1][j]&(1<<3)) && (flag[i][j]&(1<<0))))
 	{
 	if(include_temp)
@@ -341,9 +341,10 @@ double Z;
 		if(flag[i][j]&(1<<0)){
 
 		temp[i][j] = temp1[i][j];
+			//printf("%f ",temp[i][j]);
     }
   }
-	
+//printf("\n");	
 }
 
 }

@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 
-
 /**
  * The main operation reads the configuration file, initializes the scenario and
  * contains the main loop. So here are the individual steps of the algorithm:
@@ -30,7 +29,7 @@
  *
  * @image html whole-grid.jpg
  *
- * Within the main loop the following big steps are done (for some of the
+ * Within the main loop the following big steps are done (for some of the 
  * operations a definition is defined already within uvp.h):
  *
  * - calculate_dt() Determine the maximal time step size.
@@ -46,39 +45,7 @@
  */
 int main(int argn, char** args){
 
-
-
-    //define parameter variables
-    double Re;                /* reynolds number   */
-    double UI;                /* velocity x-direction */
-    double VI;                /* velocity y-direction */
-    double PI;                /* pressure */
-    double GX;                /* gravitation x-direction */
-    double GY;                /* gravitation y-direction */
-    double t_end;             /* end time */
-    double xlength;           /* length of the domain x-dir.*/
-    double ylength;           /* length of the domain y-dir.*/
-    double dt;                /* time step */
-    double dx;                /* length of a cell x-dir. */
-    double dy;                /* length of a cell y-dir. */
-    int  imax;                /* number of cells x-direction*/
-    int  jmax;                /* number of cells y-direction*/
-    double alpha;             /* uppwind differencing factor*/
-    double omg;               /* relaxation factor */
-    double tau;               /* safety factor for time step*/
-    int  itermax;             /* max. number of iterations  */
-    				/* for pressure per time step */
-    double eps;               /* accuracy bound for pressure*/
-    double dt_value;           /* time for output */
-    double Pr;
-    double TI;
-    double T_h;
-    double T_c;
-    double beta;
-    char *problem;
-    char *geometry;
-
-		printf("Start of Run... \n");
+	printf("Start of Run... \n");
 			printf("Assignment-2, Group D \n");
 			printf("Please select the problem from the list below by typing 1-5 \n");
 			printf("1. Karman Vortex Street \n");
@@ -87,6 +54,8 @@ int main(int argn, char** args){
 			printf("4. Fluid Trap \n");
 			printf("5. Rayleigh-Benard Convection \n");
 			int select;
+			char* geometry;
+			char* problem;
 			scanf("%d",&select);
 			//select problem
 			const char* filename = "0";
@@ -117,10 +86,38 @@ int main(int argn, char** args){
 			problem = "rb_convection";
 			geometry = "rb_convection.pgm";
 			break;
-			}
+}
+
+    //define parameter variables
+    double Re;                /* reynolds number   */
+    double UI;                /* velocity x-direction */
+    double VI;                /* velocity y-direction */
+    double PI;                /* pressure */
+    double GX;                /* gravitation x-direction */
+    double GY;                /* gravitation y-direction */
+    double t_end;             /* end time */
+    double xlength;           /* length of the domain x-dir.*/
+    double ylength;           /* length of the domain y-dir.*/
+    double dt;                /* time step */
+    double dx;                /* length of a cell x-dir. */
+    double dy;                /* length of a cell y-dir. */
+    int  imax;                /* number of cells x-direction*/
+    int  jmax;                /* number of cells y-direction*/
+    double alpha;             /* uppwind differencing factor*/
+    double omg;               /* relaxation factor */
+    double tau;               /* safety factor for time step*/
+    int  itermax;             /* max. number of iterations  */
+    				/* for pressure per time step */
+    double eps;               /* accuracy bound for pressure*/
+    double dt_value;           /* time for output */
+    double Pr;
+    double TI;
+    double T_h;
+    double T_c;
+    double beta;
 
     //Read and assign the parameter values from file
-    read_parameters(filename, &imax, &jmax, &xlength, &ylength,
+    read_parameters(filename, &imax, &jmax, &xlength, &ylength, 
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
 			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy);
 
@@ -149,7 +146,7 @@ int main(int argn, char** args){
 	double **T;
     double **T1;
 	if(include_temp)
-	{
+	{	
 		T = matrix(0, imax-1, 0, jmax-1);
 		T1= matrix(0, imax-1, 0, jmax-1);
 	}
@@ -184,30 +181,30 @@ int main(int argn, char** args){
 	sprintf( LogFileName, "%s.log", problem );
 	fp_log = fopen( LogFileName, "w");
 	fprintf(fp_log, "It.no.|   Time    |time step |SOR iterations | residual | SOR converged \n");
-
+	
 
     printf("PROGRESS: Starting the flow simulation...\n");
     double t=0; int n=0; int n1=0;
-
+    
 	while (t < t_end) {
         const char* is_converged = "Yes";
-
+		
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr, include_temp);
-   		printf("t = %f ,dt = %f, ",t,dt);
-
+   		printf("t = %f ,dt = %f, ",t,dt);						
+    	
 		boundaryvalues(imax, jmax, U, V, flag);
 
 		if(include_temp)
 		{
 			calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, problem);
 		}
-		//	printf("debug \n" );
-    	spec_boundary_val(imax, jmax, U, V, flag);
-			//	printf("debug \n" );
-    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T, include_temp);
-				//printf("debug \n" );
-    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
 
+    	spec_boundary_val(imax, jmax, U, V, flag);
+
+    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T, include_temp);
+									
+    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
+											
 		int it = 0;
 		double res = 10.0;
 
@@ -233,12 +230,12 @@ int main(int argn, char** args){
 		else
 		{
 			nullify_obstacles2(U, V, P, T, flag, imax, jmax);
-		}
+		}	
 
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
    			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
-							dx ,dy ,U ,V ,P);
+							dx ,dy ,U ,V ,P,T,include_temp);
 
 			printf("writing result at %f seconds \n",n1*dt_value);
     		n1=n1+ 1;
@@ -266,10 +263,9 @@ int main(int argn, char** args){
 
 	printf("PROGRESS: End of Run.\n");
   return -1;
-
+    
 }
 
 /*Things to do:
 read parameter
-write temp and obstructions to vtk filename
 */

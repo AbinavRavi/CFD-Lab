@@ -13,9 +13,7 @@ Before execution, this folder should contain the following:
  
    
 INSTRUCTIONS OF USE:
--> to select the problem, go to main and comment/uncomment the .dat files. For ex.
-	const char* filename = cavity100.dat;
-	//const char* filename = karman-vortex.dat;
+-> select the problem from shell by typing 1 to 5.
 
 -> use command 'make' to execute, and 'make clean' to go back to original state.
 
