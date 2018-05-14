@@ -48,14 +48,14 @@ int main(int argn, char** args){
 	printf("Start of Run... \n");
 			printf("Assignment-2, Group D \n");
 			printf("Please select the problem from the list below by typing 1-5 \n");
-			printf("1. Karman Vortex Street \n");
-			printf("2. Flow over a Step \n");
-			printf("3. Natural Convection \n");
-			printf("4. Fluid Trap \n");
-			printf("5. Rayleigh-Benard Convection \n");
+			printf("P1. Karman Vortex Street \n");
+			printf("P2. Flow over a Step \n");
+			printf("P3. Natural Convection \n");
+			printf("P4. Fluid Trap \n");
+			printf("P5. Rayleigh-Benard Convection \n");
 			int select;
-			char* geometry;
-			char* problem;
+			char* geometry = (char*)(malloc(sizeof(char)*6));
+			char* problem = (char*)(malloc(sizeof(char)*2));
 			scanf("%d",&select);
 			//select problem
 			const char* filename = "0";
@@ -63,28 +63,23 @@ int main(int argn, char** args){
 			{
 			case 1:
 			filename = "karman_vortex.dat";
-			problem = "karman_vortex";
-			geometry = "karman_vortex.pgm";
+
 			break;
 			case 2:
 			filename = "step_flow.dat";
-			problem = "step_flow";
-			geometry = "step_flow.pgm";
+
 			break;
 			case 3:
 			filename = "natural_convection.dat";
-			problem = "natural_convection";
-			geometry = "natural_convection.pgm";
+
 			break;
 			case 4:
 			filename = "fluid_trap.dat";
-			problem = "fluid_trap";
-			geometry = "fluid_trap.pgm";
+
 			break;
 			case 5:
 			filename = "rb_convection.dat";
-			problem = "rb_convection";
-			geometry = "rb_convection.pgm";
+
 			break;
 }
 
@@ -119,8 +114,8 @@ int main(int argn, char** args){
     //Read and assign the parameter values from file
     read_parameters(filename, &imax, &jmax, &xlength, &ylength, 
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
-			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy);
-
+			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy, problem, geometry);
+printf("Debig \n");
 	//include_temp =1 => include temperature equations for solving
     int include_temp = 1;
     if(((select==1)||(select==2)))
@@ -259,6 +254,8 @@ int main(int argn, char** args){
     free_imatrix(flag, 0, imax-1, 0, jmax-1);
 	if(include_temp) { free_matrix(T, 0, imax-1, 0, jmax-1);
 			   free_matrix(T1, 0, imax-1, 0, jmax-1); }
+	free(geometry);
+	free(problem);
     printf("PROGRESS: allocated memory released...\n \n");
 
 	printf("PROGRESS: End of Run.\n");

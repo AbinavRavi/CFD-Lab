@@ -68,3 +68,7 @@ T_c   -0.5
 #       temperature related values
 #--------------------------------------------
 beta  0.00063
+
+
+problem		P4
+geometry	P4.pgm

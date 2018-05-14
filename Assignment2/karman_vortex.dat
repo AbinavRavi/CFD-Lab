@@ -64,4 +64,6 @@ T_h		0
 T_c		0
 beta		0
 
+problem		P1
+geometry	P1.pgm
 

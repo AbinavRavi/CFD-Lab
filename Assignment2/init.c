@@ -27,8 +27,9 @@ void read_parameters( const char *szFileName,       /* name of the file */
 		    double *T_c,
 		    double *beta,
 		    double *dx,                /* length of a cell x-dir. */
-                    double *dy                /* length of a cell y-dir. */
-                    		                               /* for pressure per time step */
+            double *dy,               /* length of a cell y-dir. */
+            char *problem,
+		    char *geometry
 
 )           
 {
@@ -64,6 +65,9 @@ void read_parameters( const char *szFileName,       /* name of the file */
    READ_DOUBLE( szFileName, *T_h );
    READ_DOUBLE( szFileName, *T_c );
    READ_DOUBLE( szFileName, *beta );
+	
+	READ_STRING( szFileName, problem);
+	READ_STRING( szFileName, geometry);
 
    *dx = *xlength / (double)(*imax);
    *dy = *ylength / (double)(*jmax);

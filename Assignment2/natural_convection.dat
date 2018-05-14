@@ -67,3 +67,5 @@ T_c		0.0
 
 beta		0.00021
 
+problem		P3
+geometry	P3.pgm
