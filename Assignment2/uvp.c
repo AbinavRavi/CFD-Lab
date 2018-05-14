@@ -171,7 +171,7 @@ for(int i = 0; i<imax; ++i)
                         (pow((V[i][j]+V[i][j+1]),2.0) - pow((V[i][j-1]+V[i][j]),2.0))
                         +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
                             )+GY)
-                -GY*beta*dt*(temp[i][j]+temp[i][j+1])/2;
+                -GY*beta*dt*(temp[i][j]+temp[i][j+1])*0.5;
 	}
 	else
 	{
@@ -205,9 +205,9 @@ void calculate_uv(double dt,double dx,double dy,int imax, int jmax,
 {
 	for (int i = 0; i< imax-1;i++)
 	{
-		for (int j=0; j<jmax;j++)
+		for (int j = 0; j<jmax;j++)
 		{
-			if((flag[i][j]&(1<<0))&flag[i+1][j])
+			if(((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))))
 			//update the U component of velocity
 			U[i][j] = F[i][j] - (dt/dx)*(P[i+1][j]-P[i][j]);
 		}
@@ -215,7 +215,7 @@ void calculate_uv(double dt,double dx,double dy,int imax, int jmax,
 	
 	for (int i = 0; i< imax;i++)
 	{
-		for (int j=0; j<jmax-1;j++)
+		for (int j = 0; j<jmax-1;j++)
 		{
 			if((flag[i][j]&(1<<0))&flag[i][j+1])
 			//update the V component of velocity
@@ -284,6 +284,12 @@ if( strcmp(problem,"natural_convection") )
 		temp[0][j] = 2*T_h - temp[1][j];
 		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
 	}
+	/*for(int i=0; i<imax; i++)
+	{
+		temp[i][0] = temp[i][1];
+		temp[i][jmax-1] = temp[i][jmax-2];		
+	}*/
+	
 }
 
 if( strcmp(problem,"fluid_trap") )
@@ -293,6 +299,11 @@ if( strcmp(problem,"fluid_trap") )
 		temp[0][j] = 2*T_h - temp[1][j];
 		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
 	}
+	/*for(int i=0; i<imax; i++)
+	{
+		temp[i][0] = temp[i][1];
+		temp[i][jmax-1] = temp[i][jmax-2];		
+	}*/
 }
 
 if( strcmp(problem,"rb_convection") )
@@ -303,6 +314,12 @@ if( strcmp(problem,"rb_convection") )
 		temp[i][jmax-1] = 2*T_c - temp[i][jmax-2];		
 	}
 
+	/*for(int j=0; j<jmax; j++)
+	{
+		temp[0][j] = temp[1][j];
+		temp[imax-1][j] = temp[imax-2][j];		
+	}*/
+
 }
 
 double dut_dx;
@@ -310,26 +327,29 @@ double dvt_dy;
 double dt2_dx2;
 double dt2_dy2;
 double Z;
-  for (int i = 0; i< imax;i++){
-    for (int j=0;j<jmax;j++){
+for (int i = 0; i< imax;i++)
+{
+    for (int j=0; j<jmax;j++)
+	{
 
-		if(flag[i][j]&(1<<0)){
+	if(flag[i][j]&((1<<0)|(1<<3)|(1<<4)))
+	{
 
-  dut_dx = (1/dx)*( (U[i][j]*(temp[i][j]+temp[i+1][j])/2)-(U[i-1][j]*(temp[i-1][j]+temp[i][j])/2))+(alpha/dx)*(
-		(fabs(U[i][j])*(temp[i][j]-temp[i+1][j])/2) - (fabs(U[i-1][j])*(temp[i-1][j]-temp[i][j])/2)
-	);
+  		dut_dx = (1/dx)*( (U[i][j]*(temp[i][j]+temp[i+1][j])*0.5)-(U[i-1][j]*(temp[i-1][j]+temp[i][j])*0.5))+(alpha/dx)*(
+				(fabs(U[i][j])*(temp[i][j]-temp[i+1][j])*0.5) - (fabs(U[i-1][j])*(temp[i-1][j]-temp[i][j])*0.5)
+				);
 
-  dvt_dy = (1/dy)*( (V[i][j]*(temp[i][j]+temp[i][j+1])/2)-(V[i][j-1]*(temp[i][j-1]+temp[i][j])/2) )+(alpha/dy)*(
-		(fabs(V[i][j])*(temp[i][j]-temp[i][j+1])/2) - (fabs(V[i][j-1])*(temp[i][j-1]-temp[i][j])/2)
-	);
+  		dvt_dy = (1/dy)*( (V[i][j]*(temp[i][j]+temp[i][j+1])*0.5)-(V[i][j-1]*(temp[i][j-1]+temp[i][j])*0.5) )+(alpha/dy)*(
+				(fabs(V[i][j])*(temp[i][j]-temp[i][j+1])*0.5) - (fabs(V[i][j-1])*(temp[i][j-1]-temp[i][j])*0.5)
+				);
 
-  dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
+  		dt2_dx2 = (temp[i+1][j] - 2*temp[i][j] + temp[i-1][j])/(dx*dx);
 
-  dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
+  		dt2_dy2 = (temp[i][j+1] - 2*temp[i][j] +temp[i][j-1])/(dy*dy);
 
-  Z = ((1/Re*Pr)*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy);
+  		Z = (1/(Re*Pr))*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy;
 
-      temp1[i][j] = temp[i][j]+ (dt*Z);
+      	temp1[i][j] = temp[i][j]+ (dt*Z);
     }
   }
 	
@@ -338,10 +358,10 @@ double Z;
   for (int i = 0; i< imax;i++){
     for (int j=0;j<jmax;j++){
 
-		if(flag[i][j]&(1<<0)){
+		if(flag[i][j]&((1<<0)|(1<<3)|(1<<4))){
 
 		temp[i][j] = temp1[i][j];
-			//printf("%f ",temp[i][j]);
+			//printf("%d ",(int)temp[i][j]);
     }
   }
 //printf("\n");	

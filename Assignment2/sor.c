@@ -52,7 +52,7 @@ for(int i = 0; i<imax; ++i)
 	if(flag[i][j]&(1<<0)){
 
       P[i][j] = (1.0-omg)*P[i][j]
-              + coeff*(( P[i+1][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]+P[i][j-1])/(dy*dy) - RS[i][j]);
+              + coeff*( (P[i+1][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]+P[i][j-1])/(dy*dy) - RS[i][j]);
 	}
     }
   }

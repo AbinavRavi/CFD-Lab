@@ -115,7 +115,7 @@ int main(int argn, char** args){
     read_parameters(filename, &imax, &jmax, &xlength, &ylength, 
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
 			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy, problem, geometry);
-printf("Debig \n");
+
 	//include_temp =1 => include temperature equations for solving
     int include_temp = 1;
     if(((select==1)||(select==2)))
@@ -138,7 +138,7 @@ printf("Debig \n");
     double **G = matrix(0, imax-1, 0, jmax-1);
     double **RS = matrix(0, imax-1, 0, jmax-1);
     int **flag = imatrix(0, imax-1, 0, jmax-1);
-	double **T;
+    double **T;
     double **T1;
 	if(include_temp)
 	{	
@@ -182,7 +182,7 @@ printf("Debig \n");
     double t=0; int n=0; int n1=0;
     
 	while (t < t_end) {
-        const char* is_converged = "Yes";
+        char* is_converged = "Yes";
 		
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr, include_temp);
    		printf("t = %f ,dt = %f, ",t,dt);						
@@ -192,6 +192,7 @@ printf("Debig \n");
 		if(include_temp)
 		{
 			calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, problem);
+			
 		}
 
     	spec_boundary_val(imax, jmax, U, V, flag);
