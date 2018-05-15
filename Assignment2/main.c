@@ -29,7 +29,7 @@
  *
  * @image html whole-grid.jpg
  *
- * Within the main loop the following big steps are done (for some of the 
+ * Within the main loop the following big steps are done (for some of the
  * operations a definition is defined already within uvp.h):
  *
  * - calculate_dt() Determine the maximal time step size.
@@ -50,9 +50,10 @@ int main(int argn, char** args){
 			printf("Please select the problem from the list below by typing 1-5 \n");
 			printf("P1. Karman Vortex Street \n");
 			printf("P2. Flow over a Step \n");
-			printf("P3. Natural Convection \n");
-			printf("P4. Fluid Trap \n");
-			printf("P5. Rayleigh-Benard Convection \n");
+			printf("P3. Natural Convection low reynolds number \n");
+			printf("P4. Natural Convection High reynolds number\n" );
+			printf("P5. Fluid Trap \n");
+			printf("P6. Rayleigh-Benard Convection \n");
 			int select;
 			char* geometry = (char*)(malloc(sizeof(char)*6));
 			char* problem = (char*)(malloc(sizeof(char)*2));
@@ -71,13 +72,17 @@ int main(int argn, char** args){
 			break;
 			case 3:
 			filename = "natural_convection.dat";
-
 			break;
+
 			case 4:
+			filename = "natural_convection2.dat";
+			break;
+
+			case 5:
 			filename = "fluid_trap.dat";
 
 			break;
-			case 5:
+			case 6:
 			filename = "rb_convection.dat";
 
 			break;
@@ -112,7 +117,7 @@ int main(int argn, char** args){
     double beta;
 
     //Read and assign the parameter values from file
-    read_parameters(filename, &imax, &jmax, &xlength, &ylength, 
+    read_parameters(filename, &imax, &jmax, &xlength, &ylength,
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
 			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy, problem, geometry);
 
@@ -141,7 +146,7 @@ int main(int argn, char** args){
     double **T;
     double **T1;
 	if(include_temp)
-	{	
+	{
 		T = matrix(0, imax-1, 0, jmax-1);
 		T1= matrix(0, imax-1, 0, jmax-1);
 	}
@@ -176,31 +181,31 @@ int main(int argn, char** args){
 	sprintf( LogFileName, "%s.log", problem );
 	fp_log = fopen( LogFileName, "w");
 	fprintf(fp_log, "It.no.|   Time    |time step |SOR iterations | residual | SOR converged \n");
-	
+
 
     printf("PROGRESS: Starting the flow simulation...\n");
     double t=0; int n=0; int n1=0;
-    
+
 	while (t < t_end) {
         char* is_converged = "Yes";
-		
+
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr, include_temp);
-   		printf("t = %f ,dt = %f, ",t,dt);						
-    	
+   		printf("t = %f ,dt = %f, ",t,dt);
+
 		boundaryvalues(imax, jmax, U, V, flag);
 
 		if(include_temp)
 		{
 			calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, select);
-			
+
 		}
 
     	spec_boundary_val(imax, jmax, U, V, flag);
 
     	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T, include_temp);
-									
+
     	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
-											
+
 		int it = 0;
 		double res = 10.0;
 
@@ -226,7 +231,7 @@ int main(int argn, char** args){
 		else
 		{
 			nullify_obstacles2(U, V, P, T, flag, imax, jmax);
-		}	
+		}
 
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
@@ -261,7 +266,7 @@ int main(int argn, char** args){
 
 	printf("PROGRESS: End of Run.\n");
   return -1;
-    
+
 }
 
 /*Things to do:

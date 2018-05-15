@@ -17,7 +17,7 @@ void calculate_dt(double Re,
 {
 
  double Umax = fabs(U[0][0]);
- 
+
    for( int i = 0 ; i < imax ; i++ )
    {
       for( int j = 0 ; j < jmax ; j++ )
@@ -26,9 +26,9 @@ void calculate_dt(double Re,
             Umax = fabs(U[i][j]);
       }
    }
-   
+
   double Vmax = fabs(V[0][0]);
- 
+
    for( int i = 0 ; i < imax ; i++ )
    {
       for( int j = 0 ; j < jmax ; j++ )
@@ -37,15 +37,15 @@ void calculate_dt(double Re,
             Vmax = fabs(V[i][j]);
       }
    }
- 
+
  double x, y, z, w;
- 
+
  x = (Re/2.0)*pow(((1.0/pow(dx,2.0))+(1.0/pow(dy,2.0))),-1.0);
 
  y = dx/(fabs(Umax));
 
  z = dy/(fabs(Vmax));
- 
+
   double min = fmin(x,y);
     min = fmin(min,z);
 
@@ -54,7 +54,7 @@ void calculate_dt(double Re,
     min = fmin(min,w);
  }
 
- 
+
  if( (tau > 0) && (tau < 1))
  {
    *dt = tau * min;
@@ -142,7 +142,7 @@ for(int i = 0; i<imax; ++i)
                 -(1/dy)*0.25*(
                         ((V[i][j]+V[i+1][j])*(U[i][j]+U[i][j+1])- (V[i][j-1]+V[i+1][j-1])*(U[i][j-1]+U[i][j]))
                     +alpha*(fabs(V[i][j]+V[i+1][j])*(U[i][j]-U[i][j+1])-fabs(V[i][j-1]+V[i+1][j-1])*(U[i][j-1]-U[i][j]))
-                             )+GX);		
+                             )+GX);
 	}
 
 	}
@@ -188,7 +188,7 @@ for(int i = 0; i<imax; ++i)
                         (pow((V[i][j]+V[i][j+1]),2.0) - pow((V[i][j-1]+V[i][j]),2.0))
                         +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
                             )+GY);
-	
+
 	}
 	}
         }
@@ -212,7 +212,7 @@ void calculate_uv(double dt,double dx,double dy,int imax, int jmax,
 			U[i][j] = F[i][j] - (dt/dx)*(P[i+1][j]-P[i][j]);
 		}
 	}
-	
+
 	for (int i = 0; i< imax;i++)
 	{
 		for (int j = 0; j<jmax-1;j++)
@@ -250,7 +250,7 @@ void calculate_rs(double dt,
 
 void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,
 		double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, int select)
-{   
+{
     for(int i = 0; i<imax; ++i)
     {
   	for(int j = 0; j<jmax; ++j)
@@ -283,23 +283,31 @@ switch(select)
 	for(int j=0; j<jmax; j++)
 	{
 		temp[0][j] = 2*T_h - temp[1][j];
-		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
-	}
-	break;
-	
-	case 4:
-	for(int j=0; j<jmax; j++)
-	{
-		temp[0][j] = 2*T_h - temp[1][j];
-		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
+		temp[imax-1][j] = 2*T_c - temp[imax-2][j];
 	}
 	break;
 
+  case 4:
+  for(int j=0; j<jmax; j++)
+  {
+    temp[0][j] = 2*T_h - temp[1][j];
+    temp[imax-1][j] = 2*T_c - temp[imax-2][j];
+  }
+  break;
+
 	case 5:
+	for(int j=0; j<jmax; j++)
+	{
+		temp[0][j] = 2*T_h - temp[1][j];
+		temp[imax-1][j] = 2*T_c - temp[imax-2][j];
+	}
+	break;
+
+	case 6:
 	for(int i=0; i<imax; i++)
 	{
 		temp[i][0] = 2*T_h - temp[i][1];
-		temp[i][jmax-1] = 2*T_c - temp[i][jmax-2];		
+		temp[i][jmax-1] = 2*T_c - temp[i][jmax-2];
 	}
 
 }
@@ -334,7 +342,7 @@ for (int i = 0; i< imax;i++)
       	temp1[i][j] = temp[i][j]+ (dt*Z);
     }
   }
-	
+
 }
 
   for (int i = 0; i< imax;i++){
@@ -346,7 +354,7 @@ for (int i = 0; i< imax;i++)
 			//printf("%d ",(int)temp[i][j]);
     }
   }
-//printf("\n");	
+//printf("\n");
 }
 
 }
@@ -366,7 +374,7 @@ void nullify_obstacles1(double **U, double **V, double **P, int **flag, int imax
 				V[i][j] = 0;
 				P[i][j] = 0;
 			}
-			
+
 		}
 	}
 
@@ -391,4 +399,3 @@ void nullify_obstacles2(double **U, double **V, double **P, double **T, int **fl
 
 
 }
-
