@@ -117,7 +117,7 @@ void calculate_uv(
   int **flag
 );
 
-void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, const char* problem);
+void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, int select);
 
 
 

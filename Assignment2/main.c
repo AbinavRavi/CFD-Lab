@@ -191,7 +191,7 @@ int main(int argn, char** args){
 
 		if(include_temp)
 		{
-			calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, problem);
+			calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, select);
 			
 		}
 

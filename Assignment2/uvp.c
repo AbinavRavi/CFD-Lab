@@ -50,7 +50,7 @@ void calculate_dt(double Re,
     min = fmin(min,z);
 
  if(include_temp){
- w = (Re*Pr/2.0)*( (dx*dx)*(dy*dy)/( (dx*dx)+(dy*dy) ) );
+ w = ((Re*Pr)/2.0)*( (dx*dx)*(dy*dy)/( (dx*dx)+(dy*dy) ) );
     min = fmin(min,w);
  }
 
@@ -249,7 +249,7 @@ void calculate_rs(double dt,
 }
 
 void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,
-		double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, const char* problem)
+		double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, int select)
 {   
     for(int i = 0; i<imax; ++i)
     {
@@ -277,48 +277,30 @@ void calculate_temp(double **temp, double **temp1, double Pr, double Re, int ima
   	}
   }
 
-if( strcmp(problem,"natural_convection") )
+switch(select)
 {
+	case 3:
 	for(int j=0; j<jmax; j++)
 	{
 		temp[0][j] = 2*T_h - temp[1][j];
 		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
 	}
-	/*for(int i=0; i<imax; i++)
-	{
-		temp[i][0] = temp[i][1];
-		temp[i][jmax-1] = temp[i][jmax-2];		
-	}*/
+	break;
 	
-}
-
-if( strcmp(problem,"fluid_trap") )
-{
+	case 4:
 	for(int j=0; j<jmax; j++)
 	{
 		temp[0][j] = 2*T_h - temp[1][j];
 		temp[imax-1][j] = 2*T_c - temp[imax-2][j];		
 	}
-	/*for(int i=0; i<imax; i++)
-	{
-		temp[i][0] = temp[i][1];
-		temp[i][jmax-1] = temp[i][jmax-2];		
-	}*/
-}
+	break;
 
-if( strcmp(problem,"rb_convection") )
-{
+	case 5:
 	for(int i=0; i<imax; i++)
 	{
 		temp[i][0] = 2*T_h - temp[i][1];
 		temp[i][jmax-1] = 2*T_c - temp[i][jmax-2];		
 	}
-
-	/*for(int j=0; j<jmax; j++)
-	{
-		temp[0][j] = temp[1][j];
-		temp[imax-1][j] = temp[imax-2][j];		
-	}*/
 
 }
 
