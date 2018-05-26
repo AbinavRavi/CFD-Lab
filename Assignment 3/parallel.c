@@ -1,6 +1,7 @@
 
 #include "parallel.h"
-#include <mpi.h>
+
+#include<mpi.h>
 
 
 void Program_Message(char *txt)
@@ -23,7 +24,7 @@ void Programm_Sync(char *txt)
    int myrank;
 
    MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-   MPI_Barrier(MPI_COMM_WORLD);                             /* synchronize output */  
+   MPI_Barrier(MPI_COMM_WORLD);                             /* synchronize output */
    fprintf(stderr,"-MESSAGE- P:%2d : %s\n",myrank,txt);
    fflush(stdout);
    fflush(stderr);
@@ -47,9 +48,6 @@ void Programm_Stop(char *txt)
    exit(1);
 }
 
-
-#include<mpi.h>
-
 void init_parallel(int iproc,
                int jproc,
                int imax,
@@ -62,89 +60,37 @@ void init_parallel(int iproc,
                int *rank_l,
                int *rank_r,
                int *rank_b,
-               int *rank_t,
+               int *rankt,
                int *omg_i,
                int *omg_j,
                int num_proc)
 {
 
+  *omg_i = (*myrank % iproc) + 1;
+  *omg_j = (*myrank % jproc) + 1;
 
-for(int rank = 0;rank<num_proc;rank++)
-{
-	omg_i[rank] = (rank % iproc) + 1;
-	omg_j[rank] = (rank % jproc) + 1;
+  *il = (*omg_i-1)*(imax/iproc) + 1;
+  *ir = (*myrank!=iproc)?((*omg_i)*(imax/iproc)):imax;
 
+  *jb = (*omg_j-1)*(jmax/jproc) + 1;
+  *jt = (*myrank!=jproc)?((*omg_j)*(jmax/jproc)):jmax;
 
-	il[rank] = (omg_i[rank]-1)*(imax/iproc) + 1;
-	ir[rank] = (rank!=iproc)?(omg_i[rank]*(imax/iproc)):imax;
-	
-	jb[rank] = (omg_j[rank]-1)*(jmax/jproc) + 1;
-	jt[rank] = (rank!=jproc)?(omg_j[rank]*(jmax/jproc)):jmax;
-
-
- if((il[rank] = = 0)
+  if(*il == 0)
   {
-    rank_l[rank] = MPI_PROC_NULL;
+    *rank_l = MPI_PROC_NULL;
   }
   else
   {
-    rank_l[rank] = (rank)-1;
+    *rank_l = *myrank - 1;
   }
- 
-/* right boundary */
 
-if((ir[]) = = imax+1)
-{
-  *rank_r = MPI_PROC_NULL; 
-}
-else
-{
-  *rank_r = (*myrank)+1;
-}
-
-}
-
-
-MPI_Init(NULL, NULL);
-MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
-MPI_comm_rank(MPI_COMM_WORLD, myrank);
-
-
-
-
-
-
-
-
-
-
-
-
-
-  /*Assigning rank to neighbour for each subdomain rank_l,rank_r,rank_b,rank_t*/
-    /*left boundary*/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  if(*ir == imax+1)
+  {
+    *rank_r = MPI_PROC_NULL;
+  }
+  else
+  {
+    *rank_r = *myrank + 1;
+  }
 
 }
