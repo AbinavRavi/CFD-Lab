@@ -38,23 +38,53 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 int main(int argn, char** args){
+  
+      //location of input file
+    const char* filename = "cavity100.dat";
 
-  int iproc = 2;
-  int jproc = 3;
-  int imax = 300;
-  int jmax = 300;
+    //define parameter variables
+    double Re;                /* reynolds number   */
+    double UI;                /* velocity x-direction */
+    double VI;                /* velocity y-direction */
+    double PI;                /* pressure */
+    double GX;                /* gravitation x-direction */
+    double GY;                /* gravitation y-direction */
+    double t_end;             /* end time */
+    double xlength;           /* length of the domain x-dir.*/
+    double ylength;           /* length of the domain y-dir.*/
+    double dt;                /* time step */
+    double dx;                /* length of a cell x-dir. */
+    double dy;                /* length of a cell y-dir. */
+    int  imax;                /* number of cells x-direction*/
+    int  jmax;                /* number of cells y-direction*/
+    double alpha;             /* uppwind differencing factor*/
+    double omg;               /* relaxation factor */
+    double tau;               /* safety factor for time step*/
+    int  itermax;             /* max. number of iterations  */
+    double eps;               /* accuracy bound for pressure*/
+    double dt_value;           /* time for output */
+
+  int iproc;
+  int jproc;
   int num_proc;
-  int *myrank = (int *)malloc(sizeof(int));
-  int *il = (int *)malloc(sizeof(int));
-  int *ir = (int *)malloc(sizeof(int));
-  int *jb = (int *)malloc(sizeof(int));
-  int *jt = (int *)malloc(sizeof(int));
-  int *rank_l = (int *)malloc(sizeof(int));
-  int *rank_r = (int *)malloc(sizeof(int));
-  int *rank_b = (int *)malloc(sizeof(int));
-  int *rankt = (int *)malloc(sizeof(int));
-  int *omg_i = (int *)malloc(sizeof(int));
-  int *omg_j = (int *)malloc(sizeof(int));
+  int myrank
+  int il;
+  int ir;
+  int jb;
+  int jt;
+  int l_rank;
+  int r_rank;
+  int b_rank;
+  int t_rank;
+  int omg_i;
+  int omg_j;
+
+//Read and assign the parameter values from file
+	  read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
+				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
+                                &alpha, &omg, &tau, &itermax, &eps, &dt_value, &iproc, &jproc);
+  
+  MPI_Status *status;
 
   MPI_Init(&argn, &args);
   MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
@@ -62,14 +92,66 @@ int main(int argn, char** args){
 
 
   //Initializing the parallel parameters to broadcast
-  init_parallel(iproc, jproc, imax, jmax, myrank, il, ir, jb, jt, rank_l,
-                rank_r, rank_b, rankt, omg_i, omg_j, num_proc);
-
+  init_parallel(iproc, jproc, imax, jmax, &myrank, &il, &ir, &jb, &jt, &l_rank,
+                &r_rank, &b_rank, &t_rank, &omg_i, &omg_j, num_proc);
 
   
-  printf("This is process %d \n", *myrank);
+//Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
+    double **P = matrix(0, ir-il+1, 0, jt-jb+1);
+    double **U = matrix(0, ir-il+1, 0, jt-jb+1);
+    double **V = matrix(0, ir-il+1, 0, jt-jb+1);
+    double **F = matrix(0, ir-il+1, 0, jt-jb+1);
+    double **G = matrix(0, ir-il+1, 0, jt-jb+1);
+    double **RS = matrix(0, ir-il+1, 0, jt-jb+1);
 
+//Initialize the U, V and P
+    //init_uvp(UI, VI, PI, imax, jmax, U, V, P);
+  int n = 0; //
+	double t = 0;
+	int n1=0;
+	int it;
+	double res;
+  while (t < t_end)
+  {
+    
+    boundaryvalues(imax,jmax,U,V);
+													
+    calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
+													
+    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
+													
+	  it = 0;
+	  res = 10.0;
 
-  MPI_Finalize();
+    do {
+
+    	sor(omg,dx,dy,imax,jmax,P,RS,&res);
+    	pressure_comm();
+//synchronize
+	    ++it;
+    	} while(it<itermax && res>eps);
+
+  	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P);
+  	if (t >= n1*dt_value)
+  	{
+   		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
+		  printf("%f SECONDS COMPLETED \n",n1*dt_value);
+    		n1=n1+ 1;
+    		continue;
+  	}
+	  calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
+    t =t+ dt;
+    n = n+ 1;
+    }
+
+    //Free memory
+    free_matrix( P, 0, ir-il+1, 0, jt-jb+1);
+    free_matrix( U, 0, ir-il+1, 0, jt-jb+1;
+    free_matrix( V, 0, ir-il+1, 0, jt-jb+1);
+    free_matrix( F, 0, ir-il+1, 0, jt-jb+1);
+    free_matrix( G, 0, ir-il+1, 0, jt-jb+1);
+    free_matrix(RS, 0, ir-il+1, 0, jt-jb+1);
+
+  Program_Stop();
   return 0;
 }
