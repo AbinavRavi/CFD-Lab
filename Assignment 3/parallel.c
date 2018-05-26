@@ -57,10 +57,10 @@ void init_parallel(int iproc,
                int *ir,
                int *jb,
                int *jt,
-               int *rank_l,
-               int *rank_r,
-               int *rank_b,
-               int *rankt,
+               int *l_rank,
+               int *r_rank,
+               int *b_rank,
+               int *t_rank,
                int *omg_i,
                int *omg_j,
                int num_proc)
@@ -77,20 +77,82 @@ void init_parallel(int iproc,
 
   if(*il == 0)
   {
-    *rank_l = MPI_PROC_NULL;
+    *l_rank = MPI_PROC_NULL;
   }
   else
   {
-    *rank_l = *myrank - 1;
+    *l_rank = *myrank - 1;
   }
 
   if(*ir == imax+1)
   {
-    *rank_r = MPI_PROC_NULL;
+    *r_rank = MPI_PROC_NULL;
   }
   else
   {
-    *rank_r = *myrank + 1;
+    *r_rank = *myrank + 1;
   }
 
+  if(*jb == 0)
+  {
+    *b_rank = MPI_PROC_NULL;
+  }
+  else
+  {
+    *b_rank = *myrank + 1;
+  }
+
+  if(*jt == jmax+1)
+  {
+    *t_rank = MPI_PROC_NULL;
+  }
+  else
+  {
+    *t_rank = *myrank + 1;
+  }
+
+}
+
+void pressure_comm(double **P,int il,int ir,int jb,int jt, int l_rank,int r_rank,int b_rank, int t_rank,double *bufSend, double *bufRecv, MPI_Status *status, int chunk )
+{
+  //Send to left&  recieve from right
+    int sendtag = 0;
+    int recvtag = 0;
+    int MPI_Sendrecv(P[il], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                l_rank, sendtag,
+                P[ir], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                r_rank, recvtag,
+                MPI_COMM_WORLD, status);
+    
+    sendtag++;
+    recvtag++;
+
+  // send to right & recieve from left
+    int MPI_Sendrecv(P[ir], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                r_rank, sendtag,
+                P[il], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                l_rank, recvtag,
+                MPI_COMM_WORLD, status);
+    
+    sendtag++;
+    recvtag++;
+  //send to top recieve from bottom
+    int MPI_Sendrecv(P[jt], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                t_rank, sendtag,
+                P[jb], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                b_rank, recvtag,
+                MPI_COMM_WORLD, status);
+    
+    sendtag++;
+    recvtag++;
+
+    int MPI_Sendrecv(P[jb], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                b_rank, sendtag,
+                P[jt], sizeof(double)*(jt-jb), MPI_DOUBLE,
+                t_rank, recvtag,
+                MPI_COMM_WORLD, status);
+    
+    sendtag++;
+    recvtag++;
+  
 }
