@@ -1,5 +1,7 @@
+#include<mpi.h>
 
-	
+void boundary_val(int imax, int jmax,double **U,double **V,int b_rank, int t_rank, int l_rank, int r_rank)
+{
  if(b_rank == MPI_PROC_NULL)
 {
         for (int i =1; i <=imax ; ++i)
@@ -41,3 +43,4 @@ if(r_rank == MPI_PROC_NULL)
     }
 }
 
+}
