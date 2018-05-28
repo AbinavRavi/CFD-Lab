@@ -24,7 +24,7 @@ int read_parameters( const char *szFileName,       /* name of the file */
                     double *eps,               /* accuracy bound for pressure*/
 		    double *dt_value,           /* time for output */
                     int *iproc,
-                    int *jproc
+                    int *jproc)
 {
    READ_DOUBLE( szFileName, *xlength );
    READ_DOUBLE( szFileName, *ylength );
