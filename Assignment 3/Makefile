@@ -9,7 +9,6 @@ OBJ = 	helper.o\
       	main.o\
       	visual.o\
 				parallel.o\
-				uvp.o\
 				sor.o\
 
 
@@ -28,6 +27,5 @@ boundary_val.o: helper.h boundary_val.h
 uvp.o         : helper.h uvp.h
 visual.o      : helper.h
 parallel.o		:	parallel.h
-uvp.o					: uvp.h
 sor.o					: sor.h
 main.o        : helper.h init.h boundary_val.h uvp.h visual.h

@@ -1,6 +1,7 @@
 #include<mpi.h>
+#include"boundary_val.h"
 
-void boundary_val(int imax, int jmax,double **U,double **V,int b_rank, int t_rank, int l_rank, int r_rank)
+void boundaryvalues(int imax, int jmax,double **U,double **V,int b_rank, int t_rank, int l_rank, int r_rank)
 {
  if(b_rank == MPI_PROC_NULL)
 {
@@ -9,9 +10,8 @@ void boundary_val(int imax, int jmax,double **U,double **V,int b_rank, int t_ran
         U[i][0]       = - U[i][1];
         V[i][0]       = 0;
     }
-	
 
-}	
+}
 
 if(t_rank == MPI_PROC_NULL)
 {

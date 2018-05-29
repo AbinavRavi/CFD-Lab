@@ -82,22 +82,26 @@ int main(int argn, char** args){
   int omg_i;
   int omg_j;
 
+
+
+  MPI_Init(&argn, &args);
+  MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+
 //Read and assign the parameter values from file
 	  read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end,
 				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                                 &alpha, &omg, &tau, &itermax, &eps, &dt_value, &iproc, &jproc);
 
-  MPI_Status *status;
-
-  MPI_Init(&argn, &args);
-  MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  Programm_Sync("Input file read... \n");
+  MPI_Status status;
 
 
   //Initializing the parallel parameters to broadcast
   init_parallel(iproc, jproc, imax, jmax, &myrank, &il, &ir, &jb, &jt, &l_rank,
                 &r_rank, &b_rank, &t_rank, &omg_i, &omg_j, num_proc);
 
+  Programm_Sync("Parallel parameters initialized... \n");
 
 //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     double **P = matrix(0, ir-il+1, 0, jt-jb+1);
@@ -108,33 +112,49 @@ int main(int argn, char** args){
     double **RS = matrix(0, ir-il+1, 0, jt-jb+1);
 
 //Initialize the U, V and P
-    //init_uvp(UI, VI, PI, imax, jmax, U, V, P);
+  Programm_Sync("U,V, P initializing... \n");
+  init_uvp(UI, VI, PI, ir-il, jt-jb, U, V, P);
+
+
   int n = 0; //
 	double t = 0;
 	int n1=0;
 	int it;
 	double res;
-  /*while (t < t_end)
+
+  int buffsize = (ir-il)>(jt-jb)?(ir-il):(jt-jb);
+  double *bufSend = (double*)malloc(sizeof(double)*2*buffsize);
+  double *bufRecv = (double*)malloc(sizeof(double)*2*buffsize);
+  int chunk = 0;
+
+  Programm_Sync("Starting the simulation... \n");
+  while (t < t_end)
   {
-*/
-    boundaryvalues(imax, jmax, U, V, b_rank, t_rank, l_rank, r_rank);
+    boundaryvalues(ir-il, jt-jb, U, V, b_rank, t_rank, l_rank, r_rank);
 
-    calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
+    calculate_fg(Re, GX, GY, alpha, dt, dx, dy, ir-il, jt-jb, U, V, F, G, b_rank, t_rank, l_rank, r_rank);
 
-    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
+    calculate_rs(dt, dx, dy, ir-il, jt-jb, F, G, RS);
 
 	  it = 0;
 	  res = 10.0;
-
     do {
 
-    	sor(omg,dx,dy,imax,jmax,P,RS,&res);
-    	pressure_comm();
+    	sor(omg, dx, dy, ir-il, jt-jb, P, RS, &res);
+      Programm_Sync("SOR: Pressure sync \n");
+    	pressure_comm(P, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
+
+      if (myrank == 0){
+        MPI_Allreduce( &res, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      }
 //synchronize
 	    ++it;
     	} while(it<itermax && res>eps);
 
-  	calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P);
+  	calculate_uv(dt, dx, dy, ir-il, jt-jb, U, V, F, G, P);
+    Programm_Sync("calculate_uv: velocity sync \n");
+    uv_comm(U, V, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
+
   	if (t >= n1*dt_value)
   	{
    		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
@@ -142,10 +162,13 @@ int main(int argn, char** args){
     		n1=n1+ 1;
     	//	continue;
   	}
-	  calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
+	  calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
+    if (myrank == 0){
+      MPI_Allreduce( &dt, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    }
     t =t+ dt;
     n = n+ 1;
-
+  }
     //Free memory
     free_matrix( P, 0, ir-il+1, 0, jt-jb+1);
     free_matrix( U, 0, ir-il+1, 0, jt-jb+1);
@@ -153,7 +176,8 @@ int main(int argn, char** args){
     free_matrix( F, 0, ir-il+1, 0, jt-jb+1);
     free_matrix( G, 0, ir-il+1, 0, jt-jb+1);
     free_matrix(RS, 0, ir-il+1, 0, jt-jb+1);
-
+    free(bufSend);
+    free(bufRecv);
     Programm_Stop("Exit");
   return 0;
 }

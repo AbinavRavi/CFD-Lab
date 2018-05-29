@@ -23,7 +23,7 @@
  * @param ylength    domain lenght y-direction
  * @param dt         time step length: dividing t_end by dt gives the number of
  *                   time steps to perform. Actually dt is determined by a
- *                   function, so manipulating this value within the 
+ *                   function, so manipulating this value within the
  *                   configuration file should not affect the solution process
  *                   at all
  * @param dx         cell length x-direction
@@ -38,7 +38,7 @@
  * @param dt_value   time steps for output (after how many time steps one should
  *                   write into the output file)
  */
-int read_parameters( 
+int read_parameters(
   const char *szFileName,
   double *Re,
   double *UI,
@@ -80,4 +80,3 @@ void init_uvp(
 );
 
 #endif
-

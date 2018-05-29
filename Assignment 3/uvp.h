@@ -36,7 +36,8 @@ void calculate_fg(
   double **U,
   double **V,
   double **F,
-  double **G
+  double **G,
+  int b_rank, int t_rank, int l_rank, int r_rank
 );
 
 
