@@ -84,7 +84,7 @@ void init_parallel(int iproc,
     *l_rank = *myrank - 1;
   }
 
-  if(*ir == (ir-il)+1)
+  if(*ir == imax)
   {
     *r_rank = MPI_PROC_NULL;
   }
@@ -99,16 +99,16 @@ void init_parallel(int iproc,
   }
   else
   {
-    *b_rank = *myrank + 1;
+    *b_rank = (*myrank)- iproc;
   }
 
-  if(*jt == (jt-jb)+1)
+  if(*jt == jmax)
   {
     *t_rank = MPI_PROC_NULL;
   }
   else
   {
-    *t_rank = *myrank + 1;
+    *t_rank = (*myrank) + iproc;
   }
 
 }
