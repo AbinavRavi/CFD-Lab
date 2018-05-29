@@ -1,6 +1,9 @@
 #include "helper.h"
 #include "visual.h"
 #include "init.h"
+#include "boundary_val.h"
+#include "uvp.h"
+#include "sor.h"
 #include <stdio.h>
 #include"parallel.h"
 
@@ -38,7 +41,7 @@
  * - calculate_uv() Calculate the velocity at the next time step.
  */
 int main(int argn, char** args){
-  
+
       //location of input file
     const char* filename = "cavity100.dat";
 
@@ -67,7 +70,7 @@ int main(int argn, char** args){
   int iproc;
   int jproc;
   int num_proc;
-  int myrank
+  int myrank;
   int il;
   int ir;
   int jb;
@@ -80,22 +83,22 @@ int main(int argn, char** args){
   int omg_j;
 
 //Read and assign the parameter values from file
-	  read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end, 
+	  read_parameters(filename, &Re, &UI, &VI, &PI, &GX, &GY, &t_end,
 				&xlength, &ylength, &dt, &dx, &dy, &imax, &jmax,
                                 &alpha, &omg, &tau, &itermax, &eps, &dt_value, &iproc, &jproc);
-  
+
   MPI_Status *status;
 
   MPI_Init(&argn, &args);
   MPI_Comm_size(MPI_COMM_WORLD, &num_proc);
-  MPI_Comm_rank(MPI_COMM_WORLD, myrank);
+  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
 
   //Initializing the parallel parameters to broadcast
   init_parallel(iproc, jproc, imax, jmax, &myrank, &il, &ir, &jb, &jt, &l_rank,
                 &r_rank, &b_rank, &t_rank, &omg_i, &omg_j, num_proc);
 
-  
+
 //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     double **P = matrix(0, ir-il+1, 0, jt-jb+1);
     double **U = matrix(0, ir-il+1, 0, jt-jb+1);
@@ -111,15 +114,15 @@ int main(int argn, char** args){
 	int n1=0;
 	int it;
 	double res;
-  while (t < t_end)
+  /*while (t < t_end)
   {
-    
-    boundaryvalues(imax,jmax,U,V);
-													
+*/
+    boundaryvalues(imax, jmax, U, V, b_rank, t_rank, l_rank, r_rank);
+
     calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G);
-													
+
     calculate_rs(dt,dx,dy,imax,jmax,F,G,RS);
-													
+
 	  it = 0;
 	  res = 10.0;
 
@@ -137,21 +140,20 @@ int main(int argn, char** args){
    		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
 		  printf("%f SECONDS COMPLETED \n",n1*dt_value);
     		n1=n1+ 1;
-    		continue;
+    	//	continue;
   	}
 	  calculate_dt(Re,tau,&dt,dx,dy,imax,jmax,U,V);
     t =t+ dt;
     n = n+ 1;
-    }
 
     //Free memory
     free_matrix( P, 0, ir-il+1, 0, jt-jb+1);
-    free_matrix( U, 0, ir-il+1, 0, jt-jb+1;
+    free_matrix( U, 0, ir-il+1, 0, jt-jb+1);
     free_matrix( V, 0, ir-il+1, 0, jt-jb+1);
     free_matrix( F, 0, ir-il+1, 0, jt-jb+1);
     free_matrix( G, 0, ir-il+1, 0, jt-jb+1);
     free_matrix(RS, 0, ir-il+1, 0, jt-jb+1);
 
-  Program_Stop();
+    Programm_Stop("Exit");
   return 0;
 }
