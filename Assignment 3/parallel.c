@@ -1,7 +1,6 @@
 
 #include "parallel.h"
-
-#include<mpi.h>
+#include"mpi.h"
 
 
 void Program_Message(char *txt)
@@ -48,6 +47,7 @@ void Programm_Stop(char *txt)
    exit(1);
 }
 
+
 void init_parallel(int iproc,
                int jproc,
                int imax,
@@ -75,128 +75,65 @@ void init_parallel(int iproc,
   *jb = (*omg_j-1)*(jmax/jproc) + 1;
   *jt = (*myrank!=jproc)?((*omg_j)*(jmax/jproc)):jmax;
 
-  if(*il == 1)
-  {
-    *l_rank = MPI_PROC_NULL;
-  }
-  else
-  {
-    *l_rank = *myrank - 1;
-  }
+  if(*il == 1)      *l_rank = MPI_PROC_NULL;
+  else              *l_rank = *myrank - 1;
 
-  if(*ir == imax)
-  {
-    *r_rank = MPI_PROC_NULL;
-  }
-  else
-  {
-    *r_rank = *myrank + 1;
-  }
+  if(*ir == imax)   *r_rank = MPI_PROC_NULL;
+  else              *r_rank = *myrank + 1;
 
-  if(*jb == 1)
-  {
-    *b_rank = MPI_PROC_NULL;
-  }
-  else
-  {
-    *b_rank = *myrank - iproc;
-  }
 
-  if(*jt == jmax)
-  {
-    *t_rank = MPI_PROC_NULL;
-  }
-  else
-  {
-    *t_rank = *myrank + iproc;
-  }
+  if(*jb == 1)      *b_rank = MPI_PROC_NULL;
+  else              *b_rank = *myrank - iproc;
+
+  if(*jt == jmax)   *t_rank = MPI_PROC_NULL;
+  else              *t_rank = *myrank + iproc;
 
 }
 
-void pressure_comm(double **P,int il,int ir,int jb,int jt, int l_rank,int r_rank,int b_rank, int t_rank,double *bufSend, double *bufRecv, MPI_Status *status, int chunk )
+void pressure_comm(double **P,int il,int ir,int jb,int jt,
+                  int l_rank,int r_rank,int b_rank, int t_rank,
+              double *bufSend, double *bufRecv, MPI_Status *status, int chunk )
 {
-
   //Send to left&  recieve from right
-    if(l_rank != MPI_PROC_NULL)
-    {
-      for (int j = jb; j< (jt-jb);++j)
-      {
-        bufSend[j-1] = P[il][j];
-      }
-    }
-    
-    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE,l_rank, chunk,bufRecv, sizeof(double)*(jt-jb),MPI_DOUBLE,r_rank, chunk,MPI_COMM_WORLD, status);
-
+  if( (l_rank!=MPI_PROC_NULL)&&(r_rank!=MPI_PROC_NULL) )
+  {
+    bufSend = P[1];
+    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk,
+               P[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk,
+               MPI_COMM_WORLD, status);
+    printf("Debug \n");
     chunk++;
-     // Recieve teh pressure value
-    if(r_rank != MPI_PROC_NULL)
-    {
-      for (int j = jb;j< (jt-jb); ++j)
-      {
-        P[ir+1][j] = bufRecv[j-1];
-      }
-    }
-
+  }
 
   // send to right & recieve from left
-    if(r_rank != MPI_PROC_NULL)
-    {
-      for(int j = jb; j< (jt-jb);++j)
-      {
-        bufSend[j+1] = P[ir][j+1];
-      }
-    }
-
-    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE,r_rank, chunk,bufRecv, sizeof(double)*(jt-jb),MPI_DOUBLE,l_rank, chunk,MPI_COMM_WORLD, status);
+  if( (l_rank!=MPI_PROC_NULL)&&(r_rank!=MPI_PROC_NULL) )
+  {
+    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE,r_rank, chunk,
+                  bufRecv, sizeof(double)*(jt-jb),MPI_DOUBLE,l_rank, chunk,
+                  MPI_COMM_WORLD, status);
     chunk++;
+  }
 
-   if(l_rank != MPI_PROC_NULL)
-   {
-     for(int j = jb; j<=(jt-jb); ++j)
-     {
-       P[il][j+1] = bufRecv[j+1];
-     }
-   }
   //send to top recieve from bottom
-    if(t_rank != MPI_PROC_NULL)
-    {
-      for(int i = il; i<=(ir-il) ; ++i )
-      {
-        bufSend[i-1] = P[i][jt+1];
-      }
-    }
-    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE,t_rank, chunk,bufRecv, sizeof(double)*(jt-jb),MPI_DOUBLE,b_rank, chunk,MPI_COMM_WORLD, status);
+  if( (l_rank!=MPI_PROC_NULL)&&(r_rank!=MPI_PROC_NULL) )
+  {
+    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE,t_rank, chunk,
+                  bufRecv, sizeof(double)*(jt-jb),MPI_DOUBLE,b_rank, chunk,
+                  MPI_COMM_WORLD, status);
     chunk++;
-    if(b_rank != MPI_PROC_NULL)
-    {
-      for(int i = ir; i<=(ir-il); ++i)
-      {
-        P[i][jb] = bufRecv[i-1];
-      }
-    }
-
+  }
 
   //send to bottom recieve from top
-    if(b_rank != MPI_PROC_NULL)
-      {
-        for(int i = il; i<=(ir-il); ++i)
-        {
-          bufSend[i-1] = P[i][jb];
-        }
-
-      }
-
-    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE,b_rank, chunk,bufRecv, sizeof(double)*(jt-jb),MPI_DOUBLE,t_rank, chunk,MPI_COMM_WORLD, status);
+  if( (l_rank!=MPI_PROC_NULL)&&(r_rank!=MPI_PROC_NULL) )
+  {
+    MPI_Sendrecv(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE,b_rank, chunk,
+                  bufRecv, sizeof(double)*(jt-jb),MPI_DOUBLE,t_rank, chunk,
+                  MPI_COMM_WORLD, status);
     chunk++;
-    if(t_rank != MPI_PROC_NULL)
-    {
-      for(int i = il; i<=(ir-il); ++i)
-      {
-        P[i][jt+1] = bufRecv[i-1];
-      }
-    }
+  }
 
 }
+
 
 void uv_comm(double **U,
             double **V,
