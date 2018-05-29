@@ -46,3 +46,17 @@ void pressure_comm(double **P,
 					MPI_Status *status,
 					int chunk );
 
+void uv_comm(double **U,
+            double **V,
+            int il,
+            int ir,
+            int jb,
+            int jt,
+            int l_rank,
+            int r_rank,
+            int b_rank,
+            int t_rank,
+            double *bufSend,
+            double *bufRecv,
+            MPI_Status *Status,
+            int chunk);
