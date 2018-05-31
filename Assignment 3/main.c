@@ -143,7 +143,8 @@ int main(int argn, char** args){
     	sor(omg, dx, dy, ir-il, jt-jb, P, RS, &res);
       Programm_Sync("SOR: Pressure sync \n");
     	pressure_comm(P, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
-
+      printf("\nDebug1 \n");
+      Programm_Sync("SOR: Pressure sync-1 \n");
       if (myrank == 0){
         MPI_Allreduce( &res, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
       }
