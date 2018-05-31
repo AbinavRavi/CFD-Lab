@@ -1,6 +1,5 @@
 
 #include "parallel.h"
-#include"mpi.h"
 
 
 void Program_Message(char *txt)
@@ -116,34 +115,36 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
   }
   else
   {
+    printf("Debug3: %d \n",myrank);
     MPI_Sendrecv(P[1], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk,
                P[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk,
                MPI_COMM_WORLD, status);
     chunk++;
   }
-
+  Programm_Sync("Synch-1 \n");
   // send to right & recieve from left
 
   if (l_rank == MPI_PROC_NULL)
   {
-    printf("Debug3: %d \n",myrank);
+    printf("Debug4: %d \n",myrank);
     MPI_Send(P[ir-il], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD);
     chunk++;
   }
   else if (r_rank == MPI_PROC_NULL)
   {
-    printf("Debug4: %d \n",myrank);
+    printf("Debug5: %d \n",myrank);
     MPI_Recv(P[0], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD, status);
     chunk++;
   }
   else
   {
+    printf("Debug6: %d \n",myrank);
     MPI_Sendrecv(P[ir-il], sizeof(double)*(jt-jb), MPI_DOUBLE,r_rank, chunk,
                   P[0], sizeof(double)*(jt-jb),MPI_DOUBLE,l_rank, chunk,
                   MPI_COMM_WORLD, status);
     chunk++;
   }
-
+  Programm_Sync("Synch-2 \n");
   //send to top recieve from bottom
   for (int i = 1; i <=ir-il; ++i)
   {
@@ -153,18 +154,19 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
 
   if (b_rank == MPI_PROC_NULL)
   {
-    printf("Debug5: %d \n",myrank);
+    printf("Debug7: %d \n",myrank);
     MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
     chunk++;
   }
   else if (t_rank == MPI_PROC_NULL)
   {
-    printf("Debug6: %d \n",myrank);
+    printf("Debug8: %d \n",myrank);
     MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
     chunk++;
   }
   else
   {
+    printf("Debug9: %d \n",myrank);
     MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
                   bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
                   MPI_COMM_WORLD, status);
@@ -175,7 +177,7 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
   {
     P[i][0] = bufRecv[i];
   }
-
+  Programm_Sync("Synch-3 \n");
   ///send to bottom recieve from top
   for (int i = 1; i <=ir-il; ++i)
   {
@@ -184,18 +186,19 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
 
   if (b_rank == MPI_PROC_NULL)
   {
-    printf("Debug7: %d \n",myrank);
+    printf("Debug10: %d \n",myrank);
     MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
     chunk++;
   }
-  if (t_rank == MPI_PROC_NULL)
+  else if (t_rank == MPI_PROC_NULL)
   {
-    printf("Debug8: %d \n",myrank);
+    printf("Debug11: %d \n",myrank);
     MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
     chunk++;
   }
   else
   {
+    printf("Debug12: %d \n",myrank);
     MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
                 bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
                   MPI_COMM_WORLD, status);
@@ -206,6 +209,7 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
   {
     P[i][ir-il+1] = bufRecv[i];
   }
+  Programm_Sync("Synch-4 \n");
 }
 
 
