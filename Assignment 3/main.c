@@ -105,26 +105,26 @@ int main(int argn, char** args){
 
 //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     double **P = matrix(0, ir-il+1, 0, jt-jb+1);
-    double **U = matrix(0, ir-il+1, 0, jt-jb+1);
-    double **V = matrix(0, ir-il+1, 0, jt-jb+1);
-    double **F = matrix(0, ir-il+1, 0, jt-jb+1);
-    double **G = matrix(0, ir-il+1, 0, jt-jb+1);
+    double **U = matrix(0, ir-il+2, 0, jt-jb+1);
+    double **V = matrix(0, ir-il+1, 0, jt-jb+2);
+    double **F = matrix(0, ir-il+2, 0, jt-jb+1);
+    double **G = matrix(0, ir-il+1, 0, jt-jb+2);
     double **RS = matrix(0, ir-il+1, 0, jt-jb+1);
 
 //Initialize the U, V and P
   Programm_Sync("U,V, P initializing... \n");
   init_uvp(UI, VI, PI, ir-il, jt-jb, U, V, P);
 
-
   int n = 0; //
 	double t = 0;
-	int n1=0;
+  double dt1 = 0;
+	//int n1=0;
 	int it;
 	double res;
-
-  int buffsize = (ir-il)>(jt-jb)?(ir-il):(jt-jb);
-  double *bufSend = (double*)malloc(sizeof(double)*2*buffsize);
-  double *bufRecv = (double*)malloc(sizeof(double)*2*buffsize);
+  double Residual;
+  int buffsize = (ir-il)>(jt-jb)?(ir-il+1):(jt-jb+1);
+  double *bufSend = (double*)malloc(sizeof(double)*4*8*buffsize);
+  double *bufRecv = (double*)malloc(sizeof(double)*4*8*buffsize);
   int chunk = 0;
 
   Programm_Sync("Starting the simulation... \n");
@@ -138,41 +138,45 @@ int main(int argn, char** args){
 
 	  it = 0;
 	  res = 10.0;
+
     do {
+      Residual = 0.0;
+    	sor(omg, dx, dy, P, RS, &res, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, status);
 
-    	sor(omg, dx, dy, P, RS, &res, il, ir, jb, jt, imax, jmax, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, status);
+      /* Sum the squares of all local residuals then square root that sum for global residual */
 
-      /*if (myrank == 0){
-        MPI_Allreduce( &res, &res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-      }*/
+      MPI_Allreduce(&res, &Residual, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+      MPI_Barrier(MPI_COMM_WORLD);
+
 //synchronize
 	    ++it;
-    	} while(it<itermax && res>eps);
+    } while(it<itermax&& Residual>eps);
+    printf("residual: %f\n",Residual);
+    MPI_Barrier(MPI_COMM_WORLD);
 
   	calculate_uv(dt, dx, dy, ir-il, jt-jb, U, V, F, G, P);
-    Programm_Sync("calculate_uv: velocity sync \n");
-    uv_comm(U, V, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
+    MPI_Barrier(MPI_COMM_WORLD);
 
-  	if (t >= n1*dt_value)
+    uv_comm(U, V, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
+  	/*if (t >= n1*dt_value)
   	{
    		write_vtkFile("solution", n,xlength,ylength,imax,jmax,dx,dy,U,V,P);
 		  printf("%f SECONDS COMPLETED \n",n1*dt_value);
     		n1=n1+ 1;
     	//	continue;
-  	}
-	  calculate_dt(Re, tau, &dt, dx, dy, imax, jmax, U, V);
-    if (myrank == 0){
-      MPI_Allreduce( &dt, &dt, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-    }
-    t =t+ dt;
+  	}*/
+    calculate_dt(Re, tau, &dt, dx, dy, ir-il, jt-jb, U, V);
+    MPI_Allreduce( &dt, &dt1, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    t =t+ dt1;
     n = n+ 1;
-  }
+}
+    //printf("Debug, residual: %f\n",Residual);
     //Free memory
     free_matrix( P, 0, ir-il+1, 0, jt-jb+1);
-    free_matrix( U, 0, ir-il+1, 0, jt-jb+1);
-    free_matrix( V, 0, ir-il+1, 0, jt-jb+1);
-    free_matrix( F, 0, ir-il+1, 0, jt-jb+1);
-    free_matrix( G, 0, ir-il+1, 0, jt-jb+1);
+    free_matrix( U, 0, ir-il+2, 0, jt-jb+1);
+    free_matrix( V, 0, ir-il+1, 0, jt-jb+2);
+    free_matrix( F, 0, ir-il+2, 0, jt-jb+1);
+    free_matrix( G, 0, ir-il+1, 0, jt-jb+2);
     free_matrix(RS, 0, ir-il+1, 0, jt-jb+1);
     free(bufSend);
     free(bufRecv);

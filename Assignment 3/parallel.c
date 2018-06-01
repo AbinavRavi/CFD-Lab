@@ -88,6 +88,7 @@ void init_parallel(int iproc,
   else              *t_rank = *myrank + iproc;
 
 
+
 printf("Thread_id: %d omg_ij: %d%d \nil: %d, ir: %d, jb: %d, jt: %d \n",*myrank,*omg_i,*omg_j, *il,*ir,*jb,*jt);
 
 printf("l_rank: %d, r_rank: %d, b_rank: %d, t_rank: %d \n \n", *l_rank,*r_rank,*b_rank,*t_rank);
@@ -98,118 +99,74 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
               double *bufSend, double *bufRecv, MPI_Status *status, int chunk )
 {
   int myrank;
-
+  int x_dim = ir-il;
+  int y_dim = jt-jb;
+  chunk = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   //Send to left &  recieve from right
-  if (l_rank == MPI_PROC_NULL)
+  for (int j = 1; j <=y_dim; ++j)
   {
-    printf("Debug1: %d \n",myrank);
-    MPI_Recv(P[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
+    bufSend[j] = P[1][j];
   }
-  else if (r_rank == MPI_PROC_NULL)
+  if (l_rank != MPI_PROC_NULL)
+    MPI_Send(bufSend, sizeof(double)*y_dim, MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
+
+  if (r_rank != MPI_PROC_NULL)
+    MPI_Recv(bufRecv, sizeof(double)*y_dim, MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
+
+  for (int j = 1; j <=y_dim; ++j)
   {
-    printf("Debug2: %d \n",myrank);
-    MPI_Send(P[1], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
+    P[ir-il+1][j] = bufRecv[j];
   }
-  else
-  {
-    printf("Debug3: %d \n",myrank);
-    MPI_Sendrecv(P[1], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk,
-               P[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk,
-               MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  Programm_Sync("Synch-1 \n");
+
   // send to right & recieve from left
+  for (int j = 1; j <=y_dim; ++j)
+  {
+    bufSend[j] = P[ir-il][j];
+  }
+  if (r_rank != MPI_PROC_NULL)
+    MPI_Send(bufSend, sizeof(double)*y_dim, MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD);
 
-  if (l_rank == MPI_PROC_NULL)
+  else if (l_rank != MPI_PROC_NULL)
+    MPI_Recv(bufRecv, sizeof(double)*y_dim, MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD, status);
+
+  for (int j = 1; j <=y_dim; ++j)
   {
-    printf("Debug4: %d \n",myrank);
-    MPI_Send(P[ir-il], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
+    P[0][j] = bufRecv[j];
   }
-  else if (r_rank == MPI_PROC_NULL)
-  {
-    printf("Debug5: %d \n",myrank);
-    MPI_Recv(P[0], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  else
-  {
-    printf("Debug6: %d \n",myrank);
-    MPI_Sendrecv(P[ir-il], sizeof(double)*(jt-jb), MPI_DOUBLE,r_rank, chunk,
-                  P[0], sizeof(double)*(jt-jb),MPI_DOUBLE,l_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  Programm_Sync("Synch-2 \n");
+
   //send to top recieve from bottom
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
-
     bufSend[i] = P[i][jt-jb];
   }
+  if (t_rank != MPI_PROC_NULL)
+    MPI_Send(bufSend, sizeof(double)*x_dim, MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
 
-  if (b_rank == MPI_PROC_NULL)
-  {
-    printf("Debug7: %d \n",myrank);
-    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
-  }
-  else if (t_rank == MPI_PROC_NULL)
-  {
-    printf("Debug8: %d \n",myrank);
-    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  else
-  {
-    printf("Debug9: %d \n",myrank);
-    MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
-                  bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
-  }
+  if (b_rank != MPI_PROC_NULL)
+    MPI_Recv(bufRecv, sizeof(double)*x_dim, MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
 
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
     P[i][0] = bufRecv[i];
   }
-  Programm_Sync("Synch-3 \n");
+
   ///send to bottom recieve from top
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
     bufSend[i] = P[i][1];
   }
+  if (b_rank != MPI_PROC_NULL)
+    MPI_Send(bufSend, sizeof(double)*x_dim, MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
 
-  if (b_rank == MPI_PROC_NULL)
-  {
-    printf("Debug10: %d \n",myrank);
-    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  else if (t_rank == MPI_PROC_NULL)
-  {
-    printf("Debug11: %d \n",myrank);
-    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
-  }
-  else
-  {
-    printf("Debug12: %d \n",myrank);
-    MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
-                bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
-  }
+  if (t_rank != MPI_PROC_NULL)
+    MPI_Recv(bufRecv, sizeof(double)*x_dim, MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
 
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
     P[i][ir-il+1] = bufRecv[i];
   }
-  Programm_Sync("Synch-4 \n");
+
 }
 
 
@@ -229,237 +186,174 @@ void uv_comm(double **U,
             int chunk)
 
 {
- int myrank;
- /* Velocity U */
+  int myrank;
+  int x_dim = ir-il;
+  int y_dim = jt-jb;
+  chunk = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+
+ /////////////* Velocity U *////////////
   //Send to left &  recieve from right
-  if (l_rank == MPI_PROC_NULL)
+  for (int j = 1; j <=y_dim; ++j)
   {
-    printf("Debug1: %d \n",myrank);
-    MPI_Recv(U[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
+    bufSend[j] = U[2][j];
   }
-  else if (r_rank == MPI_PROC_NULL)
+  if (l_rank != MPI_PROC_NULL)
   {
-    printf("Debug2: %d \n",myrank);
-    MPI_Send(U[2], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
+    MPI_Send(bufSend, sizeof(double)*y_dim, MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
   }
-  else
+  if (r_rank != MPI_PROC_NULL)
   {
-    printf("Debug3: %d \n",myrank);
-    MPI_Sendrecv(U[2], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk,
-               U[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk,
-               MPI_COMM_WORLD, status);
-    chunk++;
+    MPI_Recv(bufRecv, sizeof(double)*y_dim, MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
   }
-  Programm_Sync("Synch-1 \n");
+  for (int j = 1; j <=y_dim; ++j)
+  {
+    U[ir-il+1][j] = bufRecv[j];
+  }
+
   // send to right & recieve from left
+  for (int j = 1; j <=y_dim; ++j)
+  {
+    bufSend[j] = U[ir-il-1][j];
+  }
+  if (r_rank != MPI_PROC_NULL)
+  {
+    MPI_Send(bufSend, sizeof(double)*y_dim, MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD);
+  }
+  if (l_rank != MPI_PROC_NULL)
+  {
+    MPI_Recv(bufRecv, sizeof(double)*y_dim, MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD, status);
+  }
+  for (int j = 1; j <=y_dim; ++j)
+  {
+    U[0][j] = bufRecv[j];
+  }
 
-  if (l_rank == MPI_PROC_NULL)
-  {
-    printf("Debug4: %d \n",myrank);
-    MPI_Send(U[ir-il-1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
-  }
-  else if (r_rank == MPI_PROC_NULL)
-  {
-    printf("Debug5: %d \n",myrank);
-    MPI_Recv(U[0], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  else
-  {
-    printf("Debug6: %d \n",myrank);
-    MPI_Sendrecv(U[ir-il-1], sizeof(double)*(jt-jb), MPI_DOUBLE,r_rank, chunk,
-                  U[0], sizeof(double)*(jt-jb),MPI_DOUBLE,l_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  Programm_Sync("Synch-2 \n");
   //send to top recieve from bottom
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim+1; ++i)
   {
-
     bufSend[i] = U[i][jt-jb];
   }
-
-  if (b_rank == MPI_PROC_NULL)
+  if (t_rank != MPI_PROC_NULL)
   {
-    printf("Debug7: %d \n",myrank);
-    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
+    MPI_Send(bufSend, sizeof(double)*(x_dim+1), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
   }
-  else if (t_rank == MPI_PROC_NULL)
+  if (b_rank != MPI_PROC_NULL)
   {
-    printf("Debug8: %d \n",myrank);
-    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
+    MPI_Recv(bufRecv, sizeof(double)*(x_dim+1), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
   }
-  else
-  {
-    printf("Debug9: %d \n",myrank);
-    MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
-                  bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
-  }
-
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim+1; ++i)
   {
     U[i][0] = bufRecv[i];
   }
-  Programm_Sync("Synch-3 \n");
 
   ///send to bottom recieve from top
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim+1; ++i)
   {
     bufSend[i] = U[i][1];
   }
-
-  if (b_rank == MPI_PROC_NULL)
+  if (b_rank != MPI_PROC_NULL)
   {
-    printf("Debug10: %d \n",myrank);
-    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
+    MPI_Send(bufSend, sizeof(double)*(x_dim+1), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
+      }
+  if (t_rank != MPI_PROC_NULL)
+  {
+    MPI_Recv(bufRecv, sizeof(double)*(x_dim+1), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
   }
-  else if (t_rank == MPI_PROC_NULL)
+  for (int i = 1; i <=x_dim+1; ++i)
   {
-    printf("Debug11: %d \n",myrank);
-    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
-  }
-  else
-  {
-    printf("Debug12: %d \n",myrank);
-    MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
-                bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
+    U[i][jt-jb+1] = bufRecv[i];
   }
 
-  for (int i = 1; i <=ir-il; ++i)
-  {
-    U[i][ir-il+1] = bufRecv[i];
-  }
-  Programm_Sync("Synch-4 \n");
 
-  /* Velocity V*/
-
-  int myrank;
-
-  MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  /////////////* Velocity V*///////////////
   //Send to left &  recieve from right
-  if (l_rank == MPI_PROC_NULL)
+  for (int j = 1; j <=y_dim+1; ++j)
   {
-    printf("Debug1: %d \n",myrank);
-    MPI_Recv(V[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
+    bufSend[j] = V[1][j];
   }
-  else if (r_rank == MPI_PROC_NULL)
+  if (l_rank != MPI_PROC_NULL)
   {
-    printf("Debug2: %d \n",myrank);
-    MPI_Send(V[1], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
+    MPI_Send(bufSend, sizeof(double)*(y_dim+1), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
   }
-  else
+  if (r_rank != MPI_PROC_NULL)
   {
-    printf("Debug3: %d \n",myrank);
-    MPI_Sendrecv(V[1], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk,
-               V[ir-il+1], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk,
-               MPI_COMM_WORLD, status);
-    chunk++;
+    MPI_Recv(bufRecv, sizeof(double)*(y_dim+1), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
   }
-  Programm_Sync("Synch-1 \n");
+  for (int j = 1; j <=y_dim+1; ++j)
+  {
+    V[ir-il+1][j] = bufRecv[j];
+  }
+
   // send to right & recieve from left
+  for (int j = 1; j <=y_dim+1; ++j)
+  {
+    bufSend[j] = V[ir-il][j];
+  }
+  if (r_rank != MPI_PROC_NULL)
+  {
+    MPI_Send(bufSend, sizeof(double)*(y_dim+1), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD);
+  }
+  if (l_rank != MPI_PROC_NULL)
+  {
+    MPI_Recv(bufRecv, sizeof(double)*(y_dim+1), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD, status);
+  }
+  for (int j = 1; j <=y_dim+1; ++j)
+  {
+    V[0][j] = bufRecv[j];
+  }
 
-  if (l_rank == MPI_PROC_NULL)
-  {
-    printf("Debug4: %d \n",myrank);
-    MPI_Send(V[ir-il], sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
-  }
-  else if (r_rank == MPI_PROC_NULL)
-  {
-    printf("Debug5: %d \n",myrank);
-    MPI_Recv(V[0], sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  else
-  {
-    printf("Debug6: %d \n",myrank);
-    MPI_Sendrecv(V[ir-il], sizeof(double)*(jt-jb), MPI_DOUBLE,r_rank, chunk,
-                  P[0], sizeof(double)*(jt-jb),MPI_DOUBLE,l_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
-  }
-  Programm_Sync("Synch-2 \n");
   //send to top recieve from bottom
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim+1; ++i)
   {
-
     bufSend[i] = V[i][jt-jb-1];
   }
-
-  if (b_rank == MPI_PROC_NULL)
+  if (t_rank != MPI_PROC_NULL)
   {
-    printf("Debug7: %d \n",myrank);
-    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
+    MPI_Send(bufSend, sizeof(double)*(x_dim+1), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
   }
-  else if (t_rank == MPI_PROC_NULL)
+  if (b_rank != MPI_PROC_NULL)
   {
-    printf("Debug8: %d \n",myrank);
-    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
+    MPI_Recv(bufRecv, sizeof(double)*(x_dim+1), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
   }
-  else
-  {
-    printf("Debug9: %d \n",myrank);
-    MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
-                  bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
-  }
-
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim+1; ++i)
   {
     V[i][0] = bufRecv[i];
   }
-  Programm_Sync("Synch-3 \n");
-
   ///send to bottom recieve from top
-
-  for (int i = 1; i <=ir-il; ++i)
+  for (int i = 1; i <=x_dim+1; ++i)
   {
     bufSend[i] = V[i][2];
   }
-
-  if (b_rank == MPI_PROC_NULL)
+  if (b_rank != MPI_PROC_NULL)
   {
-    printf("Debug10: %d \n",myrank);
-    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
-    chunk++;
+    MPI_Send(bufSend, sizeof(double)*(x_dim+1), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
   }
-  else if (t_rank == MPI_PROC_NULL)
+  if (t_rank != MPI_PROC_NULL)
   {
-    printf("Debug11: %d \n",myrank);
-    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
-    chunk++;
+    MPI_Recv(bufRecv, sizeof(double)*(x_dim+1), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
   }
-  else
+  for (int i = 1; i <=x_dim+1; ++i)
   {
-    printf("Debug12: %d \n",myrank);
-    MPI_Sendrecv(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk,
-                bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk,
-                  MPI_COMM_WORLD, status);
-    chunk++;
+    V[i][jt-jb+1] = bufRecv[i];
   }
-
-  for (int i = 1; i <=ir-il; ++i)
-  {
-    V[i][ir-il+1] = bufRecv[i];
-  }
-  Programm_Sync("Synch-4 \n");
-
 }
+/*
+  if(l_rank != MPI_PROC_NULL)
+  {
+    MPI_Send(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
+  }
+  if(r_rank != MPI_PROC_NULL)
+  {
+    MPI_Recv(bufRecv, sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
+  }
+  if(b_rank != MPI_PROC_NULL)
+  {
+    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
+  }
+  if(t_rank != MPI_PROC_NULL)
+  {
+    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
+  }
+
+*/

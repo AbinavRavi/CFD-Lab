@@ -16,9 +16,9 @@ void calculate_dt(double Re,
 
  double Umax = fabs(U[0][0]);
 
-   for( int i = 1 ; i <= imax ; i++ )
+   for( int i = 1 ; i <= imax+1 ; i++ )
    {
-      for( int j = 1 ; j <= jmax ; j++ )
+      for( int j = 1 ; j <= jmax; j++ )
       {
          if ( fabs(U[i][j]) > Umax )
             Umax = fabs(U[i][j]);
@@ -27,9 +27,9 @@ void calculate_dt(double Re,
 
   double Vmax = fabs(V[0][0]);
 
-   for( int i = 1 ; i <= imax ; i++ )
+   for( int i = 1 ; i <= imax; i++ )
    {
-      for( int j = 1 ; j <= jmax ; j++ )
+      for( int j = 1 ; j <= jmax+1; j++ )
       {
          if ( fabs(V[i][j]) > Vmax )
             Vmax = fabs(V[i][j]);
@@ -66,7 +66,7 @@ void calculate_fg(double Re,
    )
 {
 
-    for(int i=1; i<=imax-1; i++){
+    for(int i=1; i<=imax; i++){
 
         for(int j=1; j<=jmax; j++){
 
@@ -90,7 +90,7 @@ void calculate_fg(double Re,
 
 	for(int i=1; i<=imax; i++){
 
-        for(int j=1; j<=jmax-1; j++){
+        for(int j=1; j<=jmax; j++){
         G[i][j]=V[i][j]+dt*(
                 //Central difference Scheme for second derivatives
                 (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
@@ -112,46 +112,46 @@ void calculate_fg(double Re,
   if(b_rank == MPI_PROC_NULL)
  {
       for (int i =1; i <=imax ; ++i)
-        G[i][0] = V[i][0];
+        G[i][1] = V[i][1];
  }
 
  if(t_rank == MPI_PROC_NULL)
  {
      for( int i=1;i<= imax;++i)
-       G[i][jmax]=V[i][jmax];
+       G[i][jmax+1]=V[i][jmax+1];
  }
 
  if(l_rank == MPI_PROC_NULL)
  {
      for(int j=1;j<=jmax;++j)
-        F[0][j]=U[0][j];
+        F[1][j]=U[1][j];
  }
 
  if(r_rank == MPI_PROC_NULL)
  {
      for(int j=1;j<=jmax;++j)
-      F[imax][j]=U[imax][j];
+      F[imax+1][j]=U[imax+1][j];
  }
 
 }
 
 void calculate_uv(double dt,double dx,double dy,int imax, int jmax, double**U, double**V,double**F,double**G,double **P)
 {
-	for (int i = 1; i<= imax-1;i++)
+	for (int i = 1; i<= imax;i++)
 	{
-		for (int j=1; j<=jmax;j++)
+		for (int j=1; j<=jmax+1;j++)
 		{
 			//update the U component of velocity
-			U[i][j] = F[i][j] - (dt/dx)*(P[i+1][j]-P[i][j]);
+			U[i][j] = F[i][j] - (dt/dx)*(P[i][j]-P[i-1][j]);
 		}
 	}
 
 	for (int i = 1; i<= imax;i++)
 	{
-		for (int j=1; j<=jmax-1;j++)
+		for (int j=1; j<=jmax;j++)
 		{
 			//update the V component of velocity
-			V[i][j] = G[i][j] - (dt/dy)*(P[i][j+1] -P[i][j]);
+			V[i][j] = G[i][j] - (dt/dy)*(P[i][j] -P[i][j-1]);
 		}
 	}
 }

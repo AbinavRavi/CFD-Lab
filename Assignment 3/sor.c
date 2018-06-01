@@ -31,6 +31,7 @@ void sor(
 
   int myrank;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
+  //printf("start sor \n");
 	/* SOR iteration */
 	for(i = 1; i <= x; i++) {
 		for(j = 1; j <= y; j++) {
@@ -39,7 +40,8 @@ void sor(
 		}
 	}
 
-PROC_NULL)  /* Only receive/send data from/to right */
+  /* Set left & right global domain boundaries according to Neumann boundary conditions */
+	if(l_rank == MPI_PROC_NULL)  /* Only receive/send data from/to right */
 	{
 		for(j = 1; j <= y; j++) {
 			P[0][j] = P[1][j];
@@ -51,20 +53,25 @@ PROC_NULL)  /* Only receive/send data from/to right */
 			P[x+1][j] = P[x][j];
 		}
 	}
-  /* Only receive/send data from/to bottom */
+
+	/* Set top & bottom global domain boundaries according to Neumann boundary conditions */
+	if(t_rank == MPI_PROC_NULL)  /* Only receive/send data from/to bottom */
 	{
-		for(i = 1; i <=
-      PROC_NULL)  /* Only send/receive data to/from top */
+		for(i = 1; i <= x; i++) {
+			P[i][y+1] = P[i][y];
+		}
+	}
+	if(b_rank == MPI_PROC_NULL)  /* Only send/receive data to/from top */
 	{
 		for(i = 1; i <= x; i++) {
 			P[i][0] = P[i][1];
 		}
 	}
- Programm_Sync("Pressure Sync \n");
+ MPI_Barrier(MPI_COMM_WORLD);
 	/* Communicate between processes regarding pressure boundaries */
   pressure_comm(P, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
 
-
+  MPI_Barrier(MPI_COMM_WORLD);
 	/* Compute the residual */
 	for(i = 1; i <= x; i++) {
 		for(j = 1; j <= y; j++) {
@@ -73,13 +80,4 @@ PROC_NULL)  /* Only receive/send data from/to right */
 		}
 	}
   *res = sqrt(rloc/(x*y));
-
-  printf("rloc computed: %d\n", myrank);
-
-	/* Sum the squares of all local residuals then square root that sum for global residual */
-  if(myrank ==0)
-  {
-	MPI_Allreduce(&rloc, res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  }
-
 }
