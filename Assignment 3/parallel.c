@@ -208,13 +208,13 @@ void uv_comm(double **U,
   }
   for (int j = 1; j <=y_dim; ++j)
   {
-    U[ir-il+1][j] = bufRecv[j];
+    U[ir-il+2][j] = bufRecv[j];
   }
 
   // send to right & recieve from left
   for (int j = 1; j <=y_dim; ++j)
   {
-    bufSend[j] = U[ir-il-1][j];
+    bufSend[j] = U[ir-il][j];
   }
   if (r_rank != MPI_PROC_NULL)
   {
@@ -304,56 +304,67 @@ void uv_comm(double **U,
   }
 
   //send to top recieve from bottom
-  for (int i = 1; i <=x_dim+1; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
-    bufSend[i] = V[i][jt-jb-1];
+    bufSend[i] = V[i][jt-jb];
   }
   if (t_rank != MPI_PROC_NULL)
   {
-    MPI_Send(bufSend, sizeof(double)*(x_dim+1), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
+    MPI_Send(bufSend, sizeof(double)*(x_dim), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD);
   }
   if (b_rank != MPI_PROC_NULL)
   {
-    MPI_Recv(bufRecv, sizeof(double)*(x_dim+1), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
+    MPI_Recv(bufRecv, sizeof(double)*(x_dim), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD, status);
   }
-  for (int i = 1; i <=x_dim+1; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
     V[i][0] = bufRecv[i];
   }
   ///send to bottom recieve from top
-  for (int i = 1; i <=x_dim+1; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
     bufSend[i] = V[i][2];
   }
   if (b_rank != MPI_PROC_NULL)
   {
-    MPI_Send(bufSend, sizeof(double)*(x_dim+1), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
+    MPI_Send(bufSend, sizeof(double)*(x_dim), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
   }
   if (t_rank != MPI_PROC_NULL)
   {
-    MPI_Recv(bufRecv, sizeof(double)*(x_dim+1), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
+    MPI_Recv(bufRecv, sizeof(double)*(x_dim), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
   }
-  for (int i = 1; i <=x_dim+1; ++i)
+  for (int i = 1; i <=x_dim; ++i)
   {
-    V[i][jt-jb+1] = bufRecv[i];
+    V[i][jt-jb+2] = bufRecv[i];
   }
-}
-/*
+
+//interior values not calculated in iteration
   if(l_rank != MPI_PROC_NULL)
   {
-    MPI_Send(bufSend, sizeof(double)*(jt-jb), MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
+    for (size_t j = 1; j <=y_dim; j++) {
+      bufSend[j] = U[1][j];
+    }
+    MPI_Send(bufSend, sizeof(double)*y_dim, MPI_DOUBLE, l_rank, chunk, MPI_COMM_WORLD);
   }
   if(r_rank != MPI_PROC_NULL)
   {
-    MPI_Recv(bufRecv, sizeof(double)*(jt-jb), MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
+    MPI_Recv(bufRecv, sizeof(double)*y_dim, MPI_DOUBLE, r_rank, chunk, MPI_COMM_WORLD, status);
+    for (size_t j = 1; j <=y_dim; j++) {
+      U[ir-il+1][j] = bufRecv[j];
+    }
   }
   if(b_rank != MPI_PROC_NULL)
   {
-    MPI_Send(bufSend, sizeof(double)*(ir-il), MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
+    for (size_t i = 1; i <= x_dim; i++) {
+      bufSend[i] = V[i][1];
+    }
+    MPI_Send(bufSend, sizeof(double)*x_dim, MPI_DOUBLE, b_rank, chunk, MPI_COMM_WORLD);
   }
   if(t_rank != MPI_PROC_NULL)
   {
-    MPI_Recv(bufRecv, sizeof(double)*(ir-il), MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
+    MPI_Recv(bufRecv, sizeof(double)*x_dim, MPI_DOUBLE, t_rank, chunk, MPI_COMM_WORLD, status);
+    for (size_t i = 1; i <=x_dim; i++) {
+      V[i][jt-jb+1] = bufRecv[i];
+    }
   }
-
-*/
+}
