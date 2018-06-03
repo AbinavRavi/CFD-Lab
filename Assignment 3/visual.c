@@ -95,6 +95,8 @@ void write_vtkPointCoordinates( FILE *fp, int imax, int jmax,
     }
   }
 }
+
+
 void write_Coordinates(FILE *fp, int origini, int originj, int imax, int jmax, double dx, double dy)
 {
   for(int j = 0; j < jmax+1; j++) {
@@ -103,6 +105,8 @@ void write_Coordinates(FILE *fp, int origini, int originj, int imax, int jmax, d
     }
   }
 }
+
+
 void output_uvp(double **U,double **V,double **P,int il,int ir,int jb,int jt,int omg_i,int omg_j,char *szProblem, int n)
 {
   double dx =1;
@@ -121,8 +125,8 @@ void output_uvp(double **U,double **V,double **P,int il,int ir,int jb,int jt,int
     ERROR( szBuff );
     return;
   }
-int imax = ir-il;
-int jmax = jt-jb;
+int imax = ir-il+1;
+int jmax = jt-jb+1;
   write_vtkHeader( fp, imax, jmax, dx, dy);
   write_Coordinates(fp, il, jb, imax, jmax, dx, dy);
   fprintf(fp,"POINT_DATA %i \n", (imax+1)*(jmax+1) );

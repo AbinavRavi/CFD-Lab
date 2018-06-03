@@ -41,7 +41,7 @@ MPI_Allreduce(&Vmax, &Vmax1, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
 
  double x, y, z;
  
- x = (Re/2.0)*pow(((1.0/pow(dx,2.0))+(1.0/pow(dy,2.0))),-1.0);
+ x = (Re*0.5)*pow( (1.0/(dx*dx)+ 1.0/(dy*dy)),-1.0);
 
  y = dx/(fabs(Umax1));
 

@@ -1,14 +1,13 @@
-#include"mpi.h"
+#include "mpi.h"
 #include"boundary_val.h"
 
-void boundaryvalues(int imax, int jmax,double **U,double **V,int b_rank, int t_rank, int l_rank, int r_rank)
+void boundaryvalues(int imax, int jmax,double **U,double **V, int l_rank, int r_rank,int b_rank, int t_rank)
 {
  if(b_rank == MPI_PROC_NULL)
 {
         for (int i =1; i <=imax+1 ; ++i)
 	{
         U[i][0]       = - U[i][1];
-        //V[i][1]       = 0;
         V[i][0]       = 0;
     }
 }

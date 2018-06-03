@@ -1,5 +1,6 @@
 #include "sor.h"
 #include <math.h>
+#include "parallel.h"
 
 void sor(
   double omg,
@@ -26,50 +27,44 @@ void sor(
 	int i, j;
 	double rloc = 0.0;
 	double coeff = omg/(2.0*(1.0/(dx*dx)+1.0/(dy*dy)));
-	//int chunk = 0;
-	int x = ir - il+1;
-	int y = jt - jb+1;
-  int chunk = 0;
+	int xdim = ir - il+1;
+	int ydim = jt - jb+1;
+ 	int chunk = 0;
   
   int myrank;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
-  //printf("start sor \n");
-
- //MPI_Barrier(MPI_COMM_WORLD);
-	
-  //MPI_Barrier(MPI_COMM_WORLD);
 	/* Compute the residual */
 
 	/* Set left & right global domain boundaries according to Neumann boundary conditions */
 	if(l_rank == MPI_PROC_NULL)
 	{
-		for(j = 1; j <= y; j++) {
+		for(j = 1; j <= ydim; j++) {
 			P[0][j] = P[1][j];
 		}
 	}
 	if(r_rank == MPI_PROC_NULL)
 	{
-		for(j = 1; j <= y; j++) {
-			P[x+1][j] = P[x][j];
+		for(j = 1; j <= ydim; j++) {
+			P[xdim+1][j] = P[xdim][j];
 		}
 	}
 
 	/* Set top & bottom global domain boundaries according to Neumann boundary conditions */
 	if(t_rank == MPI_PROC_NULL)
 	{
-		for(i = 1; i <= x; i++) {
-			P[i][y+1] = P[i][y];
+		for(i = 1; i <= xdim; i++) {
+			P[i][ydim+1] = P[i][ydim];
 		}
 	}
 	if(b_rank == MPI_PROC_NULL)
 	{
-		for(i = 1; i <= x; i++) {
+		for(i = 1; i <= xdim; i++) {
 			P[i][0] = P[i][1];
 		}
 	}
 		/* SOR iteration */
-	for(i = 1; i <= x; i++) {
-		for(j = 1; j <= y; j++) {
+	for(i = 1; i <= xdim; i++) {
+		for(j = 1; j <= ydim; j++) {
 			P[i][j] = (1.0-omg)*P[i][j]
 				  + coeff*(( P[i+1][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]+P[i][j-1])/(dy*dy) - RS[i][j]);
 		}
@@ -77,13 +72,13 @@ void sor(
 /* Communicate between processes regarding pressure boundaries */
   pressure_comm(P, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
 
-	for(i = 1; i <= x; i++) {
-		for(j = 1; j <= y; j++) {
+	for(i = 1; i <= xdim; i++) {
+		for(j = 1; j <= ydim; j++) {
 			rloc += ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i][j])*
 				  ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i][j]);
 		}
 	}
 
   MPI_Allreduce(&rloc, res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-  *res = sqrt(*res/(double)(imax*jmax));
+  *res = sqrt(*res/(imax*jmax));
 }

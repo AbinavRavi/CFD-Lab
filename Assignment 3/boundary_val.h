@@ -10,10 +10,10 @@ void boundaryvalues(
   int jmax,
   double **U,
   double **V,
-  int b_rank,
-  int t_rank,
   int l_rank,
-  int r_rank
+  int r_rank,
+  int b_rank,
+  int t_rank
 );
 
 #endif

@@ -1,7 +1,6 @@
 #ifndef __SOR_H_
 #define __SOR_H_
-#include"parallel.h"
-
+#include "mpi.h"
 /**
  * One GS iteration for the pressure Poisson equation. Besides, the routine must 
  * also set the boundary values for P according to the specification. The 

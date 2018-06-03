@@ -22,8 +22,7 @@
  * @f$ i=1,\ldots,imax, \quad j=1,\ldots,jmax-1 @f$
  *
  */
- 
-double three_min(double a, double b, double c);
+
  
  
 void calculate_fg(
