@@ -27,23 +27,20 @@ void sor(
 	double rloc = 0.0;
 	double coeff = omg/(2.0*(1.0/(dx*dx)+1.0/(dy*dy)));
 	//int chunk = 0;
-	int x = ir - il;
-	int y = jt - jb;
+	int x = ir - il+1;
+	int y = jt - jb+1;
   int chunk = 0;
-  double rloc2 = 0.0;
-
+  
   int myrank;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   //printf("start sor \n");
-	/* SOR iteration */
-	for(i = 1; i <= x; i++) {
-		for(j = 1; j <= y; j++) {
-			P[i][j] = (1.0-omg)*P[i][j]
-				  + coeff*(( P[i+1][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]+P[i][j-1])/(dy*dy) - RS[i][j]);
-		}
-	}
 
-  /* Set left & right global domain boundaries according to Neumann boundary conditions */
+ //MPI_Barrier(MPI_COMM_WORLD);
+	
+  //MPI_Barrier(MPI_COMM_WORLD);
+	/* Compute the residual */
+
+	/* Set left & right global domain boundaries according to Neumann boundary conditions */
 	if(l_rank == MPI_PROC_NULL)
 	{
 		for(j = 1; j <= y; j++) {
@@ -70,20 +67,23 @@ void sor(
 			P[i][0] = P[i][1];
 		}
 	}
- //MPI_Barrier(MPI_COMM_WORLD);
-	/* Communicate between processes regarding pressure boundaries */
+		/* SOR iteration */
+	for(i = 1; i <= x; i++) {
+		for(j = 1; j <= y; j++) {
+			P[i][j] = (1.0-omg)*P[i][j]
+				  + coeff*(( P[i+1][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]+P[i][j-1])/(dy*dy) - RS[i][j]);
+		}
+	}
+/* Communicate between processes regarding pressure boundaries */
   pressure_comm(P, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
 
-  //MPI_Barrier(MPI_COMM_WORLD);
-	/* Compute the residual */
 	for(i = 1; i <= x; i++) {
 		for(j = 1; j <= y; j++) {
 			rloc += ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i][j])*
 				  ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i][j]);
 		}
 	}
-  MPI_Reduce(&rloc, &rloc2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
-  rloc2 = sqrt(rloc2/(double)(imax*jmax));
-  *res = rloc2;
-  MPI_Bcast(res, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+  MPI_Allreduce(&rloc, res, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+  *res = sqrt(*res/(double)(imax*jmax));
 }

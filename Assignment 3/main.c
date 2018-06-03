@@ -102,37 +102,38 @@ int main(int argn, char** args){
                 &r_rank, &b_rank, &t_rank, &omg_i, &omg_j, num_proc);
 
   Programm_Sync("Parallel parameters initialized... \n");
-
+  int xdim = ir-il+1;
+  int ydim = jt-jb+1;
 //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
-    double **P = matrix(0, ir-il+1, 0, jt-jb+1);
-    double **U = matrix(0, ir-il+2, 0, jt-jb+1);
-    double **V = matrix(0, ir-il+1, 0, jt-jb+2);
-    double **F = matrix(0, ir-il+2, 0, jt-jb+1);
-    double **G = matrix(0, ir-il+1, 0, jt-jb+2);
-    double **RS = matrix(0, ir-il, 0, jt-jb);
+    double **P = matrix(0, xdim+1, 0, ydim+1);
+    double **U = matrix(0, xdim+2, 0, ydim+1);
+    double **V = matrix(0, xdim+1, 0, ydim+2);
+    double **F = matrix(0, xdim+2, 0, ydim+1);
+    double **G = matrix(0, xdim+1, 0, ydim+2);
+    double **RS = matrix(0, xdim, 0, ydim);
 
 //Initialize the U, V and P
   Programm_Sync("U,V, P initializing... \n");
-  init_uvp(UI, VI, PI, ir-il, jt-jb, U, V, P);
+  init_uvp(UI, VI, PI, xdim, ydim, U, V, P);
 
   int n = 0; //
 	double t = 0;
 	int n1=0;
 	int it;
 	double res;
-  int buffsize = (ir-il)>(jt-jb)?(ir-il+1):(jt-jb+1);
+  int buffsize = (xdim)>(ydim)?(xdim+1):(ydim+1);
   double *bufSend = (double*)malloc(sizeof(double)*8*buffsize);
   double *bufRecv = (double*)malloc(sizeof(double)*8*buffsize);
   int chunk = 0;
   Programm_Sync("Starting the simulation... \n");
   while (t < t_end)
   {
-    boundaryvalues(ir-il, jt-jb, U, V, b_rank, t_rank, l_rank, r_rank);
+    boundaryvalues(xdim, ydim, U, V, b_rank, t_rank, l_rank, r_rank);
 
-    calculate_fg(Re, GX, GY, alpha, dt, dx, dy, ir-il, jt-jb, U, V, F, G);
+    calculate_fg(Re, GX, GY, alpha, dt, dx, dy, xdim, ydim, U, V, F, G);
    
 
-    calculate_rs(dt, dx, dy, ir-il, jt-jb, F, G, RS);
+    calculate_rs(dt, dx, dy, xdim, ydim, F, G, RS);
 
 	  it = 0;
 	  res = 0.0;
@@ -153,7 +154,7 @@ int main(int argn, char** args){
     printf("residual: %f\n",res);
    MPI_Barrier(MPI_COMM_WORLD);
 
-  	calculate_uv(dt, dx, dy, ir-il, jt-jb, U, V, F, G, P);
+  	calculate_uv(dt, dx, dy, xdim, ydim, U, V, F, G, P);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -166,19 +167,19 @@ int main(int argn, char** args){
     		n1=n1+ 1;
     		continue;
   	}
-    calculate_dt(Re, tau, &dt, dx, dy, ir-il, jt-jb, U, V);
+    calculate_dt(Re, tau, &dt, dx, dy, xdim, ydim, U, V);
     //MPI_Allreduce( &dt, &dt1, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     t =t+ dt;
     n = n+ 1;
 }
     //printf("Debug, residual: %f\n",Residual);
     //Free memory
-    free_matrix( P, 0, ir-il+1, 0, jt-jb+1);
-    free_matrix( U, 0, ir-il+2, 0, jt-jb+1);
-    free_matrix( V, 0, ir-il+1, 0, jt-jb+2);
-    free_matrix( F, 0, ir-il+2, 0, jt-jb+1);
-    free_matrix( G, 0, ir-il+1, 0, jt-jb+2);
-    free_matrix(RS, 0, ir-il, 0, jt-jb);
+    free_matrix( P, 0, xdim+1, 0, ydim+1);
+    free_matrix( U, 0, xdim+2, 0, ydim+1);
+    free_matrix( V, 0, xdim+1, 0, ydim+2);
+    free_matrix( F, 0, xdim+2, 0, ydim+1);
+    free_matrix( G, 0, xdim+1, 0, ydim+2);
+    free_matrix(RS, 0, xdim, 0, ydim);
     free(bufSend);
     free(bufRecv);
     Programm_Stop("Exit");

@@ -1,4 +1,3 @@
-
 #include "parallel.h"
 
 
@@ -99,8 +98,8 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
               double *bufSend, double *bufRecv, MPI_Status *status, int chunk )
 {
   int myrank;
-  int x_dim = ir-il;
-  int y_dim = jt-jb;
+  int x_dim = ir-il+1;
+  int y_dim = jt-jb+1;
   chunk = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
   //Send to left &  recieve from right
@@ -187,8 +186,8 @@ void uv_comm(double **U,
 
 {
   int myrank;
-  int x_dim = ir-il;
-  int y_dim = jt-jb;
+  int x_dim = ir-il+1;
+  int y_dim = jt-jb+1;
   chunk = 0;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
 
