@@ -1,7 +1,6 @@
 #ifndef __UVP_H__
 #define __UVP_H__
 
-
 /**
  * Determines the value of U and G according to the formula
  *
@@ -23,6 +22,10 @@
  * @f$ i=1,\ldots,imax, \quad j=1,\ldots,jmax-1 @f$
  *
  */
+ 
+double three_min(double a, double b, double c);
+ 
+ 
 void calculate_fg(
   double Re,
   double GX,
@@ -36,8 +39,7 @@ void calculate_fg(
   double **U,
   double **V,
   double **F,
-  double **G,
-  int b_rank, int t_rank, int l_rank, int r_rank
+  double **G
 );
 
 

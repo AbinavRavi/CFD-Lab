@@ -18,6 +18,8 @@ void sor(
   int t_rank,
   double *bufSend,
   double *bufRecv,
+  int imax,
+  int jmax,
   MPI_Status status
  )
 {
@@ -28,6 +30,7 @@ void sor(
 	int x = ir - il;
 	int y = jt - jb;
   int chunk = 0;
+  double rloc2 = 0.0;
 
   int myrank;
   MPI_Comm_rank(MPI_COMM_WORLD, &myrank);
@@ -41,13 +44,13 @@ void sor(
 	}
 
   /* Set left & right global domain boundaries according to Neumann boundary conditions */
-	if(l_rank == MPI_PROC_NULL)  /* Only receive/send data from/to right */
+	if(l_rank == MPI_PROC_NULL)
 	{
 		for(j = 1; j <= y; j++) {
 			P[0][j] = P[1][j];
 		}
 	}
-	if(r_rank == MPI_PROC_NULL)  /* Only send/receive data to/from left */
+	if(r_rank == MPI_PROC_NULL)
 	{
 		for(j = 1; j <= y; j++) {
 			P[x+1][j] = P[x][j];
@@ -55,23 +58,23 @@ void sor(
 	}
 
 	/* Set top & bottom global domain boundaries according to Neumann boundary conditions */
-	if(t_rank == MPI_PROC_NULL)  /* Only receive/send data from/to bottom */
+	if(t_rank == MPI_PROC_NULL)
 	{
 		for(i = 1; i <= x; i++) {
 			P[i][y+1] = P[i][y];
 		}
 	}
-	if(b_rank == MPI_PROC_NULL)  /* Only send/receive data to/from top */
+	if(b_rank == MPI_PROC_NULL)
 	{
 		for(i = 1; i <= x; i++) {
 			P[i][0] = P[i][1];
 		}
 	}
- MPI_Barrier(MPI_COMM_WORLD);
+ //MPI_Barrier(MPI_COMM_WORLD);
 	/* Communicate between processes regarding pressure boundaries */
   pressure_comm(P, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
 
-  MPI_Barrier(MPI_COMM_WORLD);
+  //MPI_Barrier(MPI_COMM_WORLD);
 	/* Compute the residual */
 	for(i = 1; i <= x; i++) {
 		for(j = 1; j <= y; j++) {
@@ -79,5 +82,8 @@ void sor(
 				  ( (P[i+1][j]-2.0*P[i][j]+P[i-1][j])/(dx*dx) + ( P[i][j+1]-2.0*P[i][j]+P[i][j-1])/(dy*dy) - RS[i][j]);
 		}
 	}
-  *res = sqrt(rloc/(x*y));
+  MPI_Reduce(&rloc, &rloc2, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+  rloc2 = sqrt(rloc2/(double)(imax*jmax));
+  *res = rloc2;
+  MPI_Bcast(res, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 }
