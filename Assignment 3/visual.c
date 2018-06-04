@@ -106,7 +106,6 @@ void write_Coordinates(FILE *fp, int origini, int originj, int imax, int jmax, d
   }
 }
 
-
 void output_uvp(double **U,double **V,double **P,int il,int ir,int jb,int jt,int omg_i,int omg_j,char *szProblem, int n)
 {
   double dx =1;
@@ -115,7 +114,7 @@ void output_uvp(double **U,double **V,double **P,int il,int ir,int jb,int jt,int
   int i,j;
   char szFileName[80];
   FILE *fp=NULL;
-  
+
   sprintf( szFileName, "%s.%d%d.%i.vtk", szProblem, omg_i, omg_j, n);
   fp = fopen( szFileName, "w");
   if( fp == NULL )

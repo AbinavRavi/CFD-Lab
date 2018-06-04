@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include "parallel.h"
 #include "mpi.h"
-
+#include <time.h>
 /**
  * The main operation reads the configuration file, initializes the scenario and
  * contains the main loop. So here are the individual steps of the algorithm:
@@ -99,14 +99,16 @@ int main(int argn, char** args){
   Programm_Sync("Input file read... \n");
   MPI_Status status;
 
-
   //Initializing the parallel parameters to broadcast
   init_parallel(iproc, jproc, imax, jmax, &myrank, &il, &ir, &jb, &jt, &l_rank,
                 &r_rank, &b_rank, &t_rank, &omg_i, &omg_j, num_proc);
 
+
   Programm_Sync("Parallel parameters initialized... \n");
+
   int xdim = ir-il+1;
   int ydim = jt-jb+1;
+
 //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     double **P = matrix(0, xdim+1, 0, ydim+1);
     double **U = matrix(0, xdim+2, 0, ydim+1);
@@ -125,45 +127,39 @@ int main(int argn, char** args){
 	int it;
 	double res;
   int buffsize = (xdim)>(ydim)?(xdim+1):(ydim+1);
-  double *bufSend = (double*)malloc(sizeof(double)*buffsize);
-  double *bufRecv = (double*)malloc(sizeof(double)*buffsize);
+  double *bufSend = (double*)malloc(sizeof(double)*2*buffsize);
+  double *bufRecv = (double*)malloc(sizeof(double)*2*buffsize);
   int chunk = 0;
   Programm_Sync("Starting the simulation... \n");
+  
   while (t < t_end)
   {
     boundaryvalues(xdim, ydim, U, V,l_rank, r_rank, b_rank, t_rank );
 
     calculate_fg(Re, GX, GY, alpha, dt, dx, dy, xdim, ydim, U, V, F, G, l_rank,r_rank, b_rank, t_rank);
-   
+
     calculate_rs(dt, dx, dy, xdim, ydim, F, G, RS);
 
 	  it = 0;
 	  res = 1.0;
 
     do {
-     
-    	sor(omg, dx, dy, P, RS, &res, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, imax,jmax,status);
-      
-      /* Sum the squares of all local residuals then square root that sum for global residual */
-      
-      MPI_Barrier(MPI_COMM_WORLD);
+     sor(omg, dx, dy, P, RS, &res, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, imax,jmax,status);
 
-//synchronize
+     MPI_Barrier(MPI_COMM_WORLD);
 	    ++it;
     } while(it<itermax&& res>eps);
 
   	calculate_uv(dt, dx, dy, xdim, ydim, U, V, F, G, P);
     boundaryvalues(xdim, ydim, U, V,l_rank, r_rank, b_rank, t_rank );
     uv_comm(U, V, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
-  	MPI_Barrier(MPI_COMM_WORLD);
-    
+
     calculate_dt(Re, tau, &dt, dx, dy, xdim, ydim, U, V);
-    //MPI_Allreduce( &dt, &dt1, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+
     if (t >= n1*dt_value)
   	{
-   		//write_vtkFile("solution", n,xlength,ylength,ir-il,jt-jb,dx,dy,U,V,P);
-      output_uvp(U,V,P, il, ir, jb, jt,omg_i, omg_j, "Solution",n);
-		  printf("%f SECONDS COMPLETED \n",n1*dt_value);
+		  output_uvp(U, V, P, il, ir, jb, jt, omg_i, omg_j, "Solution", n1);
+      printf("%f SECONDS COMPLETED \n",n1*dt_value);
     		n1=n1+ 1;
   	}
     if(myrank ==0){
@@ -171,8 +167,8 @@ int main(int argn, char** args){
     }
     t =t+ dt;
     n = n+ 1;
-}
-    //printf("Debug, residual: %f\n",Residual);
+  }
+    Programm_Sync("End of simulation... \n");
     //Free memory
     free_matrix( P, 0, xdim+1, 0, ydim+1);
     free_matrix( U, 0, xdim+2, 0, ydim+1);
@@ -182,6 +178,7 @@ int main(int argn, char** args){
     free_matrix(RS, 0, xdim+1, 0, ydim+1);
     free(bufSend);
     free(bufRecv);
+
     Programm_Stop("Exit");
   return 0;
 }
