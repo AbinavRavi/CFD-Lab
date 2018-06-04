@@ -109,10 +109,10 @@ int main(int argn, char** args){
   int ydim = jt-jb+1;
 //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     double **P = matrix(0, xdim+1, 0, ydim+1);
-    double **U = matrix(0, xdim+1, 0, ydim+1);
-    double **V = matrix(0, xdim+1, 0, ydim+1);
-    double **F = matrix(0, xdim+1, 0, ydim+1);
-    double **G = matrix(0, xdim+1, 0, ydim+1);
+    double **U = matrix(0, xdim+2, 0, ydim+1);
+    double **V = matrix(0, xdim+1, 0, ydim+2);
+    double **F = matrix(0, xdim+2, 0, ydim+1);
+    double **G = matrix(0, xdim+1, 0, ydim+2);
     double **RS = matrix(0, xdim+1, 0, ydim+1);
 
 //Initialize the U, V and P
@@ -174,10 +174,10 @@ int main(int argn, char** args){
     //printf("Debug, residual: %f\n",Residual);
     //Free memory
     free_matrix( P, 0, xdim+1, 0, ydim+1);
-    free_matrix( U, 0, xdim+1, 0, ydim+1);
-    free_matrix( V, 0, xdim+1, 0, ydim+1);
-    free_matrix( F, 0, xdim+1, 0, ydim+1);
-    free_matrix( G, 0, xdim+1, 0, ydim+1);
+    free_matrix( U, 0, xdim+2, 0, ydim+1);
+    free_matrix( V, 0, xdim+1, 0, ydim+2);
+    free_matrix( F, 0, xdim+2, 0, ydim+1);
+    free_matrix( G, 0, xdim+1, 0, ydim+2);
     free_matrix(RS, 0, xdim+1, 0, ydim+1);
     free(bufSend);
     free(bufRecv);

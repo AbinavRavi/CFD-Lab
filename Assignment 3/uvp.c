@@ -67,7 +67,7 @@ void calculate_fg(double Re,
 		 double** F, double** G)
 {
 
-for (int i = 1; i <=imax+1; i++) {
+for (int i = 1; i <=imax; i++) {
         //Boundary conditions for G
         G[i][0] = V[i][0];
         G[i][jmax]=V[i][jmax];
@@ -75,12 +75,12 @@ for (int i = 1; i <=imax+1; i++) {
     }
     
     //Boundary conditions for F
-    for (int j = 1; j <=jmax+1; j++) {
+    for (int j = 1; j <=jmax; j++) {
         F[0][j]=U[0][j];
         F[imax][j]=U[imax][j];
     }
 
-    for(int i=1; i<=imax; i++){
+    for(int i=1; i<=imax-1; i++){
 	
         for(int j=1; j<=jmax; j++){
 
@@ -104,7 +104,7 @@ for (int i = 1; i <=imax+1; i++) {
 	
 	for(int i=1; i<=imax; i++){
 	
-        for(int j=1; j<=jmax; j++){
+        for(int j=1; j<=jmax-1; j++){
         G[i][j]=V[i][j]+dt*(
                 //Central difference Scheme for second derivatives
                 (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
@@ -129,7 +129,7 @@ for (int i = 1; i <=imax+1; i++) {
 
 void calculate_uv(double dt,double dx,double dy,int imax, int jmax, double**U, double**V,double**F,double**G,double **P)
 {
-	for (int i = 1; i<= imax-1;i++)
+	for (int i = 1; i<= imax;i++)
 	{
 		for (int j=1; j<=jmax;j++)
 		{
@@ -140,7 +140,7 @@ void calculate_uv(double dt,double dx,double dy,int imax, int jmax, double**U, d
 	
 	for (int i = 1; i<= imax;i++)
 	{
-		for (int j=1; j<=jmax-1;j++)
+		for (int j=1; j<=jmax;j++)
 		{
 			//update the V component of velocity
 			V[i][j] = G[i][j] - (dt/dy)*(P[i][j+1] -P[i][j]);
