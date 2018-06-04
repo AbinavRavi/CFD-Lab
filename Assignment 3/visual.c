@@ -135,7 +135,7 @@ int jmax = jt-jb+1;
   fprintf(fp, "VECTORS velocity float\n");
   for(j = 0; j < jmax+1; j++) {
     for(i = 0; i < imax+1; i++) {
-      fprintf(fp, "%f %f 0\n", (U[i][j] + U[i][j+1]) * 0.5, (V[i][j] + V[i+1][j]) * 0.5 );
+      fprintf(fp, "%f %f 0\n", (U[i+1][j] + U[i+1][j+1]) * 0.5, (V[i][j+1] + V[i+1][j+1]) * 0.5 );
     }
   }
 

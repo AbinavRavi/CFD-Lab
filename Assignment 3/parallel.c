@@ -179,7 +179,6 @@ void pressure_comm(double **P,int il,int ir,int jb,int jt,
 
 }
 
-
 void uv_comm(double **U,
             double **V,
             int il,
@@ -206,7 +205,7 @@ void uv_comm(double **U,
   //Send to left &  recieve from right
   for (int j = 1; j <=ydim; ++j)
   {
-    bufSend[j-1] = U[1][j];
+    bufSend[j-1] = U[2][j];
   }
   if (l_rank != MPI_PROC_NULL)
   {
@@ -218,7 +217,7 @@ void uv_comm(double **U,
   }
   for (int j = 1; j <=ydim; ++j)
   {
-    U[xdim+1][j] = bufRecv[j-1];
+    U[xdim+2][j] = bufRecv[j-1];
   }
 
   // send to right & recieve from left
@@ -333,7 +332,7 @@ void uv_comm(double **U,
   ///send to bottom recieve from top
   for (int i = 1; i <=xdim; ++i)
   {
-    bufSend[i-1] = V[i][1];
+    bufSend[i-1] = V[i][2];
   }
   if (b_rank != MPI_PROC_NULL)
   {
@@ -345,9 +344,7 @@ void uv_comm(double **U,
   }
   for (int i = 1; i <=xdim; ++i)
   {
-    V[i][ydim+1] = bufRecv[i-1];
+    V[i][ydim+2] = bufRecv[i-1];
   }
 
 }
-
-

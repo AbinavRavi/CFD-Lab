@@ -133,7 +133,7 @@ int main(int argn, char** args){
   {
     boundaryvalues(xdim, ydim, U, V,l_rank, r_rank, b_rank, t_rank );
 
-    calculate_fg(Re, GX, GY, alpha, dt, dx, dy, xdim, ydim, U, V, F, G);
+    calculate_fg(Re, GX, GY, alpha, dt, dx, dy, xdim, ydim, U, V, F, G, l_rank,r_rank, b_rank, t_rank);
    
     calculate_rs(dt, dx, dy, xdim, ydim, F, G, RS);
 
@@ -151,12 +151,11 @@ int main(int argn, char** args){
 //synchronize
 	    ++it;
     } while(it<itermax&& res>eps);
-    printf("residual: %f\n",res);
 
   	calculate_uv(dt, dx, dy, xdim, ydim, U, V, F, G, P);
-
+    boundaryvalues(xdim, ydim, U, V,l_rank, r_rank, b_rank, t_rank );
     uv_comm(U, V, il, ir, jb, jt, l_rank, r_rank, b_rank, t_rank, bufSend, bufRecv, &status, chunk);
-  	Programm_Sync("Synchronising all the threads");
+  	MPI_Barrier(MPI_COMM_WORLD);
     
     calculate_dt(Re, tau, &dt, dx, dy, xdim, ydim, U, V);
     //MPI_Allreduce( &dt, &dt1, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
@@ -167,7 +166,9 @@ int main(int argn, char** args){
 		  printf("%f SECONDS COMPLETED \n",n1*dt_value);
     		n1=n1+ 1;
   	}
-   
+    if(myrank ==0){
+      printf("t = %f ,dt = %f, Res = %f,iterations=%d \n",t,dt,res,it-1);
+    }
     t =t+ dt;
     n = n+ 1;
 }

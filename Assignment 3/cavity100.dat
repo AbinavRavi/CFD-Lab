@@ -26,7 +26,7 @@ dt_value        0.2
 #               pressure
 #--------------------------------------------
 itermax		100
-eps		0.01
+eps		0.1
 omg		1.7
 alpha		0.5
 
