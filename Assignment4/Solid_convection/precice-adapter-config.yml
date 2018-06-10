@@ -1,0 +1,9 @@
+participant: Solid
+
+precice-config-file: precice-config.xml
+
+interfaces:
+- mesh: Solid-Mesh
+  patches: [interface_left, interface_right, interface_top, interface_bottom]
+  write-data: Heat-Flux
+  read-data: Temperature
