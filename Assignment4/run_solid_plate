@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Solid participant
+
+# Run this script in one terminal and the fluid solver in another terminal.
+
+# Use the precice-config for the serial run
+ln -s -f precice-configs/precice_config_plate_parallel.xml precice-config.xml
+
+# Prepare
+blockMesh -case Solid_plate
+
+# Run
+laplacianFoam -case Solid_plate

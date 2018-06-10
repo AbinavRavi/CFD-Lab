@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Solid participant
+
+# Run this script in one terminal and the flow solver in another terminal.
+
+# Use the precice-config for the heat exchanger case (explicit coupling)
+ln -s -f precice-configs/precice_config_exchange_explicit.xml precice-config.xml
+
+# Prepare
+blockMesh -case Solid_exchange
+
+# Run
+laplacianFoam -case Solid_exchange
