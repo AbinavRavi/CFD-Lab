@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+
+    <log>
+        <sink type="stream" output="stdout" filter="%Severity% > debug" enabled="true"/>
+    </log>
+
+    <solver-interface dimensions="3">
+
+    <data:scalar name="Temperature"/>
+    <data:scalar name="Heat-Flux"/>
+
+    <mesh name="Fluid-Mesh">
+        <use-data name="Temperature"/>
+        <use-data name="Heat-Flux"/>
+    </mesh>
+
+    <mesh name="Solid-Mesh">
+        <use-data name="Temperature"/>
+        <use-data name="Heat-Flux"/>
+    </mesh>
+
+    <participant name="Fluid">
+        <use-mesh name="Fluid-Mesh" provide="yes"/>
+        <read-data name="Heat-Flux" mesh="Fluid-Mesh"/>
+        <write-data name="Temperature" mesh="Fluid-Mesh"/>
+    </participant>
+
+    <participant name="Solid">
+        <use-mesh name="Fluid-Mesh" from="Fluid"/>
+        <use-mesh name="Solid-Mesh" provide="yes"/>
+        <read-data name="Temperature" mesh="Solid-Mesh"/>
+        <write-data name="Heat-Flux" mesh="Solid-Mesh"/>
+        <mapping:nearest-neighbor direction="read" from="Fluid-Mesh" to="Solid-Mesh" constraint="consistent" timing="initial"/>
+        <mapping:nearest-neighbor direction="write" from="Solid-Mesh" to="Fluid-Mesh" constraint="consistent" timing="initial"/>
+    </participant>
+
+    <m2n:sockets from="Fluid" to="Solid" distribution-type="gather-scatter"/>
+
+    <coupling-scheme:serial-explicit>
+        <participants first="Fluid" second="Solid"/>
+        <timestep-length value="0.001"/>
+        <max-time value="20.0"/>
+        <exchange data="Temperature" mesh="Fluid-Mesh" from="Fluid" to="Solid"/>
+        <exchange data="Heat-Flux" mesh="Fluid-Mesh" from="Solid" to="Fluid" initialize="true"/>
+    </coupling-scheme:serial-explicit>
+
+    </solver-interface>
+</precice-configuration>

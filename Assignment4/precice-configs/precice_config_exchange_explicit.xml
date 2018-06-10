@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+
+    <log>
+        <sink type="stream" output="stdout" filter="%Severity% > debug" enabled="true"/>
+    </log>
+
+    <solver-interface dimensions="3">
+
+        <data:scalar name="Temperature"/>
+        <data:scalar name="Heat-Flux"/>
+
+        <mesh name="F1-to-Solid-Mesh">
+            <use-data name="Temperature"/>
+            <use-data name="Heat-Flux"/>
+        </mesh>
+        <mesh name="F2-to-Solid-Mesh">
+            <use-data name="Temperature"/>
+            <use-data name="Heat-Flux"/>
+        </mesh>
+
+        <mesh name="Solid-to-F1-Mesh">
+            <use-data name="Temperature"/>
+            <use-data name="Heat-Flux"/>
+        </mesh>
+
+        <mesh name="Solid-to-F2-Mesh">
+            <use-data name="Temperature"/>
+            <use-data name="Heat-Flux"/>
+        </mesh>
+
+        <participant name="Fluid1">
+            <use-mesh name="F1-to-Solid-Mesh" provide="yes"/>
+            <read-data name="Heat-Flux" mesh="F1-to-Solid-Mesh"/>
+            <write-data name="Temperature" mesh="F1-to-Solid-Mesh"/>
+        </participant>
+
+        <participant name="Fluid2">
+            <use-mesh name="F2-to-Solid-Mesh" provide="yes"/>
+            <read-data name="Heat-Flux" mesh="F2-to-Solid-Mesh"/>
+            <write-data name="Temperature" mesh="F2-to-Solid-Mesh"/>
+        </participant>
+
+        <participant name="Solid">
+            <use-mesh name="F1-to-Solid-Mesh" from="Fluid1"/>
+            <use-mesh name="Solid-to-F1-Mesh" provide="yes"/>
+            <read-data name="Temperature" mesh="Solid-to-F1-Mesh"/>
+            <write-data name="Heat-Flux" mesh="Solid-to-F1-Mesh"/>
+            <mapping:nearest-neighbor direction="read" from="F1-to-Solid-Mesh" to="Solid-to-F1-Mesh" constraint="consistent" timing="initial"/>
+            <mapping:nearest-neighbor direction="write" from="Solid-to-F1-Mesh" to="F1-to-Solid-Mesh" constraint="consistent" timing="initial"/>
+
+            <use-mesh name="F2-to-Solid-Mesh" from="Fluid2"/>
+            <use-mesh name="Solid-to-F2-Mesh" provide="yes"/>
+            <read-data name="Temperature" mesh="Solid-to-F2-Mesh"/>
+            <write-data name="Heat-Flux" mesh="Solid-to-F2-Mesh"/>
+            <mapping:nearest-neighbor direction="read" from="F2-to-Solid-Mesh" to="Solid-to-F2-Mesh" constraint="consistent" timing="initial"/>
+            <mapping:nearest-neighbor direction="write" from="Solid-to-F2-Mesh" to="F2-to-Solid-Mesh" constraint="consistent" timing="initial"/>
+        </participant>
+
+        <m2n:sockets from="Fluid1" to="Solid" distribution-type="gather-scatter"/>
+        <coupling-scheme:serial-explicit>
+            <timestep-length value="0.01"/>
+            <max-time value="4"/>
+            <participants first="Fluid1" second="Solid"/>
+            <exchange data="Heat-Flux" mesh="F1-to-Solid-Mesh" from="Solid" to="Fluid1" initialize="true"/>
+            <exchange data="Temperature" mesh="F1-to-Solid-Mesh" from="Fluid1" to="Solid"/>
+        </coupling-scheme:serial-explicit>
+
+        <m2n:sockets from="Fluid2" to="Solid" distribution-type="gather-scatter"/>
+        <coupling-scheme:serial-explicit>
+            <timestep-length value="0.01"/>
+            <max-time value="4"/>
+            <participants first="Fluid2" second="Solid"/>
+            <exchange data="Heat-Flux" mesh="F2-to-Solid-Mesh" from="Solid" to="Fluid2" initialize="true"/>
+            <exchange data="Temperature" mesh="F2-to-Solid-Mesh" from="Fluid2" to="Solid"/>
+        </coupling-scheme:serial-explicit>
+
+    </solver-interface>
+
+</precice-configuration>
