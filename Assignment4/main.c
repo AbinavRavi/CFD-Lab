@@ -8,41 +8,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "adaptors/c/SolverInterfaceC.h"
+#include "precice_adaptor.h"
 
 
-/**
- * The main operation reads the configuration file, initializes the scenario and
- * contains the main loop. So here are the individual steps of the algorithm:
- *
- * - read the program configuration file using read_parameters()
- * - set up the matrices (arrays) needed using the matrix() command
- * - create the initial setup init_uvp(), init_flag(), output_uvp()
- * - perform the main loop
- * - trailer: destroy memory allocated and do some statistics
- *
- * The layout of the grid is decribed by the first figure below, the enumeration
- * of the whole grid is given by the second figure. All the unknowns corresond
- * to a two dimensional degree of freedom layout, so they are not stored in
- * arrays, but in a matrix.
- *
- * @image html grid.jpg
- *
- * @image html whole-grid.jpg
- *
- * Within the main loop the following big steps are done (for some of the
- * operations a definition is defined already within uvp.h):
- *
- * - calculate_dt() Determine the maximal time step size.
- * - boundaryvalues() Set the boundary values for the next time step.
- * - calculate_fg() Determine the values of F and G (diffusion and confection).
- *   This is the right hand side of the pressure equation and used later on for
- *   the time step transition.
- * - calculate_rs()
- * - Iterate the pressure poisson equation until the residual becomes smaller
- *   than eps or the maximal number of iterations is performed. Within the
- *   iteration loop the operation sor() is used.
- * - calculate_uv() Calculate the velocity at the next time step.
- */
 int main(int argn, char** args){
 
 	printf("Start of Run... \n");
@@ -98,6 +67,8 @@ int main(int argn, char** args){
     double t_end;             /* end time */
     double xlength;           /* length of the domain x-dir.*/
     double ylength;           /* length of the domain y-dir.*/
+	double x_origin;
+	double y_origin;
     double dt;                /* time step */
     double dx;                /* length of a cell x-dir. */
     double dy;                /* length of a cell y-dir. */
@@ -107,7 +78,6 @@ int main(int argn, char** args){
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
     int  itermax;             /* max. number of iterations  */
-    				/* for pressure per time step */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
     double Pr;
@@ -115,24 +85,17 @@ int main(int argn, char** args){
     double T_h;
     double T_c;
     double beta;
+	char *precice_config;
+	char *participant_name;
+	char *mesh_name;
+	char *read_data_name;
+	char *write_data_name;
 
     //Read and assign the parameter values from file
-    read_parameters(filename, &imax, &jmax, &xlength, &ylength,
+    read_parameters(filename, &imax, &jmax, &xlength, &ylength,&x_origin,&y_origin
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
-			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy, problem, geometry);
-
-	//include_temp =1 => include temperature equations for solving
-    int include_temp = 1;
-    if(((select==1)||(select==2)))
-	{
-		if( (Pr!=0)||(TI!=0)||(T_h!=0)||(T_c!=0)||(beta!=0) ){
-		char szBuff[80];
-        	sprintf( szBuff, "Input file incompatible. Please check .dat file. \n");
-        	ERROR( szBuff );
-		}
-		else  include_temp = 0;
-	}
-
+			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy, problem, geometry,
+			precice_config, participant_name, mesh_name, read_data_name, write_data_name);
 
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     printf("PROGRESS: Starting matrix allocation... \n");
@@ -143,27 +106,47 @@ int main(int argn, char** args){
     double **G = matrix(0, imax-1, 0, jmax-1);
     double **RS = matrix(0, imax-1, 0, jmax-1);
     int **flag = imatrix(0, imax-1, 0, jmax-1);
-    double **T;
-    double **T1;
-	if(include_temp)
-	{
-		T = matrix(0, imax-1, 0, jmax-1);
-		T1= matrix(0, imax-1, 0, jmax-1);
-	}
+    double **T = matrix(0, imax-1, 0, jmax-1);
+    double **T1 = matrix(0, imax-1, 0, jmax-1);
+
     printf("PROGRESS: Matrices allocated on heap... \n \n");
 
+	//Initialize precice
+	precicec_createSolverInterface(participant_name, precice_config, 0, 1);
+	int dim = precicec_getDimensions();
+
+	// define coupling mesh
+	int meshID = precicec_getMeshID(mesh_name);
+	int num_coupling_cells = 0;
+
     //Initilize flags
-    init_flag(problem,geometry, imax, jmax, flag);
+    init_flag(problem,geometry, imax, jmax, flag, &num_coupling_cells);
 
     //Initialize the U, V and P
-    if(include_temp)
-	{
-		init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, flag);
-	}
-	else
-	{
-		init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
-	}
+	init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, flag);
+
+	// get coupling cell ids
+	int* vertexIDs = precice_set_interface_vertices(imax, jmax, dx, dy, x_origin, y_origin,
+                                					num_coupling_cells, meshID, flag); 
+													
+	// define Dirichlet part of coupling written by this solver
+	int temperatureID = precicec_getDataID(write_data_name, meshID);
+	double* temperatureCoupled = (double*) malloc(sizeof(double)*num_coupling_cells);
+	
+	// define Neumann part of coupling read by this solver
+	int heatFluxID = precicec_getDataID(read_data_name, meshID);
+	double* heatFluxCoupled = (double*) malloc(sizeof(double) * num_coupling_cells);
+
+	// call precicec_initialize()
+	double precice_dt = precicec_initialize();
+
+	// initialize data at coupling interface
+	precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled,
+							vertexIDs, temperatureID, T, flag);
+	// synchronize with OpenFOAM
+	precicec_initialize_data();
+	// read heatfluxCoupled
+	precicec_readBlockScalarData(heatFluxID, num_coupling_cells, vertexIDs, heatFluxCoupled); 
 
 	//Make solution folder
 	struct stat st = {0};
@@ -172,7 +155,6 @@ int main(int argn, char** args){
 	if (stat(sol_folder, &st) == -1) {
     		mkdir(sol_folder, 0700);
 	}
-
 	char sol_directory[80];
 	sprintf( sol_directory,"Solution_%s/sol", problem);
 	//create log file
@@ -186,29 +168,29 @@ int main(int argn, char** args){
     printf("PROGRESS: Starting the flow simulation...\n");
     double t=0; int n=0; int n1=0;
 
-	while (t < t_end) {
+	while (precicec_isCouplingOngoing() ) {
         char* is_converged = "Yes";
-
+		//Calculate time step using min of precice_dt and dt
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr, include_temp);
+		dt = fmin(dt, precice_dt)
    		printf("t = %f ,dt = %f, ",t,dt);
-
+		//set boundary values for U and V in the fluid domain
 		boundaryvalues(imax, jmax, U, V, flag);
-
-		if(include_temp)
-		{
-			calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, select);
-
-		}
-
+		//Set coupling neumann boundary using precice at the coupling interface.
+		//this value comes from the adaptor which gives the heat-flux from solid domain computation
+		set_coupling_boundary(imax, jmax, dx, dy, heatFluxCoupled, T, flag);	
+		//calculate the temperature in the fluid
+		calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, select);
+		//set inlet boundary conditions for case-specific problem
     	spec_boundary_val(imax, jmax, U, V, flag);
-
+		//calculate F and G
     	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T, include_temp);
-
+		//Calculate RS
     	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
 
 		int it = 0;
 		double res = 10.0;
-
+		// SOR iteration to calculate the pressure in fluid domain
     	do {
     		sor(omg,dx,dy,imax,jmax,P,RS,&res,flag);
 			++it;
@@ -220,22 +202,21 @@ int main(int argn, char** args){
 			is_converged = "No";
 		}
   		fprintf(fp_log, "    %d |  %f | %f |      %d      | %f | %s \n", n, t, dt, it-1, res, is_converged);
-
+		// calculate the velocities U and V
 		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
-
-
-		if(!include_temp)
-		{
-			nullify_obstacles1(U, V, P, flag, imax, jmax);
-  		}
-		else
-		{
-			nullify_obstacles2(U, V, P, T, flag, imax, jmax);
-		}
-
+		// write temperatures at the coupling interface to be used by adaptor. This value is given to openfoam
+		// to be used for solid domain computation
+		precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled,
+							vertexIDs, temperatureID, T, flag);
+		// get time step from the coupling interface for the solid domain
+		precice_dt = precicec_advance(dt);
+		// read the heat flux from the solid domain into an array
+		precicec_readBlockScalarData(heatFluxID, num_coupling_cells, vertexIDs, heatFluxCoupled);
+		//write data into .vtk files for visualization
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
-   			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
+			nullify_obstacles2(U, V, P, T, flag, imax, jmax);//nullify values at obstacle cells
+   			write_vtkFile(sol_directory ,n ,xlength ,ylength x_origin,y_origin,imax-2 ,jmax-2 ,
 							dx ,dy ,U ,V ,P,T,include_temp);
 
 			printf("writing result at %f seconds \n",n1*dt_value);
@@ -245,6 +226,8 @@ int main(int argn, char** args){
     	t =t+ dt;
     	n = n+ 1;
     }
+	
+	precice_finalize();
 
 	fclose(fp_log);
     printf("PROGRESS: flow simulation completed...\n \n");
@@ -258,10 +241,13 @@ int main(int argn, char** args){
     free_matrix( G, 0, imax-1, 0, jmax-1);
     free_matrix(RS, 0, imax-1, 0, jmax-1);
     free_imatrix(flag, 0, imax-1, 0, jmax-1);
-	if(include_temp) { free_matrix(T, 0, imax-1, 0, jmax-1);
-			   free_matrix(T1, 0, imax-1, 0, jmax-1); }
+	free_matrix(T, 0, imax-1, 0, jmax-1);
+	ree_matrix(T1, 0, imax-1, 0, jmax-1);
 	free(geometry);
 	free(problem);
+	free(vertexIDs);
+	free(temperatureCoupled);
+	free(heatFluxCoupled);
     printf("PROGRESS: allocated memory released...\n \n");
 
 	printf("PROGRESS: End of Run.\n");
@@ -269,6 +255,3 @@ int main(int argn, char** args){
 
 }
 
-/*Things to do:
-read parameter
-*/

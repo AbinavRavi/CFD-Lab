@@ -4,70 +4,88 @@
 
 void read_parameters( const char *szFileName,       /* name of the file */
 		    int  *imax,                /* number of cells x-direction*/
-                    int  *jmax,                /* number of cells y-direction*/ 
+            int  *jmax,                /* number of cells y-direction*/ 
 		    double *xlength,           /* length of the domain x-dir.*/
-                    double *ylength,           /* length of the domain y-dir.*/
-		    double *dt,                /* time step */
+            double *ylength,           /* length of the domain y-dir.*/
+		    double *x_origin,
+			double *y_origin
+			double *dt,                /* time step */
 		    double *t_end,             /* end time */
 		    double *tau,               /* safety factor for time step*/
 		    double *dt_value,		/* time for output */
 		    double *eps,               /* accuracy bound for pressure*/
 		    double *omg,               /* relaxation factor */
 		    double *alpha,             /* uppwind differencing factor*/
-                    int  *itermax,             /* max. number of iterations  */
+            int  *itermax,             /* max. number of iterations  */
 		    double *GX,                /* gravitation x-direction */
-                    double *GY,                /* gravitation y-direction */
+            double *GY,                /* gravitation y-direction */
 		    double *Re,                /* reynolds number   */
-                    double *Pr,
+            double *Pr,
 		    double *UI,                /* velocity x-direction */
-                    double *VI,                /* velocity y-direction */
-                    double *PI,                /* pressure */
-       		    double *TI,
-		    double *T_h,
-		    double *T_c,
+            double *VI,                /* velocity y-direction */
+            double *PI,                /* pressure */
+       		double *TI,
 		    double *beta,
 		    double *dx,                /* length of a cell x-dir. */
             double *dy,               /* length of a cell y-dir. */
             char *problem,
-		    char *geometry
-
+		    char *geometry,
+			char *precice_config,
+			char *participant_name,
+			char *mesh_name,
+			char *read_data_name,
+			char *write_data_name
 )           
 {
    printf("PROGRESS: Reading .dat file... \n");
    //READ_STRING( szFileName, *problem );
    //READ_STRING( szFileName, geometry );
 
-   READ_INT   ( szFileName, *imax );
-   READ_INT   ( szFileName, *jmax );
-
    READ_DOUBLE( szFileName, *xlength );
    READ_DOUBLE( szFileName, *ylength );
+
+   READ_DOUBLE( szFileName, *x_origin );
+   READ_DOUBLE( szFileName, *y_origin );
+
+      READ_INT   ( szFileName, *imax );
+   READ_INT   ( szFileName, *jmax );
+
+	READ_STRING( szFileName, problem);
+	READ_STRING( szFileName, geometry);
+
+	READ_STRING( szFileName, precice_config);
+	READ_STRING( szFileName, participant_name);
+	READ_STRING( szFileName, mesh_name);
+	READ_STRING( szFileName, read_data_name);
+	READ_STRING( szFileName, write_data_name);
+
+   READ_DOUBLE( szFileName, *TI );
+	READ_DOUBLE( szFileName, *Pr );
+	READ_DOUBLE( szFileName, *beta );
 
    READ_DOUBLE( szFileName, *dt    );
    READ_DOUBLE( szFileName, *t_end );
    READ_DOUBLE( szFileName, *tau   );
+
    READ_DOUBLE( szFileName, *dt_value );
 
+   READ_INT   ( szFileName, *itermax );
    READ_DOUBLE( szFileName, *eps   );
    READ_DOUBLE( szFileName, *omg   );
    READ_DOUBLE( szFileName, *alpha );
-   READ_INT   ( szFileName, *itermax );
+
+   READ_DOUBLE( szFileName, *Re );
 
    READ_DOUBLE( szFileName, *GX );
    READ_DOUBLE( szFileName, *GY );
-   READ_DOUBLE( szFileName, *Re );
-   READ_DOUBLE( szFileName, *Pr );
+
+   READ_DOUBLE( szFileName, *PI );
 
    READ_DOUBLE( szFileName, *UI );
    READ_DOUBLE( szFileName, *VI );
-   READ_DOUBLE( szFileName, *PI );
-   READ_DOUBLE( szFileName, *TI );
-   READ_DOUBLE( szFileName, *T_h );
-   READ_DOUBLE( szFileName, *T_c );
-   READ_DOUBLE( szFileName, *beta );
-	
-	READ_STRING( szFileName, problem);
-	READ_STRING( szFileName, geometry);
+
+   //READ_DOUBLE( szFileName, *T_h );
+   //READ_DOUBLE( szFileName, *T_c );
 
    *dx = *xlength / (double)(*imax);
    *dy = *ylength / (double)(*jmax);
@@ -205,12 +223,12 @@ void forbid_assert(int imax, int jmax, int **pic)
 }
 
 
-void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
+void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag, int *num_coupling_cells)
 {
 	printf("PROGRESS: Setting flags... \n");
 	int **pic = imatrix(0,imax-1,0,jmax-1);
 	pic = read_pgm(geometry);
-
+	num_coupling_cells = 0;
 	for (int i=0; i<imax; i++)
 	{
 		for (int j=0; j<jmax; j++)
@@ -222,24 +240,29 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
 
 		switch(pic[i][j])
 		{
-			case 0: //fluid
+			case 0: //no-slip
 			flag[i][j] = 1<<1;
 			break;
 
-			case 1: //no-slip
+			case 1: //free-slip
 			flag[i][j] = 1<<2;
 			break;
 
-			case 2: //free-slip
+			case 2: //outflow
 			flag[i][j] = 1<<3;
 			break;
 
-			case 3: //outflow
+			case 3: //inflow
 			flag[i][j] = 1<<4;
 			break;
 
-			case 4: //inflow
+			case 6: //fluid
 			flag[i][j] = 1<<0;
+			break;
+
+			case 4: //coupling
+			flag[i][j] = 1<<9|1<<1;
+			*num_coupling_cells++;
 			break;
 		}
 
@@ -263,13 +286,9 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag)
 				flag[i][j] |= 1<<6;
 				}
 			}
- 
-
 		}
-
 	}
 	free_imatrix(pic, 0,imax-1,0,jmax-1);
 	printf("PROGRESS: flags set using .pgm file...\n \n");
-
 
 }
