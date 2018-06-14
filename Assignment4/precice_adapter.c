@@ -4,7 +4,7 @@
 // Check for  coupling cell
 int isCouplingCell(int flag)
 {
-    if (flag&&1<<9!=0)
+    if (flag&1<<9)
     {
         return 1;
     }
@@ -15,12 +15,13 @@ int isCouplingCell(int flag)
 }
 
 
-int *precice_set_interface_vertices(int imax, int jmax, int dx, int dy, double x_origin, double y_origin,
+int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, double x_origin, double y_origin,
                                     int num_coupling_cells,int meshID, int **flag)
 {
     double *vertices = (double*)malloc(sizeof(double)*num_coupling_cells*3);
     int *vertexID = (int*)malloc(sizeof(int)*num_coupling_cells);
     int k = 0;
+    printf("%f,%f\n",dx,dy);
     //moving over the walls
     //bottom wall
     for(int i = 0; i<imax; i++)
@@ -30,6 +31,7 @@ int *precice_set_interface_vertices(int imax, int jmax, int dx, int dy, double x
             vertices[3*k+2] = 0;
             k++;
         }
+       
     //top wall
     for(int i = 0; i<imax; i++)
         if (isCouplingCell(flag[i][jmax-1])==1) {
@@ -38,6 +40,7 @@ int *precice_set_interface_vertices(int imax, int jmax, int dx, int dy, double x
             vertices[3*k+2] = 0;
             k++;
         }
+        
     //left wall
     for(int j = 0 ; j< jmax; j++)
         if (isCouplingCell(flag[0][j])==1) {
@@ -46,6 +49,7 @@ int *precice_set_interface_vertices(int imax, int jmax, int dx, int dy, double x
             vertices[3*k+2] = 0;
             k++;
         }
+        
     //right wall
     for(int j = 0 ; j< jmax; j++)
         if (isCouplingCell(flag[imax-1][j])==1) {
@@ -64,7 +68,7 @@ int *precice_set_interface_vertices(int imax, int jmax, int dx, int dy, double x
                 vertices[3*k]= x_origin + (i-0.5)*dx;
                 vertices[3*k+1] = y_origin + (j-1)*dy;
                 vertices[3*k+2] = 0;
-                k++;
+                k++; 
             }
             //if top is fluid
             if ( (isCouplingCell(flag[i][j])==1)&&(flag[i][j+1]&1<<0) ) {
@@ -74,16 +78,17 @@ int *precice_set_interface_vertices(int imax, int jmax, int dx, int dy, double x
                 k++;
             }
         }
-    //assigning values to vertex array
-    precicec_setMeshVertices(meshID,num_coupling_cells, vertices ,vertexID);
 
-    return(*vertexID);
+    //assigning values to vertex array
+    precicec_setMeshVertices(meshID, num_coupling_cells, vertices ,vertexID);
+
+    return(vertexID);
     free(vertices);
 }
 
 
-void precice_write_temperature(int imax, int jmax, int num_coupling_cells, double *temperature, int *vertexIDs,
-                                int temperatureID, double **TEMP, int **flag)
+void precice_write_temperature(int imax, int jmax, int num_coupling_cells, double *temperature,
+                                int *vertexIDs, int temperatureID, double **TEMP, int **flag)
 {
     int k=0;    
     //moving over the walls

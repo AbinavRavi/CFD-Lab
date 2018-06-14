@@ -8,7 +8,7 @@ void read_parameters( const char *szFileName,       /* name of the file */
 		    double *xlength,           /* length of the domain x-dir.*/
             double *ylength,           /* length of the domain y-dir.*/
 		    double *x_origin,
-			double *y_origin
+			double *y_origin,
 			double *dt,                /* time step */
 		    double *t_end,             /* end time */
 		    double *tau,               /* safety factor for time step*/
@@ -52,6 +52,7 @@ void read_parameters( const char *szFileName,       /* name of the file */
 
 	READ_STRING( szFileName, problem);
 	READ_STRING( szFileName, geometry);
+
 
 	READ_STRING( szFileName, precice_config);
 	READ_STRING( szFileName, participant_name);
@@ -228,7 +229,7 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag, in
 	printf("PROGRESS: Setting flags... \n");
 	int **pic = imatrix(0,imax-1,0,jmax-1);
 	pic = read_pgm(geometry);
-	num_coupling_cells = 0;
+	*num_coupling_cells = 0;
 	for (int i=0; i<imax; i++)
 	{
 		for (int j=0; j<jmax; j++)
@@ -262,7 +263,7 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag, in
 
 			case 4: //coupling
 			flag[i][j] = 1<<9|1<<1;
-			*num_coupling_cells++;
+			(*num_coupling_cells)++;
 			break;
 		}
 
@@ -288,6 +289,7 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag, in
 			}
 		}
 	}
+	printf("num_coupling _cells = %d\n", *num_coupling_cells);
 	free_imatrix(pic, 0,imax-1,0,jmax-1);
 	printf("PROGRESS: flags set using .pgm file...\n \n");
 

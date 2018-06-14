@@ -43,7 +43,7 @@ void read_parameters( const char *szFileName,       /* name of the file */
 		    double *xlength,           /* length of the domain x-dir.*/
             double *ylength,           /* length of the domain y-dir.*/
 		    double *x_origin,
-			double *y_origin
+			double *y_origin,
 			double *dt,                /* time step */
 		    double *t_end,             /* end time */
 		    double *tau,               /* safety factor for time step*/
