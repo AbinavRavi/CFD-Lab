@@ -115,7 +115,7 @@ void calculate_uv(
   int **flag
 );
 
-void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, int select);
+void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag, double TI);
 
 void nullify_obstacles(double **U, double **V, double **P, double **T, int **flag, int imax, int jmax);
 

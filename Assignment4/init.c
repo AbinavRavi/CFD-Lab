@@ -134,7 +134,7 @@ void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax,
 }
 
 int  isfluid(int pic){
-	if((pic == 2)||(pic == 3)||(pic == 4)) {return 1;}
+	if((pic == 2)||(pic == 3)||(pic == 6)) {return 1;}
 		else {return 0;}
 }
 
@@ -148,14 +148,14 @@ void call_assert_error()
 // fluid on opposite sides Left and right
 int forbidden_LR(int **pic, int i, int j)
 {
-	if( (pic[i-1][j]==4)&&(pic[i+1][j]==4) ) {return 1;}
+	if( (pic[i-1][j]==6)&&(pic[i+1][j]==6) ) {return 1;}
 	else {return 0;}
 }
 
 // fluid on opposite sides top and bottom
 int forbidden_TB(int **pic, int i, int j)
 {
-	if( (pic[i][j+1]==4)&&(pic[i][j-1]==4) ) {return 1;}
+	if( (pic[i][j+1]==6)&&(pic[i][j-1]==6) ) {return 1;}
 	else {return 0;}	
 }
 
@@ -167,7 +167,7 @@ void forbid_assert(int imax, int jmax, int **pic)
 	{
 		for(int j=1; j<jmax-1; j++)
 		{
-			if(pic[i][j]!=4)
+			if(pic[i][j]!=6)
 			{
 				if(forbidden_LR(pic,i,j)||forbidden_TB(pic,i,j))
 				{
@@ -179,7 +179,7 @@ void forbid_assert(int imax, int jmax, int **pic)
 	//left boundary
 		for(int j=1; j<jmax-1; j++)
 		{
-			if(pic[0][j]!=4)
+			if(pic[0][j]!=6)
 			{
 				if(forbidden_TB(pic,0,j))
 				{
@@ -190,7 +190,7 @@ void forbid_assert(int imax, int jmax, int **pic)
 	//right boundary
 		for(int j=1; j<jmax-1; j++)
 		{
-			if(pic[imax-1][j]!=4)
+			if(pic[imax-1][j]!=6)
 			{
 				if(forbidden_TB(pic,imax-1,j))
 				{
@@ -201,7 +201,7 @@ void forbid_assert(int imax, int jmax, int **pic)
 	//top boundary
 	for(int i=1; i<imax-1; i++)
 	{
-			if(pic[i][jmax-1]!=4)
+			if(pic[i][jmax-1]!=6)
 			{
 				if(forbidden_LR(pic,i,jmax-1))
 				{
@@ -212,7 +212,7 @@ void forbid_assert(int imax, int jmax, int **pic)
 	//bottom boundary
 	for(int i=1; i<imax-1; i++)
 	{
-			if(pic[i][0]!=4)
+			if(pic[i][0]!=6)
 			{
 				if(forbidden_LR(pic,i,0))
 				{
@@ -270,24 +270,26 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag, in
 			if(!isfluid(pic[i][j])) //set boundaries if not 
 			{
 
-				if(i<imax-1 && pic[i+1][j]==4)
+				if(i<imax-1 && pic[i+1][j]==6)
 				{
 				flag[i][j] |= 1<<8;
 				}
-				if( i>0 && pic[i-1][j]==4)
+				if( i>0 && pic[i-1][j]==6)
 				{
 				flag[i][j] |= 1<<7;
 				}
-				if(j<jmax-1 && pic[i][j+1]==4)
+				if(j<jmax-1 && pic[i][j+1]==6)
 				{
 				flag[i][j] |= 1<<5;
 				}
-				if(j>0 && pic[i][j-1]==4)
+				if(j>0 && pic[i][j-1]==6)
 				{
 				flag[i][j] |= 1<<6;
 				}
 			}
+			printf("%d ",flag[i][j]);
 		}
+		printf("\n");
 	}
 	printf("num_coupling _cells = %d\n", *num_coupling_cells);
 	free_imatrix(pic, 0,imax-1,0,jmax-1);

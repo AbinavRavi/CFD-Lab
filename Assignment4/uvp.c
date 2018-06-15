@@ -149,7 +149,6 @@ for(int i = 0; i<imax; ++i)
         }
     }
 
-
 }
 
 
@@ -203,88 +202,46 @@ void calculate_rs(double dt,
 }
 
 void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,
-		double dt, double alpha,double **U,double **V,int **flag, double TI, double T_h, double T_c, int select)
+		double dt, double alpha,double **U,double **V,int **flag, double TI)
 {
-    for(int i = 1; i<imax-1; ++i)
+    for(int i = 0; i<imax; ++i)
     {
-  	for(int j = 1; j<jmax-1; ++j)
-  	{
-  		if ( B_O(flag[i][j]) && !(flag[i+1][j]&1<<9) )  temp[i][j] = temp[i+1][j];
+  		for(int j = 0; j<jmax; ++j)
+  		{
+  			if ( B_O(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i+1][j];
 
-  		if ( B_W(flag[i][j]) && !(flag[i-1][j]&1<<9) )  temp[i][j] = temp[i-1][j];
+  			if ( B_W(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i-1][j];
 
-  		if ( B_N(flag[i][j]) && !(flag[i][j+1]&1<<9) )  temp[i][j] = temp[i][j+1];
+  			if ( B_N(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i][j+1];
 
-  		if ( B_S(flag[i][j]) && !(flag[i][j-1]&1<<9) )  temp[i][j] = temp[i][j-1];
+  			if ( B_S(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i][j-1];
 
-  		if ( B_NO(flag[i][j]) && !(flag[i+1][j]&1<<9) && !(flag[i][j+1]&1<<9) ) temp[i][j] = (temp[i][j+1] + temp[i+1][j])/2;
+  			if ( B_NO(flag[i][j]) && ~(flag[i][j]&1<<9) ) temp[i][j] = (temp[i][j+1] + temp[i+1][j])/2;
 
-  		if ( B_NW(flag[i][j]) && !(flag[i+1][j]&1<<9) && !(flag[i][j-1]&1<<9) ) temp[i][j] = (temp[i][j+1] + temp[i-1][j])/2;
+  			if ( B_NW(flag[i][j]) && ~(flag[i][j]&1<<9) ) temp[i][j] = (temp[i][j+1] + temp[i-1][j])/2;
 
-  		if ( B_SO(flag[i][j]) && !(flag[i-1][j]&1<<9) && !(flag[i][j+1]&1<<9) ) temp[i][j] = (temp[i][j-1] + temp[i+1][j])/2;
+  			if ( B_SO(flag[i][j]) && ~(flag[i][j]&1<<9) ) temp[i][j] = (temp[i][j-1] + temp[i+1][j])/2;
 
-  		if ( B_SW(flag[i][j]) && !(flag[i-1][j]&1<<9 )&& !(flag[i][j-1]&1<<9) ) temp[i][j] = (temp[i][j-1] + temp[i-1][j])/2;
-	  }
+  			if ( B_SW(flag[i][j]) && ~(flag[i][j]&1<<9 ) ) temp[i][j] = (temp[i][j-1] + temp[i-1][j])/2;
+		
+			if (flag[i][j]&(1<<3) ) temp[i][j] = temp[i-1][j];
+
+  			if (flag[i][j]&(1<<4) ) temp[i][j] = TI;
+	  	}
 	}
 
-	for(int i = 1; i<imax; ++i)
-    {
-  	for(int j = 1; j<jmax; ++j)
-  	{
-  		if (flag[i][j]&(1<<3) ) temp[i][j] = temp[i-1][j];
+	double dut_dx;
+	double dvt_dy;
+	double dt2_dx2;
+	double dt2_dy2;
+	double Z;
 
-  		if (flag[i][j]&(1<<4) ) temp[i][j] = TI;
-  	}
-  }
-/*
-switch(select)
-{
-	case 3:
-	for(int j=0; j<jmax; j++)
+	for (int i = 0; i< imax;i++)
 	{
-		temp[0][j] = 2*T_h - temp[1][j];
-		temp[imax-1][j] = 2*T_c - temp[imax-2][j];
-	}
-	break;
-
-  case 4:
-  for(int j=0; j<jmax; j++)
-  {
-    temp[0][j] = 2*T_h - temp[1][j];
-    temp[imax-1][j] = 2*T_c - temp[imax-2][j];
-  }
-  break;
-
-	case 5:
-	for(int j=0; j<jmax; j++)
-	{
-		temp[0][j] = 2*T_h - temp[1][j];
-		temp[imax-1][j] = 2*T_c - temp[imax-2][j];
-	}
-	break;
-
-	case 6:
-	for(int i=0; i<imax; i++)
-	{
-		temp[i][0] = 2*T_h - temp[i][1];
-		temp[i][jmax-1] = 2*T_c - temp[i][jmax-2];
-	}
-
-}
-*/
-
-double dut_dx;
-double dvt_dy;
-double dt2_dx2;
-double dt2_dy2;
-double Z;
-for (int i = 0; i< imax;i++)
-{
-    for (int j=0; j<jmax;j++)
-	{
-
-	if(flag[i][j]&((1<<0)|(1<<3)|(1<<4)))
-	{
+    	for (int j=0; j<jmax;j++)
+		{
+		if( flag[i][j]&(1<<0) )
+		{
 
   		dut_dx = (1/dx)*( (U[i][j]*(temp[i][j]+temp[i+1][j])*0.5)-(U[i-1][j]*(temp[i-1][j]+temp[i][j])*0.5))+(alpha/dx)*(
 				(fabs(U[i][j])*(temp[i][j]-temp[i+1][j])*0.5) - (fabs(U[i-1][j])*(temp[i-1][j]-temp[i][j])*0.5)
@@ -301,21 +258,18 @@ for (int i = 0; i< imax;i++)
   		Z = (1/(Re*Pr))*(dt2_dx2+dt2_dy2) - dut_dx - dvt_dy;
 
       	temp1[i][j] = temp[i][j]+ (dt*Z);
-    }
-  }
+    	}
+		}
+  	}
+  	for (int i = 0; i< imax;i++){
+    	for (int j=0;j<jmax;j++){
 
-}
+			if( flag[i][j]&(1<<0) ){
 
-  for (int i = 0; i< imax;i++){
-    for (int j=0;j<jmax;j++){
-
-		if(flag[i][j]&((1<<0)|(1<<3)|(1<<4))){
-
-		temp[i][j] = temp1[i][j];
-    }
-  }
-
-}
+			temp[i][j] = temp1[i][j];
+   			}
+  		}
+	}
 
 }
 

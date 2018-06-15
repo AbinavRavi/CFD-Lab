@@ -24,7 +24,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
     printf("%f,%f\n",dx,dy);
     //moving over the walls
     //bottom wall
-    for(int i = 0; i<imax; i++)
+    for(int i = 1; i<imax-1; i++)
         if (isCouplingCell(flag[i][0])==1) {
             vertices[3*k]= x_origin + (i-0.5)*dx;
             vertices[3*k+1] = y_origin;
@@ -33,7 +33,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
         }
        
     //top wall
-    for(int i = 0; i<imax; i++)
+    for(int i = 1; i<imax-1; i++)
         if (isCouplingCell(flag[i][jmax-1])==1) {
             vertices[3*k]= x_origin + (i-0.5)*dx;
             vertices[3*k+1] = y_origin + (jmax-1)*dy;
@@ -42,7 +42,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
         }
         
     //left wall
-    for(int j = 0 ; j< jmax; j++)
+    for(int j = 1 ; j< jmax-1; j++)
         if (isCouplingCell(flag[0][j])==1) {
             vertices[3*k]= x_origin;
             vertices[3*k+1] = y_origin + (j-0.5)*dy;
@@ -51,7 +51,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
         }
         
     //right wall
-    for(int j = 0 ; j< jmax; j++)
+    for(int j = 1 ; j< jmax-1; j++)
         if (isCouplingCell(flag[imax-1][j])==1) {
             vertices[3*k]= x_origin + (imax-1)*dx;
             vertices[3*k+1] = y_origin + (j-0.5)*dy;
@@ -61,7 +61,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
 
     //inside the domain
     for(int j = 1 ; j< jmax-1; j++)
-        for(int i = 0; i<imax; i++)
+        for(int i = 1; i<imax-1; i++)
         {
             //if bottom is fluid
             if ( (isCouplingCell(flag[i][j])==1)&&(flag[i][j-1]&1<<0) ) {
@@ -105,13 +105,13 @@ void precice_write_temperature(int imax, int jmax, int num_coupling_cells, doubl
             k++;
         }
     //left wall
-    for(int j = 0 ; j< jmax; j++)
+    for(int j = 1 ; j< jmax-1; j++)
         if (isCouplingCell(flag[0][j])==1) {
             temperature[k] = TEMP[1][j];
             k++;
         }
     //right wall
-    for(int j = 0 ; j< jmax; j++)
+    for(int j = 1 ; j< jmax-1; j++)
         if (isCouplingCell(flag[imax-1][j])==1) {
             temperature[k] = TEMP[imax-2][j];
             k++;
@@ -119,7 +119,7 @@ void precice_write_temperature(int imax, int jmax, int num_coupling_cells, doubl
 
     //inside the domain
     for(int j = 1 ; j< jmax-1; j++)
-        for(int i = 0; i<imax; i++)
+        for(int i = 1; i<imax-1; i++)
         {
             //if bottom is fluid
             if ( (isCouplingCell(flag[i][j])==1)&&(flag[i][j-1]&1<<0) ) {
@@ -154,13 +154,13 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy,
             k++;
         }
     //left wall
-    for(int j = 0 ; j< jmax; j++)
+    for(int j = 1 ; j< jmax-1; j++)
         if (isCouplingCell(flag[0][j])==1) {
             TEMP[0][j] = TEMP[1][j] + dx*heatflux[k];
             k++;
         }
     //right wall
-    for(int j = 0 ; j< jmax; j++)
+    for(int j = 1 ; j< jmax-1; j++)
         if (isCouplingCell(flag[imax-1][j])==1) {
             TEMP[imax-1][j] = TEMP[imax-2][j] + dx*heatflux[k];
             k++;
@@ -168,7 +168,7 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy,
 
     //inside the domain
     for(int j = 1 ; j< jmax-1; j++)
-        for(int i = 0; i<imax; i++)
+        for(int i = 1; i<imax-1; i++)
         {
             //if bottom is fluid
             if ( (isCouplingCell(flag[i][j])==1)&&(flag[i][j-1]&1<<0) ) {
