@@ -46,8 +46,8 @@ for(int i = 0; i<imax; ++i)
 }
 
   /* SOR iteration */
-  for(i = 0; i < imax; i++) {
-    for(j = 0; j< jmax; j++) {
+  for(i = 1; i < imax-1; i++) {
+    for(j = 1; j< jmax-1; j++) {
 
 	if(flag[i][j]&(1<<0)){
 
@@ -60,8 +60,8 @@ for(int i = 0; i<imax; ++i)
   /* compute the residual */
   rloc = 0; int num_fluid_elem=0;
 
-  for(i = 0; i < imax; i++) {
-    for(j = 0; j < jmax; j++) {
+  for(i = 1; i < imax-1; i++) {
+    for(j = 1; j < jmax-1; j++) {
 
 	if(flag[i][j]&(1<<0)){
 

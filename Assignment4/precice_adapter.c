@@ -24,7 +24,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
     printf("%f,%f\n",dx,dy);
     //moving over the walls
     //bottom wall
-    for(int i = 1; i<imax-1; i++)
+    for(int i = 0; i<imax; i++)
         if (isCouplingCell(flag[i][0])==1) {
             vertices[3*k]= x_origin + (i-0.5)*dx;
             vertices[3*k+1] = y_origin;
@@ -33,7 +33,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
         }
        
     //top wall
-    for(int i = 1; i<imax-1; i++)
+    for(int i = 0; i<imax; i++)
         if (isCouplingCell(flag[i][jmax-1])==1) {
             vertices[3*k]= x_origin + (i-0.5)*dx;
             vertices[3*k+1] = y_origin + (jmax-1)*dy;

@@ -69,9 +69,6 @@ void calculate_fg(double Re,
 		 double** F, double** G,int **flag,
 		 double beta, double** temp)
 {
-
-
-
  /*set boundary values in case of no-slip/free-slip/and inflow*/
 for(int i = 0; i<imax; ++i)
 {
@@ -98,10 +95,9 @@ for(int i = 0; i<imax; ++i)
 	}
 }
 
-
-    for(int i=0; i<imax-1; i++)
+    for(int i=1; i<imax-1; i++)
     {
-        for(int j=0; j<jmax; j++)
+        for(int j=1; j<jmax-1; j++)
 		{
 		if( ((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))) )
 		{
@@ -125,12 +121,13 @@ for(int i = 0; i<imax; ++i)
     }
 
 
-    for(int i=0; i<imax; i++)
+    for(int i=1; i<imax-1; i++)
 	{
-        for(int j=0; j<jmax-1; j++)
+        for(int j=1; j<jmax-1; j++)
 		{
 		if((flag[i][j]&(1<<0))&flag[i][j+1])
 		{
+
         G[i][j]=V[i][j]+dt*(
                 //Central difference Scheme for second derivatives
                 (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
@@ -145,10 +142,10 @@ for(int i = 0; i<imax; ++i)
                         +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
                             )+GY)
                 -GY*beta*dt*(temp[i][j]+temp[i][j+1])*0.5;
+
 		}
         }
     }
-
 }
 
 
@@ -208,25 +205,28 @@ void calculate_temp(double **temp, double **temp1, double Pr, double Re, int ima
     {
   		for(int j = 0; j<jmax; ++j)
   		{
-  			if ( B_O(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i+1][j];
+		if (flag[i][j]&(1<<9)==0) {
+		
+  			if ( B_O(flag[i][j]) )  temp[i][j] = temp[i+1][j];
 
-  			if ( B_W(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i-1][j];
+  			if ( B_W(flag[i][j]) )  temp[i][j] = temp[i-1][j];
 
-  			if ( B_N(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i][j+1];
+  			if ( B_N(flag[i][j]) )  temp[i][j] = temp[i][j+1];
 
-  			if ( B_S(flag[i][j]) && ~(flag[i][j]&1<<9) )  temp[i][j] = temp[i][j-1];
+  			if ( B_S(flag[i][j]) )  temp[i][j] = temp[i][j-1];
 
-  			if ( B_NO(flag[i][j]) && ~(flag[i][j]&1<<9) ) temp[i][j] = (temp[i][j+1] + temp[i+1][j])/2;
+  			if ( B_NO(flag[i][j]) ) temp[i][j] = (temp[i][j+1] + temp[i+1][j])/2;
 
-  			if ( B_NW(flag[i][j]) && ~(flag[i][j]&1<<9) ) temp[i][j] = (temp[i][j+1] + temp[i-1][j])/2;
+  			if ( B_NW(flag[i][j]) ) temp[i][j] = (temp[i][j+1] + temp[i-1][j])/2;
 
-  			if ( B_SO(flag[i][j]) && ~(flag[i][j]&1<<9) ) temp[i][j] = (temp[i][j-1] + temp[i+1][j])/2;
+  			if ( B_SO(flag[i][j]) ) temp[i][j] = (temp[i][j-1] + temp[i+1][j])/2;
 
-  			if ( B_SW(flag[i][j]) && ~(flag[i][j]&1<<9 ) ) temp[i][j] = (temp[i][j-1] + temp[i-1][j])/2;
+  			if ( B_SW(flag[i][j]) ) temp[i][j] = (temp[i][j-1] + temp[i-1][j])/2;
 		
 			if (flag[i][j]&(1<<3) ) temp[i][j] = temp[i-1][j];
 
   			if (flag[i][j]&(1<<4) ) temp[i][j] = TI;
+		}
 	  	}
 	}
 
@@ -236,9 +236,9 @@ void calculate_temp(double **temp, double **temp1, double Pr, double Re, int ima
 	double dt2_dy2;
 	double Z;
 
-	for (int i = 0; i< imax;i++)
+	for (int i = 1; i< imax-1;i++)
 	{
-    	for (int j=0; j<jmax;j++)
+    	for (int j=1; j<jmax-1;j++)
 		{
 		if( flag[i][j]&(1<<0) )
 		{
@@ -261,8 +261,8 @@ void calculate_temp(double **temp, double **temp1, double Pr, double Re, int ima
     	}
 		}
   	}
-  	for (int i = 0; i< imax;i++){
-    	for (int j=0;j<jmax;j++){
+  	for (int i = 1; i< imax-1;i++){
+    	for (int j=1;j<jmax-1;j++){
 
 			if( flag[i][j]&(1<<0) ){
 

@@ -29,7 +29,6 @@ int main(int argn, char** args){
 			const char* filename = "0";
 			switch(select)
 			{
-				cenqfkcnek
 			case 1:
 			filename = "configs/heated-plate.dat";
 			break;
@@ -114,23 +113,23 @@ int main(int argn, char** args){
 
     //Initialize the U, V and P
 	init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, flag);
-printf("Debug1 \n");
+
 	// get coupling cell ids
 	int* vertexIDs = precice_set_interface_vertices(imax, jmax, dx, dy, x_origin, y_origin,
                                 					num_coupling_cells, meshID, flag); 
-	printf("Debug1 \n");
+
 	// define Dirichlet part of coupling written by this solver
 	int temperatureID = precicec_getDataID(write_data_name, meshID);
-printf("Debug1 \n");
+
 	double* temperatureCoupled = (double*) malloc(sizeof(double)*num_coupling_cells);
-printf("Debug1 \n");
+
 	// define Neumann part of coupling read by this solver
 	int heatFluxID = precicec_getDataID(read_data_name, meshID);
 	double* heatFluxCoupled = (double*) malloc(sizeof(double) * num_coupling_cells);
-	printf("Debug1 \n");
+
 	// call precicec_initialize()
 	double precice_dt = precicec_initialize();
-	printf("Debug1 \n");
+
 	// initialize data at coupling interface
 	precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled,
 							vertexIDs, temperatureID, T, flag);
@@ -163,12 +162,12 @@ printf("Debug1 \n");
         char* is_converged = "Yes";
 		//Calculate time step using min of precice_dt and dt
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr);
-		
+
 		dt = fmin(dt, precice_dt);
 		printf("t = %f ,dt = %f, ",t,dt);
 		//set boundary values for U and V in the fluid domain
 		boundaryvalues(imax, jmax, U, V, flag);
-		
+
 		//Set coupling neumann boundary using precice at the coupling interface.
 		//this value comes from the adaptor which gives the heat-flux from solid domain computation
 		set_coupling_boundary(imax, jmax, dx, dy, heatFluxCoupled, T, flag);
@@ -179,10 +178,12 @@ printf("Debug1 \n");
 		//set inlet boundary conditions for case-specific problem
     	spec_boundary_val(imax, jmax, U, V, flag);
 		//calculate F and G
+
     	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T);
 		//Calculate RS
-    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
 
+    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
+		
 		int it = 0;
 		double res = 10.0;
 		// SOR iteration to calculate the pressure in fluid domain

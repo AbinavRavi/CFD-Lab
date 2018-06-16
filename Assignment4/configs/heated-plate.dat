@@ -10,8 +10,8 @@ y_origin    0.25
 #--------------------------------------------
 #            number of cells
 #--------------------------------------------
-imax	    140
-jmax		40
+imax	    142
+jmax		42
 
 #--------------------------------------------
 #            domain setup
@@ -24,13 +24,13 @@ jmax		40
 #--------------------------------------------
 
 problem     heated-plate
-geometry    path/to/geometry-file
+geometry    geometries/heated-plate.pgm
 
 #--------------------------------------------
 #               PRECICE
 #--------------------------------------------
 
-precice_config		path/to/precice-config.xml
+precice_config		precice-configs/precice_config_plate_explicit.xml
 participant_name	Fluid
 mesh_name			Fluid-Mesh
 read_data_name		Heat-Flux

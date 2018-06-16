@@ -24,13 +24,13 @@ jmax		58
 #--------------------------------------------
 
 problem     F1-heat-exchange
-geometry    NS/geometries/F1-heat-exchange_82x60.pgm
+geometry    geometries/F1-heat-exchange_82x60.pgm
 
 #--------------------------------------------
 #               PRECICE
 #--------------------------------------------
 
-precice_config		precice-config.xml
+precice_config		precice-configs/precice_config_exchange_explicit.xml
 participant_name	Fluid1
 mesh_name			F1-to-Solid-Mesh
 read_data_name		Heat-Flux
