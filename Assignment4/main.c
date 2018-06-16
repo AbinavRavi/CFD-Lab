@@ -29,6 +29,7 @@ int main(int argn, char** args){
 			const char* filename = "0";
 			switch(select)
 			{
+				cenqfkcnek
 			case 1:
 			filename = "configs/heated-plate.dat";
 			break;
