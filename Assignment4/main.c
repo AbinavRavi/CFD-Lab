@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "/home/snowcrash/CSESS18/CFDLab/precice-1.1.1/src/precice/adapters/c/SolverInterfaceC.h"
+#include "/home/snowcrash/CSESS18/CFDLab/precice-1.1.1/src/precice/adapters/c/Constants.h"
 #include"precice_adapter.h"
 
 
@@ -20,7 +21,7 @@ int main(int argn, char** args){
 			printf("P1. Forced Convection over a heated plate \n");
 			printf("P2. Natural Convection with heat conducting walls \n");
 			printf("P3. 2D Heat Exchanger - Config1 \n");
-			printf("P4. 2D Heat Exchanger - Config2 \n" );
+			printf("P4. 2D Heat Exchanger - Config2 \n");
 			int select;
 			char* geometry = (char*)(malloc(sizeof(char)*200));
 			char* problem = (char*)(malloc(sizeof(char)*2));
@@ -58,7 +59,7 @@ int main(int argn, char** args){
     double ylength;           /* length of the domain y-dir.*/
 	double x_origin;
 	double y_origin;
-    double dt;                /* time step */
+    double dt ;                /* time step */
     double dx;                /* length of a cell x-dir. */
     double dy;                /* length of a cell y-dir. */
     int  imax;                /* number of cells x-direction*/
@@ -80,6 +81,9 @@ int main(int argn, char** args){
 	char *read_data_name = (char*)(malloc(sizeof(char)*200));
 	char *write_data_name = (char*)(malloc(sizeof(char)*200));
 
+	const char* coric = precicec_actionReadIterationCheckpoint();
+	const char* cowic = precicec_actionWriteIterationCheckpoint();
+
     //Read and assign the parameter values from file
     read_parameters(filename, &imax, &jmax, &xlength, &ylength,&x_origin, &y_origin,
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
@@ -91,11 +95,14 @@ int main(int argn, char** args){
     double **P = matrix(0, imax-1, 0, jmax-1);
     double **U = matrix(0, imax-1, 0, jmax-1);
     double **V = matrix(0, imax-1, 0, jmax-1);
+    double **U_cp = matrix(0, imax-1, 0, jmax-1);
+    double **V_cp = matrix(0, imax-1, 0, jmax-1);
     double **F = matrix(0, imax-1, 0, jmax-1);
     double **G = matrix(0, imax-1, 0, jmax-1);
     double **RS = matrix(0, imax-1, 0, jmax-1);
     int **flag = imatrix(0, imax-1, 0, jmax-1);
     double **T = matrix(0, imax-1, 0, jmax-1);
+	double **T_cp = matrix(0, imax-1, 0, jmax-1);
     double **T1 = matrix(0, imax-1, 0, jmax-1);
 
     printf("PROGRESS: Matrices allocated on heap... \n \n");
@@ -103,7 +110,7 @@ int main(int argn, char** args){
 	//Initialize precice
 	precicec_createSolverInterface(participant_name, precice_config, 0, 1);
 	int dim = precicec_getDimensions();
-
+	
 	// define coupling mesh
 	int meshID = precicec_getMeshID(mesh_name);
 	int num_coupling_cells = 0;
@@ -157,11 +164,18 @@ int main(int argn, char** args){
 
     printf("PROGRESS: Starting the flow simulation...\n");
     double t=0; int n=0; int n1=0;
+	double time_cp;
 
 	while (precicec_isCouplingOngoing() ) {
+
+		if(precicec_isActionRequired(cowic)){
+			write_checkpoint(t, U, V, T, &time_cp, U_cp, V_cp, T_cp, imax, jmax);
+			precicec_fulfilledAction(cowic);
+		}
+
         char* is_converged = "Yes";
 		//Calculate time step using min of precice_dt and dt
-		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr);
+		calculate_dt(Re, tau,&dt,dx,dy,imax,jmax, U, V, Pr);
 
 		dt = fmin(dt, precice_dt);
 		printf("t = %f ,dt = %f, ",t,dt);
@@ -219,8 +233,16 @@ int main(int argn, char** args){
     		n1=n1+ 1;
     		continue;
   		}
-    	t =t+ dt;
-    	n = n+ 1;
+
+		if(precicec_isActionRequired(coric)){ // timestep not converged
+			restore_checkpoint(&t, U, V, T, time_cp, U_cp, V_cp, T_cp, imax, jmax);
+			precicec_fulfilledAction(coric);
+		}
+		else{ // timestep converged
+			t =t+ dt;
+			n = n+ 1;
+		}
+
     }
 	
 	precicec_finalize();
@@ -233,11 +255,14 @@ int main(int argn, char** args){
     free_matrix( P, 0, imax-1, 0, jmax-1);
     free_matrix( U, 0, imax-1, 0, jmax-1);
     free_matrix( V, 0, imax-1, 0, jmax-1);
+    free_matrix( U_cp, 0, imax-1, 0, jmax-1);
+    free_matrix( V_cp, 0, imax-1, 0, jmax-1);
     free_matrix( F, 0, imax-1, 0, jmax-1);
     free_matrix( G, 0, imax-1, 0, jmax-1);
     free_matrix(RS, 0, imax-1, 0, jmax-1);
     free_imatrix(flag, 0, imax-1, 0, jmax-1);
 	free_matrix(T, 0, imax-1, 0, jmax-1);
+	free_matrix(T_cp, 0, imax-1, 0, jmax-1);
 	free_matrix(T1, 0, imax-1, 0, jmax-1);
 	free(geometry);
 	free(problem);
@@ -255,4 +280,3 @@ int main(int argn, char** args){
   return -1;
 
 }
-

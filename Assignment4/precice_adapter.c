@@ -183,11 +183,10 @@ void set_coupling_boundary(int imax, int jmax, double dx, double dy,
         }
 }
 
-/*
+
 void write_checkpoint(double time, double **U, double **V, double **TEMP, double *time_cp, double **U_cp,
                         double **V_cp, double **TEMP_cp, int imax, int jmax)
 {
-    
     for(int i=0; i<imax;i++)
     {
         for(int j=0;j<jmax;j++)
@@ -195,6 +194,7 @@ void write_checkpoint(double time, double **U, double **V, double **TEMP, double
             U_cp[i][j] = U[i][j];
             V_cp[i][j] = V[i][j];
             TEMP_cp[i][j] = TEMP[i][j];
+            *time_cp = time;
         }
     }
     
@@ -204,7 +204,6 @@ void write_checkpoint(double time, double **U, double **V, double **TEMP, double
 void restore_checkpoint(double *time, double **U, double **V, double **TEMP, double time_cp, double **U_cp,
                         double **V_cp,double **TEMP_cp, int imax, int jmax)
 {
-    
         for (int i=0;i<imax;i++)
         {
             for(int j=0; j<jmax;j++)
@@ -212,9 +211,10 @@ void restore_checkpoint(double *time, double **U, double **V, double **TEMP, dou
                 U[i][j] = U_cp[i][j];
                 V[i][j] = V_cp[i][j];
                 TEMP[i][j] = TEMP_cp[i][j];
+                *time = time_cp;
             }
         }
     
 
 }
-*/
+

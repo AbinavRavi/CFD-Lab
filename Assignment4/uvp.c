@@ -281,7 +281,7 @@ void nullify_obstacles(double **U, double **V, double **P, double **T, int **fla
 	{
 	    for (int j=0;j<jmax; j++)
 		{
-			if(flag[i][j]&( (1<<1)|(1<<2)) )
+			if(flag[i][j]&( (1<<1)|(1<<2) ) )
 			{
 				U[i][j] = 0;
 				V[i][j] = 0;

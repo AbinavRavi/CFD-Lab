@@ -38,13 +38,15 @@
 
     <m2n:sockets from="Fluid" to="Solid" distribution-type="gather-scatter"/>
 
-    <coupling-scheme:serial-explicit>
-        <participants first="Fluid" second="Solid"/>
-        <timestep-length value="0.001"/>
-        <max-time value="20.0"/>
+    <coupling-scheme:serial-implicit>
+      <participants first="Fluid" second="Solid" />
+      <max-timesteps value="67000" />
+      <timestep-length value="0.0003"/>
+      <max-iterations value="2000" />
+      <min-iteration-convergence-measure min-iterations="1" data="Temperature" mesh="Fluid-Mesh"/>
         <exchange data="Temperature" mesh="Fluid-Mesh" from="Fluid" to="Solid"/>
         <exchange data="Heat-Flux" mesh="Fluid-Mesh" from="Solid" to="Fluid" initialize="true"/>
-    </coupling-scheme:serial-explicit>
+    </coupling-scheme:serial-implicit>
 
     </solver-interface>
 </precice-configuration>

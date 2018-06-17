@@ -10,8 +10,8 @@ y_origin    0.1
 #--------------------------------------------
 #            number of cells
 #--------------------------------------------
-imax	    80
-jmax		34
+imax	    82
+jmax		36
 
 #--------------------------------------------
 #            domain setup
@@ -24,15 +24,15 @@ jmax		34
 #--------------------------------------------
 
 problem     F2-heat-exchange
-geometry    geometries/F2-heat-exchange_82x36.pgm
+geometry    geometries/F2-heat-exchanger.pgm
 
 #--------------------------------------------
 #               PRECICE
 #--------------------------------------------
 
-precice_config		precice-configs/precice_config_exchange_explicit.xml
+precice_config		precice-configs/precice_config_exchange2_explicit.xml
 participant_name	Fluid2
-mesh_name			F2-to-Solid-Mesh
+mesh_name		F2-to-Solid-Mesh
 read_data_name		Heat-Flux
 write_data_name		Temperature
 

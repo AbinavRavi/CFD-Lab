@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+
+    <log>
+        <sink type="stream" output="stdout" filter="%Severity% > debug" enabled="true"/>
+    </log>
+
+    <solver-interface dimensions="3">
+
+    <data:scalar name="Temperature"/>
+    <data:scalar name="Heat-Flux"/>
+
+    <mesh name="F1-to-Solid-Mesh">
+        <use-data name="Temperature"/>
+        <use-data name="Heat-Flux"/>
+    </mesh>
+
+    <mesh name="Solid-to-F1-Mesh">
+        <use-data name="Temperature"/>
+        <use-data name="Heat-Flux"/>
+    </mesh>
+
+    <participant name="Fluid1">
+        <use-mesh name="F1-to-Solid-Mesh" provide="yes"/>
+        <read-data name="Heat-Flux" mesh="F1-to-Solid-Mesh"/>
+        <write-data name="Temperature" mesh="F1-to-Solid-Mesh"/>
+    </participant>
+
+    <participant name="Solid">
+        <use-mesh name="F1-to-Solid-Mesh" from="Fluid1"/>
+        <use-mesh name="Solid-to-F1-Mesh" provide="yes"/>
+        <read-data name="Temperature" mesh="Solid-to-F1-Mesh"/>
+        <write-data name="Heat-Flux" mesh="Solid-to-F1-Mesh"/>
+        <mapping:nearest-neighbor direction="read" from="F1-to-Solid-Mesh" to="Solid-to-F1-Mesh" constraint="consistent" timing="initial"/>
+        <mapping:nearest-neighbor direction="write" from="Solid-to-F1-Mesh" to="F1-to-Solid-Mesh" constraint="consistent" timing="initial"/>
+    </participant>
+
+    <m2n:sockets from="Fluid1" to="Solid" distribution-type="gather-scatter"/>
+
+    <coupling-scheme:serial-implicit>
+      <max-timesteps value="20000" />
+      <timestep-length value="0.001"/>
+      <max-iterations value="2000" />
+      <participants first="Fluid1" second="Solid" />
+      <min-iteration-convergence-measure min-iterations="1" data="Temperature" mesh="F1-to-Solid-Mesh"/>
+        <exchange data="Heat-Flux" mesh="F1-to-Solid-Mesh" from="Solid" to="Fluid1"/>
+        <exchange data="Temperature" mesh="F1-to-Solid-Mesh" from="Fluid1" to="Solid"/>
+    </coupling-scheme:serial-implicit>
+
+    </solver-interface>
+
+</precice-configuration>
