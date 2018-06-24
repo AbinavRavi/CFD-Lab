@@ -21,7 +21,7 @@ int *precice_set_interface_vertices(int imax, int jmax, double dx, double dy, do
     double *vertices = (double*)malloc(sizeof(double)*num_coupling_cells*3);
     int *vertexID = (int*)malloc(sizeof(int)*num_coupling_cells);
     int k = 0;
-    printf("%f,%f\n",dx,dy);
+
     //moving over the walls
     //bottom wall
     for(int i = 0; i<imax; i++)

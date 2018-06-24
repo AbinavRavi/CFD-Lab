@@ -42,7 +42,8 @@ void calculate_fg(
   double **G,
   int **flag,
   double beta,
-  double **temp
+  double **temp,
+  double UI
 );
 
 
@@ -112,10 +113,12 @@ void calculate_uv(
   double **F,
   double **G,
   double **P,
-  int **flag
+  int **flag,
+  double UI
 );
 
-void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,double dt, double alpha,double **U,double **V,int **flag, double TI);
+void calculate_temp(double **temp, double **temp1, double Pr, double Re, int imax,int jmax,double dx, double dy,
+                    double dt, double alpha,double **U,double **V,int **flag, double TI, double UI);
 
 void nullify_obstacles(double **U, double **V, double **P, double **T, int **flag, int imax, int jmax);
 

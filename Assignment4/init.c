@@ -47,8 +47,8 @@ void read_parameters( const char *szFileName,       /* name of the file */
    READ_DOUBLE( szFileName, *x_origin );
    READ_DOUBLE( szFileName, *y_origin );
 
-      READ_INT   ( szFileName, *imax );
-   READ_INT   ( szFileName, *jmax );
+    READ_INT   ( szFileName, *imax );
+   	READ_INT   ( szFileName, *jmax );
 
 	READ_STRING( szFileName, problem);
 	READ_STRING( szFileName, geometry);
@@ -290,18 +290,7 @@ void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag, in
 		}
 	}
 	
-	for(int j = 0; j < jmax; j++)
-	{
-		
-		for(int i = 0; i < imax; i++)
-		{
-			printf("%d ",flag[imax-1-i][jmax-1-j]);
-		}
-		printf(" \n");
-		
-	}
-	
-	printf("num_coupling _cells = %d\n", *num_coupling_cells);
+	printf("#coupling cells = %d\n", *num_coupling_cells);
 	free_imatrix(pic, 0,imax-1,0,jmax-1);
 	printf("PROGRESS: flags set using .pgm file...\n \n");
 

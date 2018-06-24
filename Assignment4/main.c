@@ -16,12 +16,12 @@
 int main(int argn, char** args){
 
 	printf("Start of Run... \n");
-			printf("Assignment-3, Group D \n");
-			printf("Please select the problem from the list below by typing 1-5 \n");
+			printf("Assignment-4, Group D \n");
+			printf("Please select the problem from the list below by typing 1-4 \n");
 			printf("P1. Forced Convection over a heated plate \n");
 			printf("P2. Natural Convection with heat conducting walls \n");
-			printf("P3. 2D Heat Exchanger - Config1 \n");
-			printf("P4. 2D Heat Exchanger - Config2 \n");
+			printf("P3. 2D Heat Exchanger - Fluid1 \n");
+			printf("P4. 2D Heat Exchanger - Fluid2 \n");
 			int select;
 			char* geometry = (char*)(malloc(sizeof(char)*200));
 			char* problem = (char*)(malloc(sizeof(char)*2));
@@ -75,6 +75,7 @@ int main(int argn, char** args){
     double T_h;
     double T_c;
     double beta;
+
 	char *precice_config = (char*)(malloc(sizeof(char)*200));
 	char *participant_name = (char*)(malloc(sizeof(char)*200));
 	char *mesh_name = (char*)(malloc(sizeof(char)*200));
@@ -148,12 +149,12 @@ int main(int argn, char** args){
 	//Make solution folder
 	struct stat st = {0};
 	char sol_folder[80];
-	sprintf( sol_folder,"Solution_%s",problem);
+	sprintf( sol_folder,"Fluid_%s",problem);
 	if (stat(sol_folder, &st) == -1) {
     		mkdir(sol_folder, 0700);
 	}
 	char sol_directory[80];
-	sprintf( sol_directory,"Solution_%s/sol", problem);
+	sprintf( sol_directory,"Fluid_%s/sol", problem);
 	//create log file
 	char LogFileName[80];
  	FILE *fp_log = NULL;
@@ -180,29 +181,30 @@ int main(int argn, char** args){
 		dt = fmin(dt, precice_dt);
 		printf("t = %f ,dt = %f, ",t,dt);
 		//set boundary values for U and V in the fluid domain
-		boundaryvalues(imax, jmax, U, V, flag);
+		boundaryvalues(imax, jmax, U, V, flag,UI);
 
 		//Set coupling neumann boundary using precice at the coupling interface.
 		//this value comes from the adaptor which gives the heat-flux from solid domain computation
 		set_coupling_boundary(imax, jmax, dx, dy, heatFluxCoupled, T, flag);
 
 		//calculate the temperature in the fluid
-		calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI);
+		calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, UI);
 
 		//set inlet boundary conditions for case-specific problem
-    	spec_boundary_val(imax, jmax, U, V, flag);
+    	spec_boundary_val(imax, jmax, U, V, flag,select);
 		//calculate F and G
 
-    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T);
+    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T,UI);
 		//Calculate RS
 
     	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
-		
+
 		int it = 0;
 		double res = 10.0;
 		// SOR iteration to calculate the pressure in fluid domain
     	do {
-    		sor(omg,dx,dy,imax,jmax,P,RS,&res,flag);
+
+    		sor(omg,dx,dy,imax,jmax,P,RS,&res,flag,UI);
 			++it;
 
     	} while(it<itermax && res>eps);
@@ -213,7 +215,8 @@ int main(int argn, char** args){
 		}
   		fprintf(fp_log, "    %d |  %f | %f |      %d      | %f | %s \n", n, t, dt, it-1, res, is_converged);
 		// calculate the velocities U and V
-		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
+		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag, UI);
+
 		// write temperatures at the coupling interface to be used by adaptor. This value is given to openfoam
 		// to be used for solid domain computation
 		precice_write_temperature(imax, jmax, num_coupling_cells, temperatureCoupled,

@@ -334,7 +334,7 @@ double **matrix( int nrl, int nrh, int ncl, int nch )
    int nrow = nrh - nrl + 1;	/* compute number of lines */
 
    int ncol = nch - ncl + 1;	/* compute number of columns */
-   printf("nrow = %d \n, ncol = %d \n",nrow, ncol);
+   //printf("nrow = %d \n, ncol = %d \n",nrow, ncol);
    
    double **pArray  = (double **) malloc((size_t)( nrow * sizeof(double*)) );
    double  *pMatrix = (double *)  malloc((size_t)( nrow * ncol * sizeof( double )));

@@ -5,14 +5,15 @@
 /**
  * The boundary values of the problem are set.
  */
-void spec_boundary_val(int imax,int jmax,double **U,double **V,int **flag);
+void spec_boundary_val(int imax,int jmax,double **U,double **V,int **flag, int select);
 
 void boundaryvalues(
   int imax,
   int jmax,
   double **U,
   double **V,
-  int **flag
+  int **flag,
+  double UI
 );
 
 int B_O(int flag);

@@ -1,1 +1,45 @@
-Enter the details of execution and observations here.
+Enter the details of execution
+
+RUNNING THE PROGRAM:
+
+To make the code run for precice. please mention the actual path in pathto in
+
+ "pathto"/precice-1.1.1/src/precice/adapters/c/SolverInterfaceC.h 
+
+ "pathto"/precice-1.1.1/src/precice/adapters/c/Constants.h
+
+for the above both in main.c files and precice_adapter.h file. 
+
+open the fluid solver in one terminal and execute the ./sim after compiling the files. This will wait for communication from the solid solver.
+open the solid solver in another terminal and execute the list of commands in run_Solid_"problem_name" where problem name is the corresponding case running in the fluid solver.
+
+In the case of heat exchanger since there are 2 fluids in consideration run the fluid solver in 2 terminals(one terminal for each fluid) and the solid solver in another terminal.
+
+OBSERVATION:
+
+CASE1: Forced convection over a Heated plate
+	1. The temperature at the coupling interface reaches 4.83 degrees at steady state. The heated fluid is convected along the flow which is visible from the 			visualisation.
+	2. The increase in temperature doesnt cause any change in fluid velocity/pressure as there is no gravity and flow is incompressible.
+	3. The simulation converges for both explicit and implicit methods.
+
+CASE 2: Natural convection in cavity with heat conducting walls:
+	1. The simulation doesn't converge for the explicit case. The heat flux is very high due to small dx/dy and hence a very small dt is required for the 			convergence to happen in case of explicit coupling.
+	2. The pressure is high at the bottom as the cold fluid moves towards the bottom. 
+	3. The temperature is in the shape of inverted S this differs from the second assignment. This is due to the conducting walls at top and bottom in this case.
+	4. A vortex is formed since there is a cyclic movement of fluid.
+	5. Temperature are 322.725K on the left wall and 283.46K on the right wall.
+
+CASE 3: 2D heat exchanger:
+	1. The outlet temperature of fluid1 is 3.4 degrees. This increase in temperature is due to the transfer of heat from fluid2.
+	2. The temperature of fluid2 decreases by 3 degrees. This is due to transfer of heat to fluid1.
+	3. 
+
+CONVERGENCE:
+__________________________________
+Case  |  Explicit  |  Implicit    |
+______|____________|______________|
+  1   |     Yes    |     Yes      |
+  2   |     No     |     Yes      |
+  3   |     No     |     Yes      |
+______|____________|______________|
+

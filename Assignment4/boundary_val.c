@@ -1,14 +1,36 @@
 #include "boundary_val.h"
 #include <stdio.h>
 
-void spec_boundary_val(int imax,int jmax,double **U,double **V,int **flag)
+void spec_boundary_val(int imax,int jmax,double **U,double **V,int **flag, int select)
 {
 	for(int i = 0; i<imax; ++i)
 	{
 		for(int j = 0; j<jmax; ++j)
 		{
 		if(flag[i][j]&(1<<4))
-			{ U[i][j]=1; V[i][j] = 0; V[i][j-1] = 0;}
+		{
+			switch (select)
+			{
+				case 1:
+				U[i][j]=1;
+				V[i][j] = 0;
+				V[i][j-1] = 0;
+				break;
+
+				case 3:
+				U[i][j]=5;
+				V[i][j] = 0;
+				V[i][j-1] = 0;
+				break;
+
+				case 4:
+				U[i][j]=-5;
+				V[i][j] = 0;
+				V[i][j-1] = 0;
+				break;
+
+			}
+		}
 		}
 	}
 
@@ -47,7 +69,7 @@ int B_SW(int flag){
 }
 
 
-void boundaryvalues(int imax,int jmax,double **U,double **V,int **flag)
+void boundaryvalues(int imax,int jmax,double **U,double **V,int **flag, double UI)
 {
 	for(int i = 0; i<imax; ++i)
 	{
@@ -177,9 +199,18 @@ void boundaryvalues(int imax,int jmax,double **U,double **V,int **flag)
 	break;
 
 	case 1<<3://Assuming outflow happens in x direction.
-	U[i][j] = U[i-1][j];
-	V[i][j] = V[i-1][j];
-	V[i][j-1] = V[i-1][j-1];
+	
+	if (UI>=0) {
+		U[i][j] = U[i-1][j];
+		V[i][j] = V[i-1][j];
+		V[i][j-1] = V[i-1][j-1];
+	}
+	else if (UI<0){
+		U[i][j] = U[i+1][j];
+		V[i][j] = V[i+1][j];
+		V[i][j-1] = V[i+1][j-1];
+	}
+	
 	break;
 }
 	}
