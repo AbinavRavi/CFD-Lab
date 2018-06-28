@@ -200,12 +200,291 @@ int S_NOSW(int flag){
 }
 
 
-void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, int jmax, double Re, double delx, double dely, double delt)
+void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, int jmax, double Re, double delx, double dely, double delt,double GX, double GY)
 {
-    //surace type 4
-    
-    if (S_NOS(flag[i][j])) {
-        
+    for (int i=0; i< imax; i++)
+    {
+        for (int j=0;j<jmax;j++)
+        {
+    //surface type 1
+            if (S_O(flag[i][j]))
+            {
+                U[i][j] = U[i-1][j] - ((delx/dely)*(V[i][j]-V[i][j-1]));
+                P[i][j] = (2/Re)*(U[i][j]-U[i-1][j])/delx;
+                if((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    V[i+1][j-1] = V[i][j-1] -((delx/dely)*(U[i][j] - U[i][j-1]));
+                }
+
+            }
+            if (S_W(flag[i][j]))
+            {
+                U[i-1][j] = U[i][j] +(delx/dely)*(V[i][j] - V[i][j-1]);
+                P[i][j] = (2/Re)*(U[i][j] - U[i-1][j]);
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {   
+                    V[i-1][j-1] = V[i][j-1]+(delx/dely)*(U[i-1][j] - U[i-1][j-1]);
+                }
+
+            }
+            if (S_N(flag[i][j]))
+            {
+                V[i][j] = V[i][j-1] - (dely/delx)*(U[i][j]-U[i-1][j]);
+                P[i][j] = (2/Re)*((V[i][j]-V[i][j-1])/dely);
+                if((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    U[i-1][j+1] = U[i][j] - (dely/delx)*(V[i][j] - V[i][j-1]);
+                }
+            }
+            if (S_S(flag[i][j]))
+            {
+                V[i][j-1] = V[i][j]+ (dely/delx)*(U[i][j] - U[i-1][j]);
+                P[i][j] = (2/Re)*((V[i][j] - V[i][j-1])/dely);
+                if(flag[i-1][j-1]&&(1<<11)!=0)
+                {
+                    U[i-1][j-1] = U[i-1][j] + (dely/delx)*(V[i][j-1]-V[i-1][j-1]);
+                }
+            }
+            //surface type 2
+
+            if (S_NO(flag[i][j]))
+            {
+                U[i][j] = U[i-1][j];
+                V[i][j] = V[i][j-1];
+                P[i][j] = (0.5/Re)*(((U[i-1][j]+U[i][j]-U[i-1][j-1] - U[i][j-1])/dely)+((V[i][j-1]+V[i][j]-V[i-1][j]-V[i-1][j-1])/delx));
+                if ((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    U[i][j-1] = U[i][j] +(delx/dely)*(V[i+1][j-1]-V[i][j-1]);
+                }
+                if((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    V[i-1][j] = V[i][j] +(dely/delx)*(U[i-1][j+1]-U[i-1][j]);
+                }
+                U[i][j+1] = U[i][j];
+                V[i+1][j] = V[i][j];
+
+            }
+
+            if(S_OS(flag[i][j]))
+            {
+                U[i][j] = U[i-1][j];
+                V[i][j-1] = V[i][j];
+                P[i][j] = (-0.5/Re)*(((U[i][j+1]+U[i-1][j+1]-U[i][j]-U[i-1][j])/dely)+((V[i][j]+V[i][j-1]-V[i-1][j]-V[i-1][j-1])/delx));
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    U[i-1][j-1] = U[i-1][j] +(dely/delx)*(V[i][j-1] - V[i-1][j-1]);
+                }
+                if((flag[i+1][j+1]&&(1<<11))!=0)
+                {
+                    V[i+1][j] = V[i][j] - (delx/dely)*(U[i][j+1] - U[i][j]);
+                }
+                U[i][j-1] = U[i][j];
+                V[i+1][j-1] = V[i][j-1];
+            }   
+            if(S_SW(flag[i][j]))
+            {
+                U[i-1][j] = U[i][j];
+                V[i][j-1] = V[i][j];
+                P[i][j] = (0.5/Re)*(((U[i][j+1]+U[i-1][j+1]-U[i][j] - U[i-1][j])/dely)+((V[i][j]+V[i][j-1]-V[i+1][j]-V[i+1][j-1])/delx));
+                if ((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    U[i][j-1] = U[i][j] +(dely/delx)*(V[i+1][j-1]-V[i][j-1]);
+                }
+                if((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    V[i-1][j] = V[i][j] +(delx/dely)*(U[i-1][j+1]-U[i-1][j]);
+                }
+                U[i-1][j-1] = U[i-1][j];
+                V[i-1][j-1] = V[i][j-1];
+
+            }
+            if(S_WN(flag[i][j]))
+            {
+                U[i-1][j] = U[i][j];
+                V[i][j] = V[i][j-1];
+                P[i][j] = (-0.5/Re)*(((U[i-1][j]+U[i][j]-U[i][j-1]-U[i-1][j-1])/dely)+((V[i+1][j]+V[i+1][j-1]-V[i][j]-V[i][j-1])/delx));
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    U[i-1][j-1] = U[i-1][j]+(delx/dely)*(V[i][j-1]-V[i-1][j-1]);
+                }
+                if((flag[i+1][j+1]&&(1<<11))!=0)
+                {
+                    V[i+1][j] = V[i][j] - (dely/delx)*(U[i][j+1] - U[i][j]);
+                }
+                U[i-1][j+1] = U[i-1][j];
+                V[i+1][j] = V[i][j];
+
+            }
+
+            //surface type 3
+            if(S_OW(flag[i][j]))
+            {
+                U[i][j] = U[i][j]+(delt*GX);
+                U[i-1][j] = U[i-1][j] +(delt*GX);
+                P[i][j] = 0;
+                if((flag[i][j]&&(1<<11)!=0))
+                {
+                    V[i-1][j-1] = V[i][j-1] +(delx/dely)*(U[i-1][j] - U[i-1][j-1]);
+                }
+                if((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    V[i+1][j-1] = V[i][j-1] - (delx/dely)*(U[i][j] - U[i][j-1]);
+                }
+
+            }
+
+            if (S_NS(flag[i][j]))
+            {
+                V[i][j] = V[i][j]+(delt*GY);
+                V[i][j-1] = V[i][j]+(delt*GY);
+                P[i][j] = 0;
+                if ((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    U[i-1][j+1] = U[i-1][j] - (dely/delx)*(V[i][j] - V[i-1][j]);
+                }
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    U[i-1][j-1] = U[i-1][j]+(dely/delx)*(V[i][j-1]-V[i-1][j-1]);
+                }
+
+            }
+
+            //surface type 4
+            if(S_NOS(flag[i][j]))
+            {
+                P[i][j] = 0;
+                V[i][j] = V[i][j]+(delt*GY);
+                V[i][j-1] = V[i][j-1]+(delt*GY);
+                U[i][j] = U[i-1][j] -(delx/dely)*(V[i][j] - V[i][j-1]);
+                if((flag[i+1][j+1]&&(1<<11))!=0)
+                {
+                    U[i][j+1] = U[i][j];
+                    V[i+1][j] = V[i][j];
+                }
+                if((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    U[i][j-1] = U[i][j];
+                    V[i+1][j-1] = V[i][j-1];
+                }
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    U[i-1][j+1] = U[i-1][j]- (dely/delx)*(V[i][j] - V[i-1][j]);
+                }
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                     U[i-1][j-1] = U[i-1][j]+ (dely/delx)*(V[i][j-1] - V[i-1][j-1]);
+                }
+
+            }
+            if(S_OSW(flag[i][j]))
+            {
+                P[i][j] = 0;
+                U[i][j] = U[i][j]+(delt*GX);
+                U[i-1][j] = U[i-1][j] +(delt*GX);
+                V[i][j-1] = V[i][j] - (dely/delx)*(U[i][j]-U[i-1][j]);
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    U[i-1][j-1] = U[i-1][j];
+                    V[i-1][j-1] = V[i][j-1];
+                }
+                if((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    U[i][j-1] = U[i][j];
+                    V[i+1][j-1] = V[i][j-1];
+                }
+                if((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    V[i-1][j] = V[i][j]+(delx/dely)*(U[i-1][j+1]-U[i-1][j]);
+                }
+                if((flag[i+1][j+1]&&(1<<11))!=0)
+                {
+                    V[i+1][j] = V[i][j] - (delx/dely)*(U[i][j+1] - U[i][j]);
+                }
+
+            }
+            if(S_SWN(flag[i][j]))
+            {
+                P[i][j] = 0;
+                V[i][j] = V[i][j]+(delt*GY);
+                V[i][j-1] = V[i][j-1]+(delt*GY);
+                U[i-1][j] = U[i][j] +(delx/dely)*(V[i][j] - V[i][j-1]);
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    U[i-1][j-1] = U[i-1][j];
+                    V[i-1][j-1] = V[i][j-1];
+                }
+                if((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    U[i-1][j+1] = U[i-1][j];
+                    V[i-1][j] = V[i][j];
+                }
+                if((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    U[i][j-1] = U[i][j]+(dely/delx)*(V[i+1][j-1] - V[i][j-1]);
+                }
+                if((flag[i+1][j+1]&&(1<<11))!=0)
+                {
+                     U[i][j+1] = U[i][j]- (dely/delx)*(V[i+1][j] - V[i][j]);
+                }
+            }
+            if(S_WNO(flag[i][j]))
+            {
+                P[i][j] = 0;
+                U[i-1][j] = U[i-1][j]+(delt*GX);
+                U[i][j] = U[i][j] +(delt*GX);
+                V[i][j] = V[i][j-1] - (dely/delx)*(U[i][j]-U[i-1][j]);
+                if((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    U[i-1][j+1] = U[i-1][j];
+                    V[i-1][j] = V[i][j];
+                }
+                if((flag[i+1][j+1]&&(1<<11))!=0)
+                {
+                    U[i][j+1] = U[i][j];
+                    V[i+1][j] = V[i][j];
+                }
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    V[i-1][j-1] = V[i][j-1]+(delx/dely)*(U[i-1][j]-U[i-1][j-1]);
+                }
+                if((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                    V[i+1][j-1] = V[i][j-1] - (delx/dely)*(U[i][j] - U[i][j-1]);
+                }
+
+            }
+
+            //surface type 5
+            if(S_NOSW(flag[i][j]))
+            {
+                P[i][j] = 0;
+                V[i][j] = V[i][j]+(delt*GY);
+                V[i][j-1] = V[i][j-1]+(delt*GY);
+                U[i][j] = U[i][j] +(delt*GX);
+                U[i-1][j] = U[i-1][j]+(delt*GX);
+                if((flag[i-1][j-1]&&(1<<11))!=0)
+                {
+                    U[i-1][j-1] = U[i-1][j];
+                    V[i-1][j-1] = V[i][j-1];
+                }
+                if((flag[i-1][j+1]&&(1<<11))!=0)
+                {
+                    U[i-1][j+1] = U[i-1][j];
+                    V[i-1][j] = V[i][j];
+                }
+                if((flag[i+1][j+1]&&(1<<11))!=0)
+                {
+                   U[i][j+1] = U[i][j];
+                   V[i+1][j] = V[i][j];
+                }
+                if((flag[i+1][j-1]&&(1<<11))!=0)
+                {
+                   U[i][j-1] = U[i][j];
+                   V[i+1][j-1] = V[i][j-1];
+                }
+                
+            }
+        }
     }
-    
+
 }

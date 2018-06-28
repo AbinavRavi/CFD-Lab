@@ -241,7 +241,7 @@ void calculate_rs(double dt,
    	{
         	for(int j=0; j<jmax; j++)
 		{
-			if(flag[i][j]&(1<<0))
+			if(flag[i][j]&(1<<9))
 			RS[i][j] =  (1/dt)*( (F[i][j]-F[i-1][j])/dx + (G[i][j]-G[i][j-1])/dy );
 		}
 	}
