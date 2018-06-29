@@ -111,18 +111,15 @@ int main(int argn, char** args){
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
     double Pr;
-    double TI;
-    double T_h;
-    double T_c;
     double beta;
 
     //Read and assign the parameter values from file
     read_parameters(filename, &imax, &jmax, &xlength, &ylength,
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
-			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &TI, &T_h, &T_c, &beta, &dx, &dy, problem, geometry);
+			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &beta, &dx, &dy, problem, geometry);
 
 	//include_temp =1 => include temperature equations for solving
-    int include_temp = 1;
+  /*  // int include_temp = 1;
     if(((select==1)||(select==2)))
 	{
 		if( (Pr!=0)||(TI!=0)||(T_h!=0)||(T_c!=0)||(beta!=0) ){
@@ -133,7 +130,7 @@ int main(int argn, char** args){
 		else  include_temp = 0;
 	}
 
-
+*/
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     printf("PROGRESS: Starting matrix allocation... \n");
     double **P = matrix(0, imax-1, 0, jmax-1);
@@ -143,27 +140,20 @@ int main(int argn, char** args){
     double **G = matrix(0, imax-1, 0, jmax-1);
     double **RS = matrix(0, imax-1, 0, jmax-1);
     int **flag = imatrix(0, imax-1, 0, jmax-1);
-    double **T;
-    double **T1;
-	if(include_temp)
-	{
-		T = matrix(0, imax-1, 0, jmax-1);
-		T1= matrix(0, imax-1, 0, jmax-1);
-	}
-    printf("PROGRESS: Matrices allocated on heap... \n \n");
+
+		double t =0;
+		double n = 0;
+
+		INIT_PARTICLES(N,imax,jmax,delx,dely,ppc,flag)
+
+
 
     //Initilize flags
     init_flag(problem,geometry, imax, jmax, flag);
 
     //Initialize the U, V and P
-    if(include_temp)
-	{
-		init_uvpt(UI, VI, PI, TI, imax, jmax, U, V, P, T, flag);
-	}
-	else
-	{
-		init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
-	}
+   init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
+
 
 	//Make solution folder
 	struct stat st = {0};
@@ -190,21 +180,16 @@ int main(int argn, char** args){
         char* is_converged = "Yes";
 
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr, include_temp);
+
    		printf("t = %f ,dt = %f, ",t,dt);
+			MARK_CELLS(flag,  imax,  jmax,  delx,  dely,  N, Particlelines);
+			SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  delx,  dely,  delt, GX,GY);
+			calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta);
+    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
+	}
 
-		boundaryvalues(imax, jmax, U, V, flag);
 
-		if(include_temp)
-		{
-			calculate_temp(T, T1, Pr, Re, imax, jmax, dx, dy, dt, alpha, U, V, flag, TI, T_h, T_c, select);
 
-		}
-
-    	spec_boundary_val(imax, jmax, U, V, flag);
-
-    	calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta, T, include_temp);
-
-    	calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
 
 		int it = 0;
 		double res = 10.0;
@@ -222,16 +207,13 @@ int main(int argn, char** args){
   		fprintf(fp_log, "    %d |  %f | %f |      %d      | %f | %s \n", n, t, dt, it-1, res, is_converged);
 
 		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
+		boundaryvalues(imax, jmax, U, V, flag);
+  spec_boundary_val(imax, jmax, U, V, flag);
+	SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  delx,  dely,  delt, GX,GY);
 
 
-		if(!include_temp)
-		{
-			nullify_obstacles1(U, V, P, flag, imax, jmax);
-  		}
-		else
-		{
-			nullify_obstacles2(U, V, P, T, flag, imax, jmax);
-		}
+
+
 
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
@@ -258,8 +240,7 @@ int main(int argn, char** args){
     free_matrix( G, 0, imax-1, 0, jmax-1);
     free_matrix(RS, 0, imax-1, 0, jmax-1);
     free_imatrix(flag, 0, imax-1, 0, jmax-1);
-	if(include_temp) { free_matrix(T, 0, imax-1, 0, jmax-1);
-			   free_matrix(T1, 0, imax-1, 0, jmax-1); }
+
 	free(geometry);
 	free(problem);
     printf("PROGRESS: allocated memory released...\n \n");
