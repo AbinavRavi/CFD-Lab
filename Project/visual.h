@@ -31,9 +31,7 @@ void write_vtkFile(const char *szProblem,
 		  double dy,
                   double **U,
                   double **V,
-                  double **P,
-		  double **T,
-		  int include_temp
+                  double **P
 );
 
 /**

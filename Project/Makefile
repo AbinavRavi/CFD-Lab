@@ -6,19 +6,21 @@ OBJ = 	helper.o\
       	init.o\
       	boundary_val.o\
       	uvp.o\
-	sor.o\
+		sor.o\
       	main.o\
-      	visual.o
+      	visual.o\
+		surface.o
 
 rm_OBJ = helper.o\
       	init.o\
       	boundary_val.o\
       	uvp.o\
-	sor.o\
+		sor.o\
       	main.o\
       	visual.o\
-	sim\
-	*.log
+		surface.o\
+		sim\
+		*.log
 	
 
 all:  $(OBJ)
@@ -36,5 +38,6 @@ boundary_val.o: helper.h boundary_val.h
 uvp.o	      : uvp.h boundary_val.h
 visual.o      : helper.h
 sor.o	      : sor.h boundary_val.h
+surface.o	  : surface.h
 main.o        : helper.h init.h boundary_val.h uvp.h visual.h
 

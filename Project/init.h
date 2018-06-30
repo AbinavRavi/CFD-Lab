@@ -39,9 +39,9 @@
  */
 void read_parameters( const char *szFileName,       /* name of the file */
 		    int  *imax,                /* number of cells x-direction*/
-                    int  *jmax,                /* number of cells y-direction*/ 
+        int  *jmax,                /* number of cells y-direction*/ 
 		    double *xlength,           /* length of the domain x-dir.*/
-                    double *ylength,           /* length of the domain y-dir.*/
+        double *ylength,           /* length of the domain y-dir.*/
 		    double *dt,                /* time step */
 		    double *t_end,             /* end time */
 		    double *tau,               /* safety factor for time step*/
@@ -49,22 +49,18 @@ void read_parameters( const char *szFileName,       /* name of the file */
 		    double *eps,               /* accuracy bound for pressure*/
 		    double *omg,               /* relaxation factor */
 		    double *alpha,             /* uppwind differencing factor*/
-                    int  *itermax,             /* max. number of iterations  */
+        int  *itermax,             /* max. number of iterations  */
 		    double *GX,                /* gravitation x-direction */
-                    double *GY,                /* gravitation y-direction */
+        double *GY,                /* gravitation y-direction */
 		    double *Re,                /* reynolds number   */
-                    double *Pr,
 		    double *UI,                /* velocity x-direction */
-                    double *VI,                /* velocity y-direction */
-                    double *PI,                /* pressure */
-       		    double *TI,
-		    double *T_h,
-		    double *T_c,
-		    double *beta,
+        double *VI,                /* velocity y-direction */
+        double *PI,                /* pressure */
+			  int *ppc,
 		    double *dx,                /* length of a cell x-dir. */
-                    double *dy,               /* length of a cell y-dir. */
-            	    char *problem,
-		    char *geometry                    		                               /* for pressure per time step */
+        double *dy,               /* length of a cell y-dir. */
+		    char *geometry,
+        char *problem
 
 );
 
@@ -108,7 +104,7 @@ int forbidden_TB(int **pic, int i, int j);
 
 void forbid_assert(int imax, int jmax, int **pic);
 
-void init_flag(char* problem, char* geometry, int imax, int jmax, int **flag);
+void init_flag(char* geometry, int imax, int jmax, int **flag);
 
 
 #endif

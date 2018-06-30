@@ -4,6 +4,7 @@
 #include"uvp.h"
 #include"boundary_val.h"
 #include"sor.h"
+#include "surface.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -55,15 +56,15 @@ int main(int argn, char** args){
 			printf("P5. Fluid Trap \n");
 			printf("P6. Rayleigh-Benard Convection \n");
 			int select;
-			char* geometry = (char*)(malloc(sizeof(char)*6));
-			char* problem = (char*)(malloc(sizeof(char)*2));
+			char* geometry = (char*)(malloc(sizeof(char)*100));
+			char* problem = (char*)(malloc(sizeof(char)*100));
 			scanf("%d",&select);
 			//select problem
 			const char* filename = "0";
 			switch(select)
 			{
 			case 1:
-			filename = "karman_vortex.dat";
+			filename = "breaking_dam.dat";
 
 			break;
 			case 2:
@@ -110,27 +111,14 @@ int main(int argn, char** args){
     				/* for pressure per time step */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
-    double Pr;
-    double beta;
+	int ppc;
 
     //Read and assign the parameter values from file
     read_parameters(filename, &imax, &jmax, &xlength, &ylength,
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
-			&GX, &GY, &Re, &Pr, &UI, &VI, &PI, &beta, &dx, &dy, problem, geometry);
+			&GX, &GY, &Re, &UI, &VI, &PI, &ppc, &dx, &dy, geometry, problem);
 
-	//include_temp =1 => include temperature equations for solving
-  /*  // int include_temp = 1;
-    if(((select==1)||(select==2)))
-	{
-		if( (Pr!=0)||(TI!=0)||(T_h!=0)||(T_c!=0)||(beta!=0) ){
-		char szBuff[80];
-        	sprintf( szBuff, "Input file incompatible. Please check .dat file. \n");
-        	ERROR( szBuff );
-		}
-		else  include_temp = 0;
-	}
 
-*/
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     printf("PROGRESS: Starting matrix allocation... \n");
     double **P = matrix(0, imax-1, 0, jmax-1);
@@ -140,19 +128,21 @@ int main(int argn, char** args){
     double **G = matrix(0, imax-1, 0, jmax-1);
     double **RS = matrix(0, imax-1, 0, jmax-1);
     int **flag = imatrix(0, imax-1, 0, jmax-1);
+	printf("PROGRESS: Matrix allocated... \n");
 
-		double t =0;
-		double n = 0;
+	int num_particlelines = 0;
 
-		INIT_PARTICLES(N,imax,jmax,delx,dely,ppc,flag)
+	//Initilize flags
+	init_flag(geometry, imax, jmax, flag);
 
+	struct particleline *pline;
 
+	// Initialize particles
+	pline = INIT_PARTICLES (&num_particlelines, imax, jmax, dx, dy, ppc, flag);
 
-    //Initilize flags
-    init_flag(problem,geometry, imax, jmax, flag);
 
     //Initialize the U, V and P
-   init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
+   	init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
 
 
 	//Make solution folder
@@ -162,9 +152,9 @@ int main(int argn, char** args){
 	if (stat(sol_folder, &st) == -1) {
     		mkdir(sol_folder, 0700);
 	}
-
 	char sol_directory[80];
 	sprintf( sol_directory,"Solution_%s/sol", problem);
+
 	//create log file
 	char LogFileName[80];
  	FILE *fp_log = NULL;
@@ -173,23 +163,37 @@ int main(int argn, char** args){
 	fprintf(fp_log, "It.no.|   Time    |time step |SOR iterations | residual | SOR converged \n");
 
 
+	MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
+	//printf("Debug \n");
+	/*for(int j = 0; j<jmax; ++j)
+	{
+		for(int i = 0; i<imax; ++i)
+		{
+			printf("%d ",flag[i][jmax-1-j]);
+		}
+		printf("\n");
+	}*/
+	boundaryvalues(imax, jmax, U, V, flag);
+  		//printf("Debug \n");
+	spec_boundary_val(imax, jmax, U, V, flag);
+
     printf("PROGRESS: Starting the flow simulation...\n");
     double t=0; int n=0; int n1=0;
 
 	while (t < t_end) {
         char* is_converged = "Yes";
 
-		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V, Pr, include_temp);
+		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V);
 
-   		printf("t = %f ,dt = %f, ",t,dt);
-			MARK_CELLS(flag,  imax,  jmax,  delx,  dely,  N, Particlelines);
-			SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  delx,  dely,  delt, GX,GY);
-			calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag, beta);
-    calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
-	}
-
-
-
+   		//printf("t = %f ,dt = %f, ",t,dt);
+		MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
+		
+		
+		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
+			
+		calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag);
+    		
+		calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
 
 		int it = 0;
 		double res = 10.0;
@@ -199,6 +203,7 @@ int main(int argn, char** args){
 			++it;
 
     	} while(it<itermax && res>eps);
+		
 		printf("SOR itertions = %d ,residual = %f \n", it-1, res);
 		if((it==itermax)&&(res>eps)){
 			printf("WARNING: Iteration limit reached before convergence. \n");
@@ -207,18 +212,19 @@ int main(int argn, char** args){
   		fprintf(fp_log, "    %d |  %f | %f |      %d      | %f | %s \n", n, t, dt, it-1, res, is_converged);
 
 		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
+
 		boundaryvalues(imax, jmax, U, V, flag);
-  spec_boundary_val(imax, jmax, U, V, flag);
-	SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  delx,  dely,  delt, GX,GY);
 
+ 		spec_boundary_val(imax, jmax, U, V, flag);
 
+		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
 
-
+		ADVANCE_PARTICLES(U, V, dx, dy, dt, num_particlelines, pline, flag);
 
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
    			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
-							dx ,dy ,U ,V ,P,T,include_temp);
+							dx ,dy ,U ,V ,P);
 
 			printf("writing result at %f seconds \n",n1*dt_value);
     		n1=n1+ 1;
@@ -243,6 +249,9 @@ int main(int argn, char** args){
 
 	free(geometry);
 	free(problem);
+
+	FREE_PARTICLELINES(pline, num_particlelines, imax, jmax, dx, dy, ppc, flag );
+
     printf("PROGRESS: allocated memory released...\n \n");
 
 	printf("PROGRESS: End of Run.\n");
