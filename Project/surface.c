@@ -80,6 +80,8 @@ void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N,
         {
             if ( (flag[i][j]&(~(1<<1|1<<2))) )//not obstacles
             {
+                flag[i][j] = 1<<11; // preset all open cells to empty
+
                 for(int k = 0; k < N; k++)
                 {
                     struct particle *temp = Partlines[k].Particles;
@@ -93,10 +95,6 @@ void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N,
                             if (i == 0)             {flag[i][j] = 1<<4;} //inflow
                             else if (i == imax-1)   {flag[i][j] = 1<<3;} //outflow
                             else                    {flag[i][j] = 1<<0;} //fluid
-                        }
-                        else
-                        {
-                            flag[i][j] = 1<<11; //empty
                         }
                         if( ((temp->x) >= i*delx)&&((temp->x) < (i+1)*delx) 
                         &&  ((temp->y) >= j*dely)&&((temp->y) < (j+1)*dely) )
@@ -137,19 +135,19 @@ void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N,
             //Set obstacle boundaries
             else
             {  
-                if (i<imax-1 && ((flag[i+1][j]&(1<<0|1<<3|1<<4))!=0) )
+                if (i<imax-1 && (flag[i+1][j]&(1<<0|1<<3|1<<4)) )
                 {
                     flag[i][j] |= 1<<8; //east
                 }
-                if (i>0 && ((flag[i-1][j]&(1<<0|1<<3|1<<4))!=0) )
+                if (i>0 && (flag[i-1][j]&(1<<0|1<<3|1<<4)) )
                 {
                     flag[i][j] |= 1<<7; //west
                 }
-                if (j<jmax-1 && ((flag[i][j+1]&(1<<0|1<<3|1<<4))!=0) )
+                if (j<jmax-1 && (flag[i][j+1]&(1<<0|1<<3|1<<4)) )
                 {
                     flag[i][j] |= 1<<5; //north
                 }
-                if (j>0 && ((flag[i][j-1]&(1<<0|1<<3|1<<4))!=0) )
+                if (j>0 && (flag[i][j-1]&(1<<0|1<<3|1<<4)) )
                 {
                     flag[i][j] |= 1<<6; //south
                 }
@@ -641,29 +639,34 @@ void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double 
     int i, j;
     for(int k = 0; k < N; k++)
     {
+        
+        if (Partlines[k].Particles != NULL)
+        {
         struct particle *temp = Partlines[k].Particles;
-
+        
         for(int p = 0; p < Partlines[k].length; p++)
         {
+            double x_pos = temp->x;
+            double y_pos = temp->y;
             
-            i = (int)((temp->x)/delx);
-            j = (int)(((temp->y)+0.5*dely)/dely);
+            i = (int)(x_pos/delx);
+            j = (int)((y_pos+0.5*dely)/dely);
 
             if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) //only advance particles in fluid cells
             {
-                
-                temp->x += delt*U_interp(U, delx, dely, temp->x, temp->y);
+                temp->x += delt*U_interp(U, delx, dely, x_pos, y_pos);
             }
-            
-            int i = (int)(((temp->x)+0.5*delx)/delx);
-            int j = (int)((temp->y)/dely);
+
+            i = (int)((x_pos+0.5*delx)/delx);
+            j = (int)(y_pos/dely);
 
             if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) //only advance particles in fluid cells
             {
-                temp->y += delt*V_interp(V, delx, dely, temp->x, temp->y);
+                temp->y += delt*V_interp(V, delx, dely, x_pos, y_pos);
             }
-
+            printf("(%f %f) \n",temp->x,temp->y);
             temp = temp->next;
+        }
         }
     }
 
@@ -683,7 +686,6 @@ void FREE_PARTICLELINES(struct particleline *Partlines, int N, int imax, int jma
 
 void free_particles(struct particle *start)
 {
-
    struct particle* current = start;
    struct particle* next;
  
@@ -695,5 +697,4 @@ void free_particles(struct particle *start)
    }
    
    start = NULL;
-
 }

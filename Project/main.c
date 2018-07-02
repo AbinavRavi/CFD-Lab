@@ -238,13 +238,13 @@ int main(int argn, char** args){
 		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
 
 		boundaryvalues(imax, jmax, U, V, flag);
-
+		printf("Debug1 \n");
  		spec_boundary_val(imax, jmax, U, V, flag);
 
 		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
-
+		printf("Debug2 \n");
 		ADVANCE_PARTICLES(U, V, dx, dy, dt, num_particlelines, pline, flag);
-
+		printf("Debug3 \n");
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
    			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
