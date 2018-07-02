@@ -11,13 +11,14 @@ struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, do
     {
         for(int j = 0; j < jmax; j++)
         {
-            if ((flag[i][j]&&(1<<0|1<<3|1<<4))!=0) 
+            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) 
             {    
                     (*N)+= len;
 
             }
         }
     }
+    printf("Number of particlelines: %d \n",*N);
 
     //allocate particleline to an array of size N
     struct particleline *Particlelines = (struct particleline*)malloc(sizeof(struct particleline)*(*N));
@@ -27,17 +28,18 @@ struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, do
     {
         for(int j = 0; j < jmax; j++)
         {
-            if ((flag[i][j]&&(1<<0|1<<3|1<<4))!=0) {
-                
+            
+            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0)
+            {    
                 for(int k = 0; k < len; k++)
                 {
                     struct particle *start = (struct particle *)malloc(sizeof(struct particle));
                     
                     Particlelines[n + k].length = len;
                     Particlelines[n + k].Particles = start;
-                    n++;
                     insert_particles(start, i, j, delx, dely, len, k);
-                }   
+                }
+                n += len;
                 
             }
             
@@ -67,12 +69,7 @@ void insert_particles(struct particle *start, int i, int j, double delx, double 
         list = list->next;
     }   
     
-    while(start != NULL)
-    {
-        printf("(%f,%f) ",start->x, start->y);
-        start = start->next;
-    }  
-    printf("\n");
+   
 }
 
 void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N, struct particleline *Partlines){
@@ -81,7 +78,7 @@ void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N,
     {
         for(int j = 0; j < jmax; j++)
         {
-            if ( ~(flag[i][j]&(1<<1|1<<2)) )//not obstacles
+            if ( (flag[i][j]&(~(1<<1|1<<2))) )//not obstacles
             {
                 for(int k = 0; k < N; k++)
                 {
@@ -89,71 +86,74 @@ void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N,
 
                     for(int p = 0; p < Partlines[k].length; p++)
                     {
-printf("Debug1 \n");
                         //Set flag for inflow, outflow, fluid or empty region
-
-                        if( ((temp->x) <= i*delx)&&((temp->x) > (i+1)*delx) 
-                        &&  ((temp->y) <= j*dely)&&((temp->y) > (j+1)*dely) )
-                        {
-                            
-                            flag[i][j] = 1<<11; 
-                        }
                         if( ((temp->x) >= i*delx)&&((temp->x) < (i+1)*delx) 
-                        &&  ((temp->y) >= j*dely)&&((temp->y) < (j+1)*dely) )
+                        &&  ((temp->y) >= j*dely)&&((temp->y) < (j+1)*dely)  )
                         {
                             if (i == 0)             {flag[i][j] = 1<<4;} //inflow
                             else if (i == imax-1)   {flag[i][j] = 1<<3;} //outflow
                             else                    {flag[i][j] = 1<<0;} //fluid
-                        
+                        }
+                        else
+                        {
+                            flag[i][j] = 1<<11; //empty
+                        }
+                        if( ((temp->x) >= i*delx)&&((temp->x) < (i+1)*delx) 
+                        &&  ((temp->y) >= j*dely)&&((temp->y) < (j+1)*dely) )
+                        {
                             //set flag for surface or interior region, set free boundaries
-                            if (i<imax-1 && ((flag[i+1][j]&&(1<<11))!=0) )
+                            if (i<imax-1 && ((flag[i+1][j]&(1<<11))!=0) )
                             {
-                                flag[i][j] |= 1<<15|1<<10; //east
+                                flag[i][j] |= 1<<15; //east
+                                flag[i][j] |= 1<<10;
                             }
-                            if (i>0 && ((flag[i-1][j]&&(1<<11))!=0) )
+                            if (i>0 && ((flag[i-1][j]&(1<<11))!=0) )
                             {
-                                flag[i][j] |= 1<<14|1<<10; //west
+                                flag[i][j] |= 1<<14; //west
+                                flag[i][j] |= 1<<10;
                             }
-                            if (j<jmax-1 && ((flag[i][j+1]&&(1<<11))!=0) )
+                            if (j<jmax-1 && ((flag[i][j+1]&(1<<11))!=0) )
                             {
                                 flag[i][j] |= 1<<12; //north
                                 flag[i][j] |= 1<<10;
                             }
-                            if (j>0 && ((flag[i][j-1]&&(1<<11))!=0) )
+                            if (j>0 && ((flag[i][j-1]&(1<<11))!=0) )
                             {
                                 flag[i][j] |= 1<<13; //south
                                 flag[i][j] |= 1<<10;
                             }
 
-                            if ((flag[i][j]&&(1<<10))==0) { //interior cells
+                            if ((flag[i][j]&(1<<10))==0) { //interior cells
                                 flag[i][j] |= 1<<9;
                             }
                         
                          }
+                        //printf("Debug1 \n");
                          temp = temp->next;
+                         //printf("Debug2 \n");
                     }
                 }
             }
             //Set obstacle boundaries
-           /* else
+            else
             {  
-                if (i<imax-1 && ((flag[i+1][j]&&(1<<0|1<<3|1<<4))!=0) )
+                if (i<imax-1 && ((flag[i+1][j]&(1<<0|1<<3|1<<4))!=0) )
                 {
                     flag[i][j] |= 1<<8; //east
                 }
-                if (i>0 && ((flag[i-1][j]&&(1<<0|1<<3|1<<4))!=0) )
+                if (i>0 && ((flag[i-1][j]&(1<<0|1<<3|1<<4))!=0) )
                 {
                     flag[i][j] |= 1<<7; //west
                 }
-                if (j<jmax-1 && ((flag[i][j+1]&&(1<<0|1<<3|1<<4))!=0) )
+                if (j<jmax-1 && ((flag[i][j+1]&(1<<0|1<<3|1<<4))!=0) )
                 {
                     flag[i][j] |= 1<<5; //north
                 }
-                if (j>0 && ((flag[i][j-1]&&(1<<0|1<<3|1<<4))!=0) )
+                if (j>0 && ((flag[i][j-1]&(1<<0|1<<3|1<<4))!=0) )
                 {
                     flag[i][j] |= 1<<6; //south
                 }
-            }*/
+            }
 
 
         }  
@@ -683,7 +683,7 @@ void FREE_PARTICLELINES(struct particleline *Partlines, int N, int imax, int jma
 
 void free_particles(struct particle *start)
 {
-   /* deref head_ref to get the real head */
+
    struct particle* current = start;
    struct particle* next;
  
@@ -694,8 +694,6 @@ void free_particles(struct particle *start)
        current = next;
    }
    
-   /* deref head_ref to affect the real head back
-      in the caller. */
    start = NULL;
 
 }

@@ -135,12 +135,36 @@ int main(int argn, char** args){
 	//Initilize flags
 	init_flag(geometry, imax, jmax, flag);
 
+	for(int j = 0; j<jmax; ++j)
+	{
+		for(int i = 0; i<imax; ++i)
+		{
+			printf("%d ",flag[i][jmax-1-j]);
+		}
+		printf("\n");
+	}
+
 	struct particleline *pline;
 
 	// Initialize particles
+	printf("PROGRESS: Initializing Particles... \n");
 	pline = INIT_PARTICLES (&num_particlelines, imax, jmax, dx, dy, ppc, flag);
+	printf("PROGRESS: Particles initialized... \n");
 
 
+	
+	/*for(int i = 0; i < num_particlelines; i++)
+	{
+		struct particle *p = pline[i].Particles;
+
+		while(p!=NULL)
+		{
+			printf("(%f,%f)", p->x, p->y);
+			p = p->next;
+		}
+		printf("\n");
+	}*/
+	
     //Initialize the U, V and P
    	init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
 
@@ -165,14 +189,14 @@ int main(int argn, char** args){
 
 	MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
 	//printf("Debug \n");
-	/*for(int j = 0; j<jmax; ++j)
+	for(int j = 0; j<jmax; ++j)
 	{
 		for(int i = 0; i<imax; ++i)
 		{
 			printf("%d ",flag[i][jmax-1-j]);
 		}
 		printf("\n");
-	}*/
+	}
 	boundaryvalues(imax, jmax, U, V, flag);
   		//printf("Debug \n");
 	spec_boundary_val(imax, jmax, U, V, flag);
@@ -185,7 +209,7 @@ int main(int argn, char** args){
 
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V);
 
-   		//printf("t = %f ,dt = %f, ",t,dt);
+   		printf("t = %f ,dt = %f, ",t,dt);
 		MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
 		
 		
