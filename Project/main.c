@@ -238,7 +238,7 @@ int main(int argn, char** args){
 		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
 
 		boundaryvalues(imax, jmax, U, V, flag);
-		printf("Debug1 \n");
+
  		spec_boundary_val(imax, jmax, U, V, flag);
 
 		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
