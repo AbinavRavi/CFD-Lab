@@ -78,7 +78,7 @@ void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N,
     {
         for(int j = 0; j < jmax; j++)
         {
-            if ( (flag[i][j]&(~(1<<1|1<<2))) )//not obstacles
+            if ( (flag[i][j]&((1<<1|1<<2)))==0 )//not obstacles
             {
                 flag[i][j] = 1<<11; // preset all open cells to empty
 
@@ -236,6 +236,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
     //surface type 1
             if (S_O(flag[i][j]))
             {
+                //printf("DebugO \n");
                 U[i][j] = U[i-1][j] - ((delx/dely)*(V[i][j]-V[i][j-1]));
                 P[i][j] = (2/Re)*(U[i][j]-U[i-1][j])/delx;
                 if((flag[i+1][j-1]&(1<<11))!=0)
@@ -246,6 +247,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
             }
             if (S_W(flag[i][j]))
             {
+                //printf("DebugW \n");
                 U[i-1][j] = U[i][j] +(delx/dely)*(V[i][j] - V[i][j-1]);
                 P[i][j] = (2/Re)*(U[i][j] - U[i-1][j]);
                 if((flag[i-1][j-1]&(1<<11))!=0)
@@ -256,15 +258,20 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
             }
             if (S_N(flag[i][j]))
             {
+               // printf("DebugN (%d %d) \n", i, j);
                 V[i][j] = V[i][j-1] - (dely/delx)*(U[i][j]-U[i-1][j]);
+                //printf("Debug \n");
                 P[i][j] = (2/Re)*((V[i][j]-V[i][j-1])/dely);
+               // printf("Debug \n");
                 if((flag[i-1][j+1]&(1<<11))!=0)
                 {
+                    //printf("Debug \n");
                     U[i-1][j+1] = U[i][j] - (dely/delx)*(V[i][j] - V[i][j-1]);
                 }
             }
             if (S_S(flag[i][j]))
             {
+               // printf("DebugS \n");
                 V[i][j-1] = V[i][j]+ (dely/delx)*(U[i][j] - U[i-1][j]);
                 P[i][j] = (2/Re)*((V[i][j] - V[i][j-1])/dely);
                 if((flag[i-1][j-1]&(1<<11))!=0)
@@ -276,6 +283,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
 
             if (S_NO(flag[i][j]))
             {
+               // printf("DebugNO \n");
                 U[i][j] = U[i-1][j];
                 V[i][j] = V[i][j-1];
                 P[i][j] = (0.5/Re)*(((U[i-1][j]+U[i][j]-U[i-1][j-1] - U[i][j-1])/dely)+((V[i][j-1]+V[i][j]-V[i-1][j]-V[i-1][j-1])/delx));
@@ -634,7 +642,7 @@ double V_interp(double **V, double dx, double dy, double x, double y){
 }
 
 
-void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double delt, int N, struct particleline *Partlines, int **flag){
+void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double delt, int N, struct particleline *Partlines, int **flag, int imax, int jmax){
     
     int i, j;
     for(int k = 0; k < N; k++)
@@ -654,9 +662,12 @@ void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double 
 
             if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) //only advance particles in fluid cells
             {
-                printf("%f \n", U_interp(U, delx, dely, x_pos, y_pos));
-
-                temp->x += delt*U_interp(U, delx, dely, x_pos, y_pos);
+                
+                if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax)) {
+                    temp->x += delt*U_interp(U, delx, dely, x_pos, y_pos);
+                }
+                
+                //printf("%f \n", U_interp(U, delx, dely, x_pos, y_pos));
             }
 
             i = (int)((x_pos+0.5*delx)/delx);
@@ -664,10 +675,11 @@ void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double 
 
             if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) //only advance particles in fluid cells
             {
-                printf("%f \n", V_interp(V, delx, dely, x_pos, y_pos));
-                temp->y += delt*V_interp(V, delx, dely, x_pos, y_pos);
+                if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax)) {
+                    temp->y += delt*V_interp(V, delx, dely, x_pos, y_pos);
+                }
             }
-            printf("(%f %f) \n",temp->x,temp->y);
+            //printf("(%f %f) \n",temp->x,temp->y);
             temp = temp->next;
         }
         }

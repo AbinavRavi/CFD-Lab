@@ -167,7 +167,15 @@ int main(int argn, char** args){
 	
     //Initialize the U, V and P
    	init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
-
+		/*for(int j = 0; j < jmax; j++)
+		{
+			for(int i = 0; i < imax; i++)
+			{
+				printf("%f ", P[i][j]);
+			}
+			printf("\n");
+		}
+		printf(" \n \n");*/
 
 	//Make solution folder
 	struct stat st = {0};
@@ -188,17 +196,9 @@ int main(int argn, char** args){
 
 
 	MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
-	//printf("Debug \n");
-	for(int j = 0; j<jmax; ++j)
-	{
-		for(int i = 0; i<imax; ++i)
-		{
-			printf("%d ",flag[i][jmax-1-j]);
-		}
-		printf("\n");
-	}
+
 	boundaryvalues(imax, jmax, U, V, flag);
-  		//printf("Debug \n");
+
 	spec_boundary_val(imax, jmax, U, V, flag);
 
     printf("PROGRESS: Starting the flow simulation...\n");
@@ -208,16 +208,24 @@ int main(int argn, char** args){
         char* is_converged = "Yes";
 
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V);
-
-   		printf("t = %f ,dt = %f, ",t,dt);
+   		printf("t = %f ,dt = %f,  \n",t,dt);
+		   
 		MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
-		
+		for(int j = 0; j<jmax; ++j)
+		{
+			for(int i = 0; i<imax; ++i)
+			{
+				printf("%d ",flag[i][jmax-1-j]);
+			}
+			printf("\n");
+		}
 		
 		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
-			
+		printf("Debug2 \n");
 		calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag);
     		
 		calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);
+		
 
 		int it = 0;
 		double res = 10.0;
@@ -228,6 +236,15 @@ int main(int argn, char** args){
 
     	} while(it<itermax && res>eps);
 		
+		/*for(int j = 0; j < jmax; j++)
+		{
+			for(int i = 0; i < imax; i++)
+			{
+				printf("%f ", P[i][j]);
+			}
+			printf("\n");
+		}*/
+
 		printf("SOR itertions = %d ,residual = %f \n", it-1, res);
 		if((it==itermax)&&(res>eps)){
 			printf("WARNING: Iteration limit reached before convergence. \n");
@@ -242,9 +259,9 @@ int main(int argn, char** args){
  		spec_boundary_val(imax, jmax, U, V, flag);
 
 		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
-		printf("Debug2 \n");
-		ADVANCE_PARTICLES(U, V, dx, dy, dt, num_particlelines, pline, flag);
-		printf("Debug3 \n");
+	
+		ADVANCE_PARTICLES(U, V, dx, dy, dt, num_particlelines, pline, flag, imax, jmax);
+		
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
    			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
@@ -252,7 +269,6 @@ int main(int argn, char** args){
 
 			printf("writing result at %f seconds \n",n1*dt_value);
     		n1=n1+ 1;
-    		continue;
   		}
     	t =t+ dt;
     	n = n+ 1;

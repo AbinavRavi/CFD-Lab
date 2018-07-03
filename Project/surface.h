@@ -60,7 +60,7 @@ double U_interp(double **U, double dx, double dy, double x, double y);
 
 double V_interp(double **V, double dx, double dy, double x, double y);
 
-void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double delt, int N, struct particleline *Partlines, int **flag);
+void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double delt, int N, struct particleline *Partlines, int **flag, int imax, int jmax);
 
 void FREE_PARTICLELINES(struct particleline *Partlines, int N, int imax, int jmax, double delx, double dely, int ppc, int **flag );
 

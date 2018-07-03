@@ -79,35 +79,17 @@ void init_uvp(double UI, double VI, double PI, int imax, int jmax,
 	
 	for(int i=0; i<imax; i++){
 		for(int j=0; j<jmax; j++){
-			if(flag[i][j]&(1<<0)){
+			//if(flag[i][j]&(1<<0)){
 
 				U[i][j] = UI;
 				V[i][j] = VI;
 				P[i][j] = PI;
-			}
+			//}
 		}
 	}
 	printf("PROGRESS: U,V,P matrices initialized... \n \n");
 }
 
-void init_uvpt(double UI, double VI, double PI, double TI, int imax, int jmax,
-		 double** U, double** V, double** P, double** T, int** flag)
-{
-	printf("PROGRESS: Starting initialization of U,V,P,T ... \n");
-	
-	for(int i=0; i<imax; i++){
-		for(int j=0; j<jmax; j++){
-			if(flag[i][j]&(1<<0)){
-
-				U[i][j] = UI;
-				V[i][j] = VI;
-				P[i][j] = PI;
-				T[i][j] = TI;
-			}
-		}
-	}
-	printf("PROGRESS: U,V,P,T matrices initialized... \n \n");
-}
 
 void call_assert_error()
 {
