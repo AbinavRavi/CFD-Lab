@@ -67,6 +67,7 @@ int main(int argn, char** args){
 			case 2:
 			filename = "droplet.dat";
 
+
 			break;
 }
 
@@ -247,6 +248,7 @@ int main(int argn, char** args){
   		{
    			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
 							dx ,dy ,U ,V ,P);
+			write_vtkParticleFile(sol_directory,n,xlength,ylength,imax,jmax,num_particlelines,dx,dy,pline);
 
 			printf("writing result at %f seconds \n",n1*dt_value);
     		n1=n1+ 1;

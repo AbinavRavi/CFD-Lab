@@ -98,3 +98,79 @@ void write_vtkPointCoordinates( FILE *fp, int imax, int jmax,
 }
 
 
+
+void write_vtkParticleFile(const char *szProblem,
+                   int    timeStepNumber,
+                   double xlength,
+                   double ylength,
+                   int    imax,
+                   int    jmax,
+                   int    N,
+                   double dx,
+                   double dy,
+                   struct particleline *Particlelines)
+{
+
+    int n,length=0;
+    char szFileName[80];
+    FILE *fp=NULL;
+    sprintf( szFileName, "%s.particle.%i.vtk", szProblem, timeStepNumber );
+    fp = fopen( szFileName, "w");
+    if( fp == NULL )
+    {
+        char szBuff[80];
+        sprintf( szBuff, "Failed to open %s", szFileName );
+        ERROR( szBuff );
+        return;
+    }
+    /*calculate the number of the particles*/
+    for (n=0;n<N;n++) length+=Particlelines[n].length;
+
+    write_vtkParticleHeader( fp, imax, jmax, length);
+    write_vtkParticleCoordinates(fp,N,Particlelines);
+
+    if( fclose(fp) )
+    {
+        char szBuff[80];
+        sprintf( szBuff, "Failed to close %s", szFileName );
+        ERROR( szBuff );
+    }
+}
+
+
+void write_vtkParticleHeader( FILE *fp, int imax, int jmax,int length)
+{
+    if( fp == NULL )
+    {
+        char szBuff[80];
+        sprintf( szBuff, "Null pointer in write_vtkHeader" );
+        ERROR( szBuff );
+        return;
+    }
+
+    fprintf(fp,"# vtk DataFile Version 2.0\n");
+    fprintf(fp,"ASCII\n");
+    fprintf(fp,"\n");
+    fprintf(fp,"DATASET UNSTRUCTURED_GRID\n");
+    fprintf(fp,"POINTS %i float\n", length);
+    fprintf(fp,"\n");
+}
+
+
+
+void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlelines)
+{
+    struct particle *temp;
+
+    int n = 0;
+
+    for (n=0; n<N; n++ )
+    {
+        for (temp=Particlelines[n].Particles; temp->next !=NULL; temp=temp->next)
+        {
+            fprintf(fp, "%f %f 0\n", temp->next->x, temp->next->y);
+        }
+
+    }
+
+}

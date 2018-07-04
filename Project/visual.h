@@ -1,6 +1,6 @@
 #ifndef __VISUAL_H__
 #define __VISUAL_H__
-
+#include"surface.h"
 /**
  * Method for writing header information in vtk format. 
  * 
@@ -61,5 +61,21 @@ void write_vtkHeader( FILE *fp, int imax, int jmax,
  */
 void write_vtkPointCoordinates( FILE *fp, int imax, int jmax, 
                                 double dx, double dy);
+
+void write_vtkParticleFile(const char *szProblem,
+                   int    timeStepNumber,
+                   double xlength,
+                   double ylength,
+                   int    imax,
+                   int    jmax,
+                   int    N,
+                   double dx,
+                   double dy,
+                   struct particleline *Particlelines);
+
+void write_vtkParticleHeader( FILE *fp, int imax, int jmax,int length);
+
+void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlelines);
+
 
 #endif

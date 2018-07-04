@@ -249,7 +249,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
             {
                 //printf("DebugW \n");
                 U[i-1][j] = U[i][j] +(delx/dely)*(V[i][j] - V[i][j-1]);
-                P[i][j] = (2/Re)*(U[i][j] - U[i-1][j]);
+                P[i][j] = (2/Re)*((U[i][j] - U[i-1][j])/delx);
                 if((flag[i-1][j-1]&(1<<11))!=0)
                 {   
                     V[i-1][j-1] = V[i][j-1]+(delx/dely)*(U[i-1][j] - U[i-1][j-1]);
@@ -266,7 +266,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 if((flag[i-1][j+1]&(1<<11))!=0)
                 {
                     //printf("Debug \n");
-                    U[i-1][j+1] = U[i][j] - (dely/delx)*(V[i][j] - V[i][j-1]);
+                    U[i-1][j+1] = U[i-1][j] - (dely/delx)*(V[i][j] - V[i-1][j]);
                 }
             }
             if (S_S(flag[i][j]))
@@ -289,14 +289,19 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 P[i][j] = (0.5/Re)*(((U[i-1][j]+U[i][j]-U[i-1][j-1] - U[i][j-1])/dely)+((V[i][j-1]+V[i][j]-V[i-1][j]-V[i-1][j-1])/delx));
                 if ((flag[i+1][j-1]&(1<<11))!=0)
                 {
-                    U[i][j-1] = U[i][j] +(delx/dely)*(V[i+1][j-1]-V[i][j-1]);
+                    V[i+1][j-1] = V[i][j-1] -(delx/dely)*(U[i][j]-U[i][j-1]);
                 }
                 if((flag[i-1][j+1]&(1<<11))!=0)
                 {
-                    V[i-1][j] = V[i][j] +(dely/delx)*(U[i-1][j+1]-U[i-1][j]);
+                    U[i-1][j+1] = U[i-1][j] -(dely/delx)*(V[i][j]-V[i-1][j]);
                 }
-                U[i][j+1] = U[i][j];
-                V[i+1][j] = V[i][j];
+                if((flag[i+1][j+1]&(1<<11))!=0)
+                {
+                    U[i][j+1] = U[i][j];
+                    V[i+1][j] = V[i][j];
+                }
+                
+                
 
             }
 
@@ -309,29 +314,34 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 {
                     U[i-1][j-1] = U[i-1][j] +(dely/delx)*(V[i][j-1] - V[i-1][j-1]);
                 }
-                if((flag[i+1][j+1]&(1<<11))!=0)
+                /*if((flag[i+1][j+1]&(1<<11))!=0)
                 {
                     V[i+1][j] = V[i][j] - (delx/dely)*(U[i][j+1] - U[i][j]);
+                }*/
+                if((flag[i+1][j-1]&(1<<11))!=0)
+                {
+                    U[i][j-1] = U[i][j];
+                    V[i+1][j-1] = V[i][j-1];
                 }
-                U[i][j-1] = U[i][j];
-                V[i+1][j-1] = V[i][j-1];
             }   
             if(S_SW(flag[i][j]))
             {
                 U[i-1][j] = U[i][j];
                 V[i][j-1] = V[i][j];
-                P[i][j] = (0.5/Re)*(((U[i][j+1]+U[i-1][j+1]-U[i][j] - U[i-1][j])/dely)+((V[i][j]+V[i][j-1]-V[i+1][j]-V[i+1][j-1])/delx));
-                if ((flag[i+1][j-1]&(1<<11))!=0)
+                P[i][j] = (0.5/Re)*(((U[i][j+1]+U[i-1][j+1]-U[i][j] - U[i-1][j])/dely)+((-V[i][j]-V[i][j-1]+V[i+1][j]+V[i+1][j-1])/delx));
+                /*if ((flag[i+1][j-1]&(1<<11))!=0)
                 {
                     U[i][j-1] = U[i][j] +(dely/delx)*(V[i+1][j-1]-V[i][j-1]);
                 }
                 if((flag[i-1][j+1]&(1<<11))!=0)
                 {
                     V[i-1][j] = V[i][j] +(delx/dely)*(U[i-1][j+1]-U[i-1][j]);
-                }
+                }*/
+                if((flag[i-1][j-1]&(1<<11))!=0)
+                {
                 U[i-1][j-1] = U[i-1][j];
                 V[i-1][j-1] = V[i][j-1];
-
+                }
             }
             if(S_WN(flag[i][j]))
             {
@@ -340,14 +350,17 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 P[i][j] = (-0.5/Re)*(((U[i-1][j]+U[i][j]-U[i][j-1]-U[i-1][j-1])/dely)+((V[i+1][j]+V[i+1][j-1]-V[i][j]-V[i][j-1])/delx));
                 if((flag[i-1][j-1]&(1<<11))!=0)
                 {
-                    U[i-1][j-1] = U[i-1][j]+(delx/dely)*(V[i][j-1]-V[i-1][j-1]);
+                    V[i-1][j-1] = V[i][j-1]+(delx/dely)*(U[i-1][j]-U[i-1][j-1]);
                 }
-                if((flag[i+1][j+1]&(1<<11))!=0)
+                /*if((flag[i+1][j+1]&(1<<11))!=0)
                 {
                     V[i+1][j] = V[i][j] - (dely/delx)*(U[i][j+1] - U[i][j]);
+                }*/
+                if ((flag[i-1][j+1]&(1<<11))!=0)
+                {
+                    U[i-1][j+1] = U[i-1][j];
+                    V[i-1][j] = V[i][j];
                 }
-                U[i-1][j+1] = U[i-1][j];
-                V[i+1][j] = V[i][j];
 
             }
 
@@ -357,7 +370,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 U[i][j] = U[i][j]+(delt*GX);
                 U[i-1][j] = U[i-1][j] +(delt*GX);
                 P[i][j] = 0;
-                if(((flag[i][j]&(1<<11))!=0))
+                if(((flag[i-1][j-1]&(1<<11))!=0))
                 {
                     V[i-1][j-1] = V[i][j-1] +(delx/dely)*(U[i-1][j] - U[i-1][j-1]);
                 }
@@ -371,7 +384,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
             if (S_NS(flag[i][j]))
             {
                 V[i][j] = V[i][j]+(delt*GY);
-                V[i][j-1] = V[i][j]+(delt*GY);
+                V[i][j-1] = V[i][j-1]+(delt*GY);
                 P[i][j] = 0;
                 if ((flag[i-1][j+1]&(1<<11))!=0)
                 {
@@ -401,7 +414,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                     U[i][j-1] = U[i][j];
                     V[i+1][j-1] = V[i][j-1];
                 }
-                if((flag[i-1][j-1]&(1<<11))!=0)
+                if((flag[i-1][j+1]&(1<<11))!=0)
                 {
                     U[i-1][j+1] = U[i-1][j]- (dely/delx)*(V[i][j] - V[i-1][j]);
                 }
@@ -416,7 +429,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 P[i][j] = 0;
                 U[i][j] = U[i][j]+(delt*GX);
                 U[i-1][j] = U[i-1][j] +(delt*GX);
-                V[i][j-1] = V[i][j] - (dely/delx)*(U[i][j]-U[i-1][j]);
+                V[i][j-1] = V[i][j] + (dely/delx)*(U[i][j]-U[i-1][j]);
                 if((flag[i-1][j-1]&(1<<11))!=0)
                 {
                     U[i-1][j-1] = U[i-1][j];
@@ -427,14 +440,14 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                     U[i][j-1] = U[i][j];
                     V[i+1][j-1] = V[i][j-1];
                 }
-                if((flag[i-1][j+1]&(1<<11))!=0)
+               /* if((flag[i-1][j+1]&(1<<11))!=0)
                 {
                     V[i-1][j] = V[i][j]+(delx/dely)*(U[i-1][j+1]-U[i-1][j]);
                 }
                 if((flag[i+1][j+1]&(1<<11))!=0)
                 {
                     V[i+1][j] = V[i][j] - (delx/dely)*(U[i][j+1] - U[i][j]);
-                }
+                }*/
 
             }
             if(S_SWN(flag[i][j]))
@@ -453,14 +466,14 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                     U[i-1][j+1] = U[i-1][j];
                     V[i-1][j] = V[i][j];
                 }
-                if((flag[i+1][j-1]&(1<<11))!=0)
+               /* if((flag[i+1][j-1]&(1<<11))!=0)
                 {
                     U[i][j-1] = U[i][j]+(dely/delx)*(V[i+1][j-1] - V[i][j-1]);
                 }
                 if((flag[i+1][j+1]&(1<<11))!=0)
                 {
                      U[i][j+1] = U[i][j]- (dely/delx)*(V[i+1][j] - V[i][j]);
-                }
+                }*/
             }
             if(S_WNO(flag[i][j]))
             {
