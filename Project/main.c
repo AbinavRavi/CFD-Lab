@@ -49,12 +49,9 @@ int main(int argn, char** args){
 	printf("Start of Run... \n");
 			printf("Assignment-2, Group D \n");
 			printf("Please select the problem from the list below by typing 1-5 \n");
-			printf("P1. Karman Vortex Street \n");
-			printf("P2. Flow over a Step \n");
-			printf("P3. Natural Convection low reynolds number \n");
-			printf("P4. Natural Convection High reynolds number\n" );
-			printf("P5. Fluid Trap \n");
-			printf("P6. Rayleigh-Benard Convection \n");
+			printf("P1. Breaking Dam \n");
+			printf("P2. droplet \n");
+			
 			int select;
 			char* geometry = (char*)(malloc(sizeof(char)*100));
 			char* problem = (char*)(malloc(sizeof(char)*100));
@@ -68,23 +65,7 @@ int main(int argn, char** args){
 
 			break;
 			case 2:
-			filename = "step_flow.dat";
-
-			break;
-			case 3:
-			filename = "natural_convection.dat";
-			break;
-
-			case 4:
-			filename = "natural_convection2.dat";
-			break;
-
-			case 5:
-			filename = "fluid_trap.dat";
-
-			break;
-			case 6:
-			filename = "rb_convection.dat";
+			filename = "droplet.dat";
 
 			break;
 }
