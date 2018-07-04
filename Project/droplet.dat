@@ -60,5 +60,5 @@ ppc		16
 #--------------------------------------------
 #         surface parameters
 #--------------------------------------------
-geometry     breaking_dam.pgm
-problem      dam_break
+geometry     droplet.pgm
+problem      droplet
