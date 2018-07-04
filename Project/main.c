@@ -193,17 +193,17 @@ int main(int argn, char** args){
    		printf("t = %f ,dt = %f,  \n",t,dt);
 		   
 		MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
-		for(int j = 0; j<jmax; ++j)
+		/*for(int j = 0; j<jmax; ++j)
 		{
 			for(int i = 0; i<imax; ++i)
 			{
 				printf("%d ",flag[i][jmax-1-j]);
 			}
 			printf("\n");
-		}
+		}*/
 		
 		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
-		printf("Debug2 \n");
+		
 		calculate_fg(Re,GX,GY,alpha,dt,dx,dy,imax,jmax,U,V,F,G,flag);
     		
 		calculate_rs(dt,dx,dy,imax,jmax,F,G,RS,flag);

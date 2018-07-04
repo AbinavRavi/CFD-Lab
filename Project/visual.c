@@ -166,11 +166,13 @@ void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlel
 
     for (n=0; n<N; n++ )
     {
-        for (temp=Particlelines[n].Particles; temp->next !=NULL; temp=temp->next)
+      temp = Particlelines[n].Particles;
+        for (int i = 0; i<Particlelines[n].length; i++)
         {
-            fprintf(fp, "%f %f 0\n", temp->next->x, temp->next->y);
+            fprintf(fp, "%f %f 0\n", temp->x, temp->y);
+             temp = temp->next;
         }
-
+     
     }
 
 }
