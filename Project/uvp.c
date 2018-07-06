@@ -66,40 +66,11 @@ void calculate_fg(double Re,
 		 double** F, double** G,int **flag)
 {
 
-
-
- /*set boundary values in case of no-slip/free-slip/and inflow*/
-for(int i = 0; i<imax; ++i)
-{
-	for(int j = 0; j<jmax; ++j)
-	{
-		if ( B_O(flag[i][j]) )  F[i][j] = U[i][j];
-
-		if ( B_W(flag[i][j]) )  F[i-1][j] = U[i-1][j];
-
-		if ( B_N(flag[i][j]) )  G[i][j] = V[i][j];
-
-		if ( B_S(flag[i][j]) )  G[i][j-1] = V[i][j-1];
-
-		if ( B_NO(flag[i][j]) ) { F[i][j] = U[i][j]; G[i][j] = V[i][j]; }
-
-		if ( B_NW(flag[i][j]) ) { F[i-1][j] = U[i-1][j]; G[i][j] = V[i][j]; }
-
-		if ( B_SO(flag[i][j]) ) { F[i][j] = U[i][j]; G[i][j-1] = V[i][j-1]; }
-
-		if ( B_SW(flag[i][j]) ) { F[i-1][j] = U[i-1][j]; G[i][j-1] = V[i][j-1]; }
-		//Outflow
-		//if (flag[i][j]&(1<<3) ) P[i][j] = 0;
-		//Inflow
-		if (flag[i][j]&(1<<4) ) F[i][j] = U[i][j];
-	}
-}
-
     for(int i=0; i<imax-1; i++)
     {
         for(int j=0; j<jmax; j++)
 		{
-		if( ((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))) )
+		if( ((flag[i][j]&(1<<0))&flag[i+1][j]) )//|| ( (flag[i+1][j]&(1<<3)) && (flag[i][j]&(1<<0))) )
 		{
 			
         F[i][j]=U[i][j]+dt*(
@@ -116,6 +87,10 @@ for(int i = 0; i<imax; ++i)
                     +alpha*(fabs(V[i][j]+V[i+1][j])*(U[i][j]-U[i][j+1])-fabs(V[i][j-1]+V[i+1][j-1])*(U[i][j-1]-U[i][j]))
                              )+GX);
 
+		}
+		else
+		{
+			F[i][j] = U[i][j];
 		}
 		}
     }
@@ -142,9 +117,41 @@ for(int i = 0; i<imax; ++i)
                             )+GY);
 
 		}
+		else
+		{
+			G[i][j] = V[i][j];
+		}
         }
 
     }
+
+	/*set boundary values in case of no-slip/free-slip/and inflow*/
+for(int i = 0; i<imax; ++i)
+{
+	for(int j = 0; j<jmax; ++j)
+	{
+		if ( B_O(flag[i][j]) )  F[i][j] = U[i][j];
+
+		if ( B_W(flag[i][j]) )  F[i-1][j] = U[i-1][j];
+
+		if ( B_N(flag[i][j]) )  G[i][j] = V[i][j];
+
+		if ( B_S(flag[i][j]) )  G[i][j-1] = V[i][j-1];
+
+		if ( B_NO(flag[i][j]) ) { F[i][j] = U[i][j]; G[i][j] = V[i][j]; }
+
+		if ( B_NW(flag[i][j]) ) { F[i-1][j] = U[i-1][j]; G[i][j] = V[i][j]; }
+
+		if ( B_SO(flag[i][j]) ) { F[i][j] = U[i][j]; G[i][j-1] = V[i][j-1]; }
+
+		if ( B_SW(flag[i][j]) ) { F[i-1][j] = U[i-1][j]; G[i][j-1] = V[i][j-1]; }
+		//Outflow
+		//if (flag[i][j]&(1<<3) ) P[i][j] = 0;
+		//Inflow
+		if (flag[i][j]&(1<<4) ) F[i][j] = U[i][j];
+	}
+}
+
 
 }
 
@@ -157,7 +164,7 @@ void calculate_uv(double dt,double dx,double dy,int imax, int jmax,
 	{
 		for (int j = 0; j<jmax;j++)
 		{
-			if(((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))))
+			if(((flag[i][j]&(1<<0))&flag[i+1][j]) )//|| ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))))
 			//update the U component of velocity
 			U[i][j] = F[i][j] - (dt/dx)*(P[i+1][j]-P[i][j]);
 		}
@@ -191,7 +198,7 @@ void calculate_rs(double dt,
    	{
         	for(int j=0; j<jmax; j++)
 		{
-			if(flag[i][j]&(1<<9))
+			if((flag[i][j]&(1<<9))!=0)
 			RS[i][j] =  (1/dt)*( (F[i][j]-F[i-1][j])/dx + (G[i][j]-G[i][j-1])/dy );
 		}
 	}
@@ -206,7 +213,7 @@ void nullify_obstacles(double **U, double **V, double **P, int **flag, int imax,
 	{
 	    for (int j=0;j<jmax; j++)
 		{
-			if(flag[i][j]&((1<<1)|(1<<2)|(1<<11)) )
+			if(flag[i][j]&((1<<1)|(1<<2)))
 			{
 				U[i][j] = 0;
 				V[i][j] = 0;
