@@ -48,7 +48,7 @@ int S_WNO(int flag);
 //Surface type 5
 int S_NOSW(int flag);
 
-struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, double dely, int ppc, int **flag);
+struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, double dely, int ppc, int **flag, int select);
 
 void insert_particles(struct particle *start, int i, int j, double delx, double dely, int len, int cell_count);
 

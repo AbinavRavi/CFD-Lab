@@ -55,10 +55,10 @@ PI		0
 #--------------------------------------------
 #         surface parameters
 #--------------------------------------------
-ppc		16
+ppc		49
 
 #--------------------------------------------
 #         surface parameters
 #--------------------------------------------
-geometry     droplet.pgm
+geometry     droplet1.pgm
 problem      droplet

@@ -66,66 +66,9 @@ void calculate_fg(double Re,
 		 double** F, double** G,int **flag)
 {
 
-    for(int i=0; i<imax-1; i++)
-    {
-        for(int j=0; j<jmax; j++)
-		{
-		if( ((flag[i][j]&(1<<0))&flag[i+1][j]) )//|| ( (flag[i+1][j]&(1<<3)) && (flag[i][j]&(1<<0))) )
-		{
-			
-        F[i][j]=U[i][j]+dt*(
-                //Central difference scheme for second derivatives
-                (1/Re)*((U[i-1][j]-2*U[i][j]+U[i+1][j])/pow(dx,2.0)+(U[i][j-1]-2*U[i][j]+U[i][j+1])/pow(dy,2.0))
-                //Modified Donor Cell method on convective term (d(u^2)/dx)
-                -(1/dx)*0.25*(
-                        (pow((U[i+1][j]+U[i][j]),2.0) - pow((U[i-1][j]+U[i][j]),2.0))
-                        +alpha*(fabs(U[i+1][j]+U[i][j])*(U[i][j]-U[i+1][j])-fabs(U[i-1][j]+U[i][j])*(U[i-1][j]-U[i][j]))
-                             )
-                 //Modified Donor Cell method on convective term (d(uv)/dy)
-                -(1/dy)*0.25*(
-                        ((V[i][j]+V[i+1][j])*(U[i][j]+U[i][j+1])- (V[i][j-1]+V[i+1][j-1])*(U[i][j-1]+U[i][j]))
-                    +alpha*(fabs(V[i][j]+V[i+1][j])*(U[i][j]-U[i][j+1])-fabs(V[i][j-1]+V[i+1][j-1])*(U[i][j-1]-U[i][j]))
-                             )+GX);
-
-		}
-		else
-		{
-			F[i][j] = U[i][j];
-		}
-		}
-    }
 
 
-    for(int i=0; i<imax; i++)
-	{
-        for(int j=0; j<jmax-1; j++)
-		{
-		if((flag[i][j]&(1<<0))&flag[i][j+1])
-		{
-        G[i][j]=V[i][j]+dt*(
-                //Central difference Scheme for second derivatives
-                (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
-                //Modified Donor cell method for d(uv)/dx
-                -(1/dx)*0.25*(
-                        ((U[i][j]+U[i][j+1])*(V[i][j]+V[i+1][j])- (U[i-1][j]+U[i-1][j+1])*(V[i-1][j]+V[i][j]))
-                    +alpha*(fabs(U[i][j]+U[i][j+1])*(V[i][j]-V[i+1][j])-fabs(U[i-1][j]+U[i-1][j+1])*(V[i-1][j]-V[i][j]))
-                            )
-                //modified Donor cell method for d(v^2)/dy
-                -(1/dy)*0.25*(
-                        (pow((V[i][j]+V[i][j+1]),2.0) - pow((V[i][j-1]+V[i][j]),2.0))
-                        +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
-                            )+GY);
-
-		}
-		else
-		{
-			G[i][j] = V[i][j];
-		}
-        }
-
-    }
-
-	/*set boundary values in case of no-slip/free-slip/and inflow*/
+ /*set boundary values in case of no-slip/free-slip/and inflow*/
 for(int i = 0; i<imax; ++i)
 {
 	for(int j = 0; j<jmax; ++j)
@@ -152,6 +95,56 @@ for(int i = 0; i<imax; ++i)
 	}
 }
 
+    for(int i=0; i<imax-1; i++)
+    {
+        for(int j=0; j<jmax; j++)
+		{
+		if( ((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))) )
+		{
+			
+        F[i][j]=U[i][j]+dt*(
+                //Central difference scheme for second derivatives
+                (1/Re)*((U[i-1][j]-2*U[i][j]+U[i+1][j])/pow(dx,2.0)+(U[i][j-1]-2*U[i][j]+U[i][j+1])/pow(dy,2.0))
+                //Modified Donor Cell method on convective term (d(u^2)/dx)
+                -(1/dx)*0.25*(
+                        (pow((U[i+1][j]+U[i][j]),2.0) - pow((U[i-1][j]+U[i][j]),2.0))
+                        +alpha*(fabs(U[i+1][j]+U[i][j])*(U[i][j]-U[i+1][j])-fabs(U[i-1][j]+U[i][j])*(U[i-1][j]-U[i][j]))
+                             )
+                 //Modified Donor Cell method on convective term (d(uv)/dy)
+                -(1/dy)*0.25*(
+                        ((V[i][j]+V[i+1][j])*(U[i][j]+U[i][j+1])- (V[i][j-1]+V[i+1][j-1])*(U[i][j-1]+U[i][j]))
+                    +alpha*(fabs(V[i][j]+V[i+1][j])*(U[i][j]-U[i][j+1])-fabs(V[i][j-1]+V[i+1][j-1])*(U[i][j-1]-U[i][j]))
+                             )+GX);
+
+		}
+		}
+    }
+
+
+    for(int i=0; i<imax; i++)
+	{
+        for(int j=0; j<jmax-1; j++)
+		{
+		if((flag[i][j]&(1<<0))&flag[i][j+1])
+		{
+        G[i][j]=V[i][j]+dt*(
+                //Central difference Scheme for second derivatives
+                (1/Re)*((V[i-1][j]-2*V[i][j]+ V[i+1][j])/pow(dx,2.0)+(V[i][j-1]-2*V[i][j]+ V[i][j+1])/pow(dy,2.0))
+                //Modified Donor cell method for d(uv)/dx
+                -(1/dx)*0.25*(
+                        ((U[i][j]+U[i][j+1])*(V[i][j]+V[i+1][j])- (U[i-1][j]+U[i-1][j+1])*(V[i-1][j]+V[i][j]))
+                    +alpha*(fabs(U[i][j]+U[i][j+1])*(V[i][j]-V[i+1][j])-fabs(U[i-1][j]+U[i-1][j+1])*(V[i-1][j]-V[i][j]))
+                            )
+                //modified Donor cell method for d(v^2)/dy
+                -(1/dy)*0.25*(
+                        (pow((V[i][j]+V[i][j+1]),2.0) - pow((V[i][j-1]+V[i][j]),2.0))
+                        +alpha*(fabs(V[i][j]+V[i][j+1])*(V[i][j]-V[i][j+1])-fabs(V[i][j-1]+V[i][j])*(V[i][j-1]-V[i][j]))
+                            )+GY);
+
+		}
+        }
+
+    }
 
 }
 
@@ -164,7 +157,7 @@ void calculate_uv(double dt,double dx,double dy,int imax, int jmax,
 	{
 		for (int j = 0; j<jmax;j++)
 		{
-			if(((flag[i][j]&(1<<0))&flag[i+1][j]) )//|| ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))))
+			if(((flag[i][j]&(1<<0))&flag[i+1][j]) || ( (flag[i+1][j] & (1<<3)) && (flag[i][j]&(1<<0))))
 			//update the U component of velocity
 			U[i][j] = F[i][j] - (dt/dx)*(P[i+1][j]-P[i][j]);
 		}
@@ -198,7 +191,7 @@ void calculate_rs(double dt,
    	{
         	for(int j=0; j<jmax; j++)
 		{
-			if((flag[i][j]&(1<<9))!=0)
+			if(flag[i][j]&(1<<9))
 			RS[i][j] =  (1/dt)*( (F[i][j]-F[i-1][j])/dx + (G[i][j]-G[i][j-1])/dy );
 		}
 	}
@@ -213,7 +206,7 @@ void nullify_obstacles(double **U, double **V, double **P, int **flag, int imax,
 	{
 	    for (int j=0;j<jmax; j++)
 		{
-			if(flag[i][j]&((1<<1)|(1<<2)))
+			if(flag[i][j]&((1<<1)|(1<<2)|(1<<11)) )
 			{
 				U[i][j] = 0;
 				V[i][j] = 0;
@@ -222,6 +215,41 @@ void nullify_obstacles(double **U, double **V, double **P, int **flag, int imax,
 
 		}
 	}
+
+}
+
+void set_gravity(double *gx, double *gy, double t, int prob){
+
+
+switch (prob)
+{
+	case 1:
+		//sudden break;
+		if (t<3) {
+			*gx = 2.5;
+		}
+		else
+		{
+			*gx = 0;
+		}
+
+		//uphill, downhill
+
+		//speed breaker
+
+		//banking
+
+		//uneven roads
+
+		break;
+
+	case 2:
+		*gx = 1;
+		break;
+
+	default:
+		break;
+}
 
 }
 

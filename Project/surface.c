@@ -1,11 +1,15 @@
 #include "surface.h"
 
 
-struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, double dely, int ppc, int **flag){
+struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, double dely, int ppc, int **flag, int select)
+{
     
     *N = 0;
     int len = sqrt(ppc);
+    struct particleline *Particlelines;
 
+    if (select == 1) {
+    
     // find the total number of particlelines
     for(int i = 0; i < imax; i++)
     {
@@ -21,12 +25,12 @@ struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, do
     printf("Number of particlelines: %d \n",*N);
 
     //allocate particleline to an array of size N
-    struct particleline *Particlelines = (struct particleline*)malloc(sizeof(struct particleline)*(*N));
+    Particlelines = (struct particleline*)malloc(sizeof(struct particleline)*(*N));
     
     int n = 0;
-    for(int i = 0; i < imax; i++)
+    for(int i = 1; i < imax-1; i++)
     {
-        for(int j = 0; j < jmax; j++)
+        for(int j = 1; j < jmax-1; j++)
         {
             
             if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0)
@@ -45,7 +49,85 @@ struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, do
             
         } 
     }
+    }
+    
+    else if(select == 2)
+    {
 
+    // find the total number of particlelines
+    for(int i = 0; i < imax; i++)
+    {
+        for(int j = 0; j < 16; j++)
+        {
+            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) 
+            {    
+                    (*N)+= len;
+
+            }
+        }
+    }
+    
+    double r = 1.5*(delx<dely?delx:dely);
+    int  subdiv = (int)((r*(double)len)/delx);
+    double dr = r/subdiv;
+    double xo = 20.5*delx;
+    double yo = 23.5*dely;
+    double C;
+    int length1;
+    //allocate particleline to an array
+    Particlelines = (struct particleline*)malloc(sizeof(struct particleline)*((*N)+subdiv));
+    printf("Number of particlelines: %d \n",*N +subdiv);
+    
+    for(int i = 0; i < subdiv; i++)
+    {
+        C = 2*3.1415*(r-i*dr);
+        struct particle *start = (struct particle *)malloc(sizeof(struct particle));
+        length1 = (int)((C*ppc)/delx);   
+
+        Particlelines[i].length = length1;
+        Particlelines[i].Particles = start;
+        
+        struct particle *list;
+
+        list = start;
+        start->next = NULL;
+
+        for(int k=0; k<length1; k++)
+        {   
+            double th = (2*3.1415*(double)k)/((double)length1);
+            list->x =  xo + (r-i*dr)*cos(th);
+            list->y =  yo + (r-i*dr)*sin(th);
+            if (k<length1-1) {
+            list->next = (struct particle *)malloc(sizeof(struct particle));
+            }
+            else  list->next = NULL;
+        
+            list = list->next;
+        }
+    }
+    printf("%d \n",subdiv);
+    int n = subdiv;
+    for(int i = 0; i < imax; i++)
+    {
+        for(int j = 0; j < 16; j++)
+        {
+            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0)
+            {    
+                for(int k = 0; k < len; k++)
+                {
+                    struct particle *start = (struct particle *)malloc(sizeof(struct particle));
+                    
+                    Particlelines[n + k].length = len;
+                    Particlelines[n + k].Particles = start;
+                    insert_particles(start, i, j, delx, dely, len, k);
+                }
+                n += len;
+                
+            }
+        } 
+    }
+    }
+    
     return &Particlelines[0];
 }
 
@@ -58,8 +140,8 @@ void insert_particles(struct particle *start, int i, int j, double delx, double 
 
     for(int k=0; k<len; k++)
     {   
-        list->x = i*delx + (delx/(double)len)*k;
-        list->y = j*dely + (dely/(double)len)*cell_count;
+        list->x = i*delx + (delx/(double)len)*k + (delx/(double)len)/2;
+        list->y = j*dely + (dely/(double)len)*cell_count + (dely/(double)len)/2;
         
         if (k<len-1) {
             list->next = (struct particle *)malloc(sizeof(struct particle));
@@ -69,7 +151,6 @@ void insert_particles(struct particle *start, int i, int j, double delx, double 
         list = list->next;
     }   
     
-   
 }
 
 void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N, struct particleline *Partlines){
@@ -153,10 +234,8 @@ void MARK_CELLS(int **flag, int imax, int jmax, double delx, double dely, int N,
                 }
             }
 
-
         }  
     }
-
 
 }
 
@@ -414,7 +493,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 V[i][j] = V[i][j-1] - (dely/delx)*(U[i][j]-U[i-1][j]);
                 U[i][j] = U[i][j] +(delt*GX);
                 U[i-1][j] = U[i-1][j]+(delt*GX);
-
+                //V[i][j] = V[i][j-1] - (dely/delx)*(U[i][j]-U[i-1][j]);
                 if((flag[i-1][j-1]&(1<<11))!=0)
                 {
                     V[i-1][j-1] = V[i][j-1]+(delx/dely)*(U[i-1][j]-U[i-1][j-1]);
@@ -444,7 +523,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 U[i-1][j] = U[i][j] +(delx/dely)*(V[i][j] - V[i][j-1]);
                 V[i][j] = V[i][j]+(delt*GY);
                 V[i][j-1] = V[i][j-1]+(delt*GY);
-                
+                //U[i-1][j] = U[i][j] +(delx/dely)*(V[i][j] - V[i][j-1]);
                 if((flag[i-1][j-1]&(1<<11))!=0)
                 {
                     U[i-1][j-1] = U[i-1][j];
@@ -470,7 +549,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 V[i][j-1] = V[i][j] + (dely/delx)*(U[i][j]-U[i-1][j]);
                 U[i][j] = U[i][j]+(delt*GX);
                 U[i-1][j] = U[i-1][j] +(delt*GX);
-                
+                //V[i][j-1] = V[i][j] + (dely/delx)*(U[i][j]-U[i-1][j]);
                 if((flag[i-1][j-1]&(1<<11))!=0)
                 {
                     U[i-1][j-1] = U[i-1][j];
@@ -498,6 +577,7 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
                 U[i][j] = U[i-1][j] -(delx/dely)*(V[i][j] - V[i][j-1]);
                 V[i][j] = V[i][j]+(delt*GY);
                 V[i-1][j] = V[i-1][j]+(delt*GY);
+                //U[i][j] = U[i-1][j] -(delx/dely)*(V[i][j] - V[i][j-1]);
                 if((flag[i-1][j+1]&(1<<11))!=0)
                 {
                     U[i-1][j+1] = U[i-1][j]- (dely/delx)*(V[i][j] - V[i-1][j]);
@@ -519,7 +599,6 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
             }
             
             
-
             //surface type 5
             if(S_NOSW(flag[i][j]))
             {
@@ -663,49 +742,6 @@ void SET_UVP_SURFACE(double **U,double **V, double **P, int **flag, int imax, in
 
 }
 
-/*
-void DELETE_PARTICLES(int **flag, int imax, int jmax, double delx, double dely, int N, struct particleline *Partlines){
-
-    for(int i = 0; i < imax; i++)
-    {
-        for(int j = 0; j < jmax; j++)
-        {
-            if (flag[i][j]&(1<<0|1<<3|1<<4|1<<11)==0)
-            {
-
-                for(int k = 0; k < N; k++)
-                {
-                    struct particle *currP = NULL;
-                    struct particle *prevP = NULL;
-
-                    for(currP = Particlelines[k].Particles; currP != NULL; prevP = currP, currP = currP->next)
-                    {
-                        if( (currP->x >= i*delx)&&(currP->x < (i+1)*delx) 
-                        &&  (currP->y >= j*dely)&&`(currP->y < (j+1)*dely) )
-                        {
-                           //unlink first particle 
-                            if (currP == Particlelines[k].Particles) {
-                                Particlelines[k].Particles = currP->next;
-                            }
-                            //unlink last particle
-                            else if (currP->next == NULL) {
-                                prevP->next = NULL;
-                            }
-                            //delete interior particle
-                            else{
-                                prevP->next = currP->next;
-                            }
-                            free(currP);
-                            (Particlelines[k].length)--;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-}
-*/
 
 double U_interp(double **U, double dx, double dy, double x, double y){
 
@@ -718,26 +754,15 @@ double U_interp(double **U, double dx, double dy, double x, double y){
     int i = (int)(x/dx);
     int j = (int)((y+0.5*dy)/dy);
 
-    x1 = i*dx;
-    x2 = (i+1)*dx;
-    y1 = (j-0.5)*dy;
-    y2 = (j+0.5)*dy;
+    x1 = (i-1)*dx;
+    x2 = i*dx;
+    y1 = (j-1.5)*dy;
+    y2 = (j-0.5)*dy;
 
-    
-    if (i==0) { //inflow  
-
-        u1 = 1;
-        u2 = U[i][j-1];
-        u3 = 1;
-        u4 = U[i][j];
-    }
-    else{ //fluid or outflow
-
-        u1 = U[i-1][j-1];
-        u2 = U[i][j-1];
-        u3 = U[i-1][j];
-        u4 = U[i][j];
-    }
+    u1 = U[i-1][j-1];
+    u2 = U[i][j-1];
+    u3 = U[i-1][j];
+    u4 = U[i][j];
 
     return (1/(dx*dy))*( (x2-x)*(y2-y)*u1 + (x-x1)*(y2-y)*u2
             +(x2-x)*(y-y1)*u3 + (x-x1)*(y-y1)*u4 );
@@ -754,27 +779,15 @@ double V_interp(double **V, double dx, double dy, double x, double y){
     int i = (int)((x+0.5*dx)/dx);
     int j = (int)(y/dy);
     
-    x1 = (i-0.5)*dx;
-    x2 = (i+0.5)*dx;
-    y1 = j*dy;
-    y2 = (j+0.5)*dy;
+    x1 = (i-1.5)*dx;
+    x2 = (i-0.5)*dx;
+    y1 = (j-1)*dy;
+    y2 = j*dy;
 
-
-    if (i==0) { //inflow  
-
-        v1 = 0;
-        v2 = V[i][j-1];
-        v3 = 0;
-        v4 = V[i][j];
-    }
-    else{ //fluid or outflow
-
-        v1 = V[i-1][j-1];
-        v2 = V[i][j-1];
-        v3 = V[i-1][j];
-        v4 = V[i][j];
-    }
-
+    v1 = V[i-1][j-1];
+    v2 = V[i][j-1];
+    v3 = V[i-1][j];
+    v4 = V[i][j];
 
     return (1/(dx*dy))*( (x2-x)*(y2-y)*v1 + (x-x1)*(y2-y)*v2
             +(x2-x)*(y-y1)*v3 + (x-x1)*(y-y1)*v4 );
@@ -784,12 +797,16 @@ double V_interp(double **V, double dx, double dy, double x, double y){
 void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double delt, int N, struct particleline *Partlines, int **flag, int imax, int jmax){
     
     int i, j;
+    struct particle *temp;
+    struct particle *temp1;
     for(int k = 0; k < N; k++)
     {
         
         if (Partlines[k].Particles != NULL)
         {
-        struct particle *temp = Partlines[k].Particles;
+        temp = Partlines[k].Particles;
+        
+        //for(temp = Partlines[k].Particles; temp->next !=NULL; temp=temp->next)
         
         for(int p = 0; p < Partlines[k].length; p++)
         {
@@ -799,26 +816,28 @@ void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double 
             i = (int)(x_pos/delx);
             j = (int)((y_pos+0.5*dely)/dely);
 
-            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) //only advance particles in fluid cells
+             if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax))
             {
-                
-                if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax)) {
-                    temp->x += delt*U_interp(U, delx, dely, x_pos, y_pos);
-                }
-                
-                //printf("%f \n", U_interp(U, delx, dely, x_pos, y_pos));
+                temp->x += delt*U_interp(U, delx, dely, x_pos, y_pos);
             }
 
             i = (int)((x_pos+0.5*delx)/delx);
             j = (int)(y_pos/dely);
 
-            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) //only advance particles in fluid cells
+            if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax))
             {
-                if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax)) {
-                    temp->y += delt*V_interp(V, delx, dely, x_pos, y_pos);
-                }
+                temp->y += delt*V_interp(V, delx, dely, x_pos, y_pos);
             }
-            //printf("(%f %f) \n",temp->x,temp->y);
+
+            if (temp->x >= imax * delx || temp->y >= jmax * dely || temp->x <= 0 || temp->y <= 0)
+            {
+                temp1 = temp->next;
+                free(temp);
+                temp = temp1;
+                Partlines[k].length--;
+                if (temp1 == NULL)
+                    break;
+            }
             temp = temp->next;
         }
         }

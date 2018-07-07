@@ -10,7 +10,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-
 /**
  * The main operation reads the configuration file, initializes the scenario and
  * contains the main loop. So here are the individual steps of the algorithm:
@@ -90,16 +89,14 @@ int main(int argn, char** args){
     double omg;               /* relaxation factor */
     double tau;               /* safety factor for time step*/
     int  itermax;             /* max. number of iterations  */
-    				/* for pressure per time step */
     double eps;               /* accuracy bound for pressure*/
     double dt_value;           /* time for output */
-	int ppc;
+	int ppc;					/* particles per cell */
 
     //Read and assign the parameter values from file
     read_parameters(filename, &imax, &jmax, &xlength, &ylength,
 			&dt, &t_end, &tau, &dt_value, &eps, &omg, &alpha, &itermax,
 			&GX, &GY, &Re, &UI, &VI, &PI, &ppc, &dx, &dy, geometry, problem);
-
 
     //Allocate the matrices for P(pressure), U(velocity_x), V(velocity_y), F, and G on heap
     printf("PROGRESS: Starting matrix allocation... \n");
@@ -130,12 +127,10 @@ int main(int argn, char** args){
 
 	// Initialize particles
 	printf("PROGRESS: Initializing Particles... \n");
-	pline = INIT_PARTICLES (&num_particlelines, imax, jmax, dx, dy, ppc, flag);
+	pline = INIT_PARTICLES (&num_particlelines, imax, jmax, dx, dy, ppc, flag,select);
 	printf("PROGRESS: Particles initialized... \n");
 
-
-	
-	/*for(int i = 0; i < num_particlelines; i++)
+	for(int i = 0; i < 10; i++)
 	{
 		struct particle *p = pline[i].Particles;
 
@@ -145,10 +140,11 @@ int main(int argn, char** args){
 			p = p->next;
 		}
 		printf("\n");
-	}*/
+	}
 	
     //Initialize the U, V and P
    	init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
+
 		/*for(int j = 0; j < jmax; j++)
 		{
 			for(int i = 0; i < imax; i++)
@@ -176,7 +172,6 @@ int main(int argn, char** args){
 	fp_log = fopen( LogFileName, "w");
 	fprintf(fp_log, "It.no.|   Time    |time step |SOR iterations | residual | SOR converged \n");
 
-
 	MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
 
 	boundaryvalues(imax, jmax, U, V, flag);
@@ -190,8 +185,8 @@ int main(int argn, char** args){
         char* is_converged = "Yes";
 
 		calculate_dt(Re,tau,&dt,dx,dy,imax,jmax, U, V);
-   		printf("t = %f ,dt = %f,  \n",t,dt);
-		   
+   		printf("t = %f ,dt = %f,  ",t,dt);
+		
 		MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
 		/*for(int j = 0; j<jmax; ++j)
 		{
@@ -244,6 +239,8 @@ int main(int argn, char** args){
 	
 		ADVANCE_PARTICLES(U, V, dx, dy, dt, num_particlelines, pline, flag, imax, jmax);
 		
+		set_gravity(&GX, &GY, t, 1);
+		
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
    			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
@@ -278,10 +275,7 @@ int main(int argn, char** args){
     printf("PROGRESS: allocated memory released...\n \n");
 
 	printf("PROGRESS: End of Run.\n");
-  return -1;
+  	
+	return -1;
 
 }
-
-/*Things to do:
-read parameter
-*/

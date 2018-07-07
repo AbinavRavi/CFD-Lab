@@ -92,7 +92,7 @@ void write_vtkPointCoordinates( FILE *fp, int imax, int jmax,
 
   for(j = 0; j < jmax+1; j++) {
     for(i = 0; i < imax+1; i++) {
-      fprintf(fp, "%f %f 0\n", originX+(i*dx), originY+(j*dy) );
+      fprintf(fp, "%f %f 0\n", originX+((i+1)*dx), originY+((j+1)*dy) );
     }
   }
 }
@@ -111,7 +111,7 @@ void write_vtkParticleFile(const char *szProblem,
                    struct particleline *Particlelines)
 {
 
-    int n,length=0;
+    int length=0;
     char szFileName[80];
     FILE *fp=NULL;
     sprintf( szFileName, "%s.particle.%i.vtk", szProblem, timeStepNumber );
@@ -124,7 +124,18 @@ void write_vtkParticleFile(const char *szProblem,
         return;
     }
     /*calculate the number of the particles*/
-    for (n=0;n<N;n++) length+=Particlelines[n].length;
+        
+    for(int k = 0; k < N; k++)
+    {
+      struct particle *temp = Particlelines[k].Particles;
+      
+      for(int p = 0; p < Particlelines[k].length; p++)
+      {
+          length++;
+        temp = temp->next;
+      }
+      
+    }
 
     write_vtkParticleHeader( fp, imax, jmax, length);
     write_vtkParticleCoordinates(fp,N,Particlelines);
@@ -160,19 +171,16 @@ void write_vtkParticleHeader( FILE *fp, int imax, int jmax,int length)
 
 void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlelines)
 {
-    struct particle *temp;
-
-    int n = 0;
-
-    for (n=0; n<N; n++ )
+    for(int k = 0; k < N; k++)
     {
-      temp = Particlelines[n].Particles;
-        for (int i = 0; i<Particlelines[n].length; i++)
-        {
-            fprintf(fp, "%f %f 0\n", temp->x, temp->y);
-             temp = temp->next;
-        }
-     
+      struct particle *temp = Particlelines[k].Particles;
+      
+      for(int p = 0; p < Particlelines[k].length; p++)
+      {
+          fprintf(fp, "%f %f 0\n", temp->x, temp->y);
+          temp = temp->next;
+      }
+      
     }
 
 }

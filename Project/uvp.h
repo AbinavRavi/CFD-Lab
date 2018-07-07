@@ -115,5 +115,7 @@ void calculate_uv(
 
 void nullify_obstacles(double **U, double **V, double **P, int **flag, int imax, int jmax);
 
+void set_gravity(double *gx, double *gy, double t, int prob);
+
 #endif
 

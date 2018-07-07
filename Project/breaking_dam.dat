@@ -28,7 +28,7 @@ dt_value        0.5
 eps		0.001
 omg		1.7
 alpha		0.5
-itermax		500
+itermax		2000
 
 #--------------------------------------------
 #               gravitation
@@ -60,5 +60,5 @@ ppc		16
 #--------------------------------------------
 #         surface parameters
 #--------------------------------------------
-geometry     breaking_dam.pgm
+geometry     breaking_dam_baffle2.pgm
 problem      dam_break
