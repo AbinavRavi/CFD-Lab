@@ -117,5 +117,11 @@ void nullify_obstacles(double **U, double **V, double **P, int **flag, int imax,
 
 void set_gravity(double *gx, double *gy, double t, int prob);
 
+double KE(int imax, int jmax, double **U, double **V, int **flag);
+
+double Force_y(int imax, int jmax, double delx, double **P, int **flag);
+
+double Force_x(int imax, int jmax, double dely, double **P, int **flag);
+
 #endif
 

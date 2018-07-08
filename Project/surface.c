@@ -798,25 +798,22 @@ void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double 
     
     int i, j;
     struct particle *temp;
-    struct particle *temp1;
+
     for(int k = 0; k < N; k++)
     {
         
         if (Partlines[k].Particles != NULL)
         {
         temp = Partlines[k].Particles;
-        
-        //for(temp = Partlines[k].Particles; temp->next !=NULL; temp=temp->next)
-        
-        for(int p = 0; p < Partlines[k].length; p++)
+        for(int p =0; p < Partlines[k].length ; p++)
         {
             double x_pos = temp->x;
             double y_pos = temp->y;
-            
+
             i = (int)(x_pos/delx);
             j = (int)((y_pos+0.5*dely)/dely);
 
-             if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax))
+            if ((i>0)&&(i<imax)&&(j>0)&&(j<jmax))
             {
                 temp->x += delt*U_interp(U, delx, dely, x_pos, y_pos);
             }
@@ -829,7 +826,9 @@ void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double 
                 temp->y += delt*V_interp(V, delx, dely, x_pos, y_pos);
             }
 
-            if (temp->x >= imax * delx || temp->y >= jmax * dely || temp->x <= 0 || temp->y <= 0)
+            temp = temp->next;
+
+           /* if (temp->x >= imax * delx || temp->y >= jmax * dely || temp->x <= 0 || temp->y <= 0)
             {
                 temp1 = temp->next;
                 free(temp);
@@ -837,8 +836,53 @@ void ADVANCE_PARTICLES(double **U, double **V, double delx, double dely, double 
                 Partlines[k].length--;
                 if (temp1 == NULL)
                     break;
+            }*/
+        }
+        }
+    }
+
+}
+
+void DELETE_PARTICLES(double delx, double dely, int N, struct particleline *Partlines, int **flag, int imax, int jmax){
+
+    int i, j;
+    struct particle *temp;
+    struct particle *temp1;
+
+    for(int k = 0; k < N; k++)
+    {
+        
+        if (Partlines[k].Particles != NULL)
+        {
+        temp = Partlines[k].Particles;
+        for(int p = 0; p< Partlines[k].length; p++)
+        {
+            double x_pos = temp->x;
+            double y_pos = temp->y;
+
+            i = (int)(x_pos/delx);
+            j = (int)(y_pos/dely);
+
+            if(flag[i][j]&(1<<1|1<<2))
+            //if (x_pos >= imax * delx || y_pos >= jmax * dely || x_pos <= 0 || y_pos <= 0 )
+            {   
+                if(temp->next != NULL)
+                {
+                    temp1 = temp->next;
+                    free(temp);
+                    temp = temp1;
+                    (Partlines[k].length)--;
+                    temp = temp->next;
+                }
+                else
+                {
+                    free(temp);
+                    break;
+                }
+                
             }
-            temp = temp->next;
+            
+
         }
         }
     }

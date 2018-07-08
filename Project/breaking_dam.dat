@@ -14,7 +14,7 @@ ylength		4.0
 #               time steps
 #--------------------------------------------
 dt		0.04
-t_end	20.0
+t_end	30.0
 tau	 	0.5
 
 #--------------------------------------------
@@ -60,5 +60,5 @@ ppc		16
 #--------------------------------------------
 #         surface parameters
 #--------------------------------------------
-geometry     breaking_dam_baffle2.pgm
+geometry     breaking_dam_baffle1.pgm
 problem      dam_break

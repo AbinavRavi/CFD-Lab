@@ -172,11 +172,15 @@ int main(int argn, char** args){
 	fp_log = fopen( LogFileName, "w");
 	fprintf(fp_log, "It.no.|   Time    |time step |SOR iterations | residual | SOR converged \n");
 
+
+	char LogFileName1[80];
+ 	FILE *fp_fxfyke = NULL;
+	sprintf( LogFileName1, "%s.FxFyKE.csv", problem );
+	fp_fxfyke = fopen( LogFileName1, "w");
+
 	MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
 
 	boundaryvalues(imax, jmax, U, V, flag);
-
-	spec_boundary_val(imax, jmax, U, V, flag);
 
     printf("PROGRESS: Starting the flow simulation...\n");
     double t=0; int n=0; int n1=0;
@@ -230,28 +234,32 @@ int main(int argn, char** args){
   		fprintf(fp_log, "    %d |  %f | %f |      %d      | %f | %s \n", n, t, dt, it-1, res, is_converged);
 
 		calculate_uv(dt,dx,dy,imax,jmax,U,V,F,G,P,flag);
-
+		
 		boundaryvalues(imax, jmax, U, V, flag);
-
- 		spec_boundary_val(imax, jmax, U, V, flag);
-
+		
 		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
-	
+
 		ADVANCE_PARTICLES(U, V, dx, dy, dt, num_particlelines, pline, flag, imax, jmax);
+		
+		//DELETE_PARTICLES(dx, dy, num_particlelines, pline, flag, imax, jmax);
 		
 		set_gravity(&GX, &GY, t, 1);
 		
 		if ((t >= n1*dt_value)&&(t!=0.0))
   		{
-   			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 ,
-							dx ,dy ,U ,V ,P);
-			write_vtkParticleFile(sol_directory,n,xlength,ylength,imax,jmax,num_particlelines,dx,dy,pline);
+   			write_vtkFile(sol_directory ,n ,xlength ,ylength ,imax-2 ,jmax-2 , dx ,dy ,U ,V ,P);
+
+			write_vtkParticleFile(sol_directory,n,xlength,ylength,imax,jmax,num_particlelines,dx,dy,pline, flag);
+
+			fprintf(fp_fxfyke, "%f, %f, %f, %f \n", t, Force_x(imax, jmax, dy, P, flag),
+					Force_y(imax, jmax, dx, P, flag), KE(imax, jmax, U, V, flag) );
 
 			printf("writing result at %f seconds \n",n1*dt_value);
     		n1=n1+ 1;
   		}
     	t =t+ dt;
     	n = n+ 1;
+
     }
 
 	fclose(fp_log);

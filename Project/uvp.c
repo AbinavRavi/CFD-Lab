@@ -220,12 +220,11 @@ void nullify_obstacles(double **U, double **V, double **P, int **flag, int imax,
 
 void set_gravity(double *gx, double *gy, double t, int prob){
 
-
-switch (prob)
-{
+	switch (prob)
+	{
 	case 1:
 		//sudden break;
-		if (t<3) {
+		if (t<3.0) {
 			*gx = 2.5;
 		}
 		else
@@ -249,7 +248,59 @@ switch (prob)
 
 	default:
 		break;
-}
+	}
 
 }
 
+
+double Force_x(int imax, int jmax, double dely, double **P, int **flag){
+
+	double fx = 0;
+	for(int i = 1; i <imax-1; i++)
+	{
+		for(int j =1; j <jmax-1 ; j++)
+		{
+			if(flag[i+1][j]&(1<<7))		fx += P[i][j]*dely;
+			
+			if(flag[i-1][j]&(1<<8))		fx -= P[i][j]*dely;
+
+		}
+	}
+
+	return fx;
+}
+
+
+double Force_y(int imax, int jmax, double delx, double **P, int **flag){
+
+	double fy = 0;
+	for(int i = 1; i <imax-1; i++)
+	{
+		for(int j =1; j <jmax-1 ; j++)
+		{
+			if(flag[i][j+1]&(1<<6))		fy += P[i][j]*delx;
+			
+			if(flag[i][j-1]&(1<<5))		fy -= P[i][j]*delx;
+
+		}
+	}
+
+	return fy;
+}
+
+double KE(int imax, int jmax, double **U, double **V, int **flag){
+
+	double ke = 0;
+	for(int i = 1; i <imax-1; i++)
+	{
+		for(int j =1; j <jmax-1 ; j++)
+		{
+			if(flag[i][j]&(1<<0))		
+			
+			ke += 0.5*(U[i][j]*U[i][j] + V[i][j]*V[i][j]);
+
+		}
+	}
+
+	return ke;
+}

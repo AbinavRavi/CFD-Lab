@@ -71,11 +71,15 @@ void write_vtkParticleFile(const char *szProblem,
                    int    N,
                    double dx,
                    double dy,
-                   struct particleline *Particlelines);
+                   struct particleline *Particlelines,
+                   int **flag);
 
 void write_vtkParticleHeader( FILE *fp, int imax, int jmax,int length);
 
-void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlelines);
-
+void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlelines, int imax,
+                   int    jmax,
+                   double dx,
+                   double dy,
+                   int **flag);
 
 #endif

@@ -33,7 +33,6 @@ void write_vtkFile(const char *szProblem,
   write_vtkPointCoordinates(fp, imax, jmax, dx, dy);
 
   fprintf(fp,"POINT_DATA %i \n", (imax+1)*(jmax+1) );
-	
   fprintf(fp,"\n");
   fprintf(fp, "VECTORS velocity float\n");
   for(j = 0; j < jmax+1; j++) {
@@ -108,7 +107,8 @@ void write_vtkParticleFile(const char *szProblem,
                    int    N,
                    double dx,
                    double dy,
-                   struct particleline *Particlelines)
+                   struct particleline *Particlelines,
+                   int **flag)
 {
 
     int length=0;
@@ -124,21 +124,35 @@ void write_vtkParticleFile(const char *szProblem,
         return;
     }
     /*calculate the number of the particles*/
-        
+    int i,j;
     for(int k = 0; k < N; k++)
     {
+      if(Particlelines[k].Particles!=NULL)
+      {
       struct particle *temp = Particlelines[k].Particles;
-      
       for(int p = 0; p < Particlelines[k].length; p++)
       {
+        double x_pos = temp->x;
+        double y_pos = temp->y;
+
+        i = (int)(x_pos/dx);
+        j = (int)(y_pos/dy);
+
+        if((flag[i][j]&(1<<1|1<<2))==0)
+        {
+        if (x_pos < imax * dx && y_pos < jmax * dy && x_pos > 0 && y_pos > 0 )
+        {
           length++;
+        }
+        }
         temp = temp->next;
+      }
       }
       
     }
 
     write_vtkParticleHeader( fp, imax, jmax, length);
-    write_vtkParticleCoordinates(fp,N,Particlelines);
+    write_vtkParticleCoordinates(fp,N,Particlelines, imax, jmax, dx, dy, flag);
 
     if( fclose(fp) )
     {
@@ -169,16 +183,35 @@ void write_vtkParticleHeader( FILE *fp, int imax, int jmax,int length)
 
 
 
-void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlelines)
+void write_vtkParticleCoordinates( FILE *fp,int N,struct particleline *Particlelines, int imax,
+                   int    jmax,
+                   double dx,
+                   double dy,
+                   int **flag)
 {
+  int i,j;
     for(int k = 0; k < N; k++)
     {
+      if(Particlelines[k].Particles!=NULL)
+      {
       struct particle *temp = Particlelines[k].Particles;
-      
       for(int p = 0; p < Particlelines[k].length; p++)
       {
+        double x_pos = temp->x;
+        double y_pos = temp->y;
+
+        i = (int)(x_pos/dx);
+        j = (int)(y_pos/dy);
+
+        if((flag[i][j]&(1<<1|1<<2))==0)
+        {
+        if (x_pos < imax * dx && y_pos < jmax * dy && x_pos > 0 && y_pos > 0 )
+        {
           fprintf(fp, "%f %f 0\n", temp->x, temp->y);
+        }
+        }
           temp = temp->next;
+      }
       }
       
     }
