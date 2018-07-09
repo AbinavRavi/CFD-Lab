@@ -60,7 +60,7 @@ int main(int argn, char** args){
 			switch(select)
 			{
 			case 1:
-			filename = "breaking_dam.dat";
+			filename = "t2.dat";
 
 			break;
 			case 2:
@@ -130,7 +130,7 @@ int main(int argn, char** args){
 	pline = INIT_PARTICLES (&num_particlelines, imax, jmax, dx, dy, ppc, flag,select);
 	printf("PROGRESS: Particles initialized... \n");
 
-	for(int i = 0; i < 10; i++)
+	/*for(int i = 0; i < 10; i++)
 	{
 		struct particle *p = pline[i].Particles;
 
@@ -140,7 +140,7 @@ int main(int argn, char** args){
 			p = p->next;
 		}
 		printf("\n");
-	}
+	}*/
 	
     //Initialize the U, V and P
    	init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);

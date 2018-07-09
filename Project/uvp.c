@@ -225,7 +225,7 @@ void set_gravity(double *gx, double *gy, double t, int prob){
 	case 1:
 		//sudden break;
 		if (t<3.0) {
-			*gx = 2.5;
+			*gx = 0.75;
 		}
 		else
 		{
