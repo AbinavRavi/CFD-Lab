@@ -1,2 +1,9 @@
-# CFD-Lab
-Computational Fluid Dynamics Praktikum at TUM. (Chair 5 Informatics)
+# CFDLabCodeSkeleton
+Code Sceleton for the CFD Lab taught at TUM Informatics
+
+This repository contains
+
+* a makefile
+* a parameter file
+* the headers
+* the files with the respective method stubs
