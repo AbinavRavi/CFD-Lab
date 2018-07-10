@@ -46,10 +46,17 @@
 int main(int argn, char** args){
 
 	printf("Start of Run... \n");
-			printf("Assignment-2, Group D \n");
-			printf("Please select the problem from the list below by typing 1-5 \n");
-			printf("P1. Breaking Dam \n");
-			printf("P2. droplet \n");
+			printf("CFD Project, Group D \n");
+			printf("Please select the problem from the list below by typing 1-9 \n");
+			printf("P1. Tanker SideSection 50percent full without baffle \n");
+			printf("P2. Tanker SideSection 50percent full with baffle \n");
+			printf("P3. Tanker SideSection 80percent full without baffle \n");
+			printf("P4. Tanker SideSection 80percent full with baffle \n");
+			printf("P5. Tanker FrontSection 50percent full without baffle \n");
+			printf("P6. Tanker FrontSection 50percent full with baffle \n");
+			printf("P7. Tanker FrontSection 80percent full without baffle \n");
+			printf("P8. Tanker FrontSection 80percent full with baffle \n");
+			printf("P9. Breaking dam \n");
 			
 			int select;
 			char* geometry = (char*)(malloc(sizeof(char)*100));
@@ -60,15 +67,41 @@ int main(int argn, char** args){
 			switch(select)
 			{
 			case 1:
-			filename = "t2.dat";
-
+			filename = "Tanker_SS_50_1.dat";
 			break;
+
 			case 2:
-			filename = "droplet.dat";
-
-
+			filename = "Tanker_SS_50_2.dat";
 			break;
-}
+
+			case 3:
+			filename = "Tanker_SS_80_1.dat";
+			break;
+
+			case 4:
+			filename = "Tanker_SS_80_2.dat";
+			break;
+
+			case 5:
+			filename = "tanker2_50_FS.dat";
+			break;
+
+			case 6:
+			filename = "tanker1_50_FS.dat";
+			break;
+
+			case 7:
+			filename = "tanker2_80_FS.dat";
+			break;
+
+			case 8:
+			filename = "tanker1_80_FS.dat";
+			break;
+
+			case 9:
+			filename = "breaking_dam.dat";
+			break;
+			}
 
     //define parameter variables
     double Re;                /* reynolds number   */
@@ -130,30 +163,11 @@ int main(int argn, char** args){
 	pline = INIT_PARTICLES (&num_particlelines, imax, jmax, dx, dy, ppc, flag,select);
 	printf("PROGRESS: Particles initialized... \n");
 
-	/*for(int i = 0; i < 10; i++)
-	{
-		struct particle *p = pline[i].Particles;
-
-		while(p!=NULL)
-		{
-			printf("(%f,%f)", p->x, p->y);
-			p = p->next;
-		}
-		printf("\n");
-	}*/
+	
 	
     //Initialize the U, V and P
    	init_uvp(UI, VI, PI, imax, jmax, U, V, P, flag);
 
-		/*for(int j = 0; j < jmax; j++)
-		{
-			for(int i = 0; i < imax; i++)
-			{
-				printf("%f ", P[i][j]);
-			}
-			printf("\n");
-		}
-		printf(" \n \n");*/
 
 	//Make solution folder
 	struct stat st = {0};
@@ -192,14 +206,7 @@ int main(int argn, char** args){
    		printf("t = %f ,dt = %f,  ",t,dt);
 		
 		MARK_CELLS(flag,  imax,  jmax,  dx,  dy,  num_particlelines, pline);
-		/*for(int j = 0; j<jmax; ++j)
-		{
-			for(int i = 0; i<imax; ++i)
-			{
-				printf("%d ",flag[i][jmax-1-j]);
-			}
-			printf("\n");
-		}*/
+		
 		
 		SET_UVP_SURFACE(U,V, P, flag,  imax,  jmax,  Re,  dx,  dy,  dt, GX,GY);
 		
@@ -217,14 +224,7 @@ int main(int argn, char** args){
 
     	} while(it<itermax && res>eps);
 		
-		/*for(int j = 0; j < jmax; j++)
-		{
-			for(int i = 0; i < imax; i++)
-			{
-				printf("%f ", P[i][j]);
-			}
-			printf("\n");
-		}*/
+		
 
 		printf("SOR itertions = %d ,residual = %f \n", it-1, res);
 		if((it==itermax)&&(res>eps)){
@@ -241,7 +241,6 @@ int main(int argn, char** args){
 
 		ADVANCE_PARTICLES(U, V, dx, dy, dt, num_particlelines, pline, flag, imax, jmax);
 		
-		//DELETE_PARTICLES(dx, dy, num_particlelines, pline, flag, imax, jmax);
 		
 		set_gravity(&GX, &GY, t, 1);
 		

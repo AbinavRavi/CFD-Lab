@@ -222,32 +222,120 @@ void set_gravity(double *gx, double *gy, double t, int prob){
 
 	switch (prob)
 	{
+
 	case 1:
-		//sudden break;
-		if (t<3.0) {
-			*gx = 0.75;
+		//banking
+		if (t < 3.0) {
+			*gx = 0.8;
 		}
 		else
 		{
 			*gx = 0;
 		}
-
-		//uphill, downhill
-
-		//speed breaker
-
-		//banking
-
-		//uneven roads
-
 		break;
 
 	case 2:
-		*gx = 1;
+	//banking
+		if (t < 3.0) {
+			*gx = 0.8;
+		}
+		else
+		{
+			*gx = 0;
+		}
 		break;
 
-	default:
+	case 3:
+	//banking
+		if (t < 3.0) {
+			*gx = 0.8;
+		}
+		else
+		{
+			*gx = 0;
+		}
 		break;
+
+	case 4:
+	//banking
+		if (t < 3.0) {
+			*gx = 0.8;
+		}
+		else
+		{
+			*gx = 0;
+		}
+		break;
+
+	case 5:
+	//braking
+		if (t < 3.0) {
+			*gx = 0.8;
+		}
+		else
+		{
+			*gx = 0;
+		}
+		break;
+
+	case 6:
+	//braking
+		if (t < 3.0) {
+			*gx = 0.8;
+		}
+		else
+		{
+			*gx = 0;
+		}
+		break;
+
+	case 7:
+	//braking
+		if (t < 3.0) {
+			*gx = 0.8;
+		}
+		else
+		{
+			*gx = 0;
+		}
+		break;
+
+	case 8:
+	//braking
+		if (t < 3.0) {
+			*gx = 0.8;
+		}
+		else
+		{
+			*gx = 0;
+		}
+		break;
+
+/*
+		case 1:
+		*gx = sin(0.2*t/6);
+		*gy = -cos(0.2*t/6);
+		break;
+
+		case 2:
+		*gx = sin(0.2*t/6);
+		*gy = -cos(0.2*t/6);
+		break;
+
+		case 3:
+		*gx = sin(0.2*t/6);
+		*gy = -cos(0.2*t/6);
+		break;
+
+		case 4:
+		*gx = sin(0.2*t/6);
+		*gy = -cos(0.2*t/6);
+		break;
+*/
+
+		default:
+		break;
+
 	}
 
 }

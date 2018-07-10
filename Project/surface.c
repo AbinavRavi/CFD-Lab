@@ -7,8 +7,6 @@ struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, do
     *N = 0;
     int len = sqrt(ppc);
     struct particleline *Particlelines;
-
-    if (select == 1) {
     
     // find the total number of particlelines
     for(int i = 0; i < imax; i++)
@@ -48,84 +46,6 @@ struct particleline *INIT_PARTICLES (int *N, int imax, int jmax, double delx, do
             }
             
         } 
-    }
-    }
-    
-    else if(select == 2)
-    {
-
-    // find the total number of particlelines
-    for(int i = 0; i < imax; i++)
-    {
-        for(int j = 0; j < 16; j++)
-        {
-            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0) 
-            {    
-                    (*N)+= len;
-
-            }
-        }
-    }
-    
-    double r = 1.5*(delx<dely?delx:dely);
-    int  subdiv = (int)((r*(double)len)/delx);
-    double dr = r/subdiv;
-    double xo = 20.5*delx;
-    double yo = 23.5*dely;
-    double C;
-    int length1;
-    //allocate particleline to an array
-    Particlelines = (struct particleline*)malloc(sizeof(struct particleline)*((*N)+subdiv));
-    printf("Number of particlelines: %d \n",*N +subdiv);
-    
-    for(int i = 0; i < subdiv; i++)
-    {
-        C = 2*3.1415*(r-i*dr);
-        struct particle *start = (struct particle *)malloc(sizeof(struct particle));
-        length1 = (int)((C*ppc)/delx);   
-
-        Particlelines[i].length = length1;
-        Particlelines[i].Particles = start;
-        
-        struct particle *list;
-
-        list = start;
-        start->next = NULL;
-
-        for(int k=0; k<length1; k++)
-        {   
-            double th = (2*3.1415*(double)k)/((double)length1);
-            list->x =  xo + (r-i*dr)*cos(th);
-            list->y =  yo + (r-i*dr)*sin(th);
-            if (k<length1-1) {
-            list->next = (struct particle *)malloc(sizeof(struct particle));
-            }
-            else  list->next = NULL;
-        
-            list = list->next;
-        }
-    }
-    printf("%d \n",subdiv);
-    int n = subdiv;
-    for(int i = 0; i < imax; i++)
-    {
-        for(int j = 0; j < 16; j++)
-        {
-            if ((flag[i][j]&(1<<0|1<<3|1<<4))!=0)
-            {    
-                for(int k = 0; k < len; k++)
-                {
-                    struct particle *start = (struct particle *)malloc(sizeof(struct particle));
-                    
-                    Particlelines[n + k].length = len;
-                    Particlelines[n + k].Particles = start;
-                    insert_particles(start, i, j, delx, dely, len, k);
-                }
-                n += len;
-                
-            }
-        } 
-    }
     }
     
     return &Particlelines[0];
@@ -882,7 +802,6 @@ void DELETE_PARTICLES(double delx, double dely, int N, struct particleline *Part
                 
             }
             
-
         }
         }
     }
